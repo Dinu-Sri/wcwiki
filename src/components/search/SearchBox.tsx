@@ -185,15 +185,18 @@ export function SearchBox({
 
   const sizeClasses =
     size === "large"
-      ? "py-3.5 md:py-4 text-base md:text-lg"
-      : "py-2.5 md:py-3 text-sm md:text-base";
+      ? "py-4 md:py-5 text-base md:text-lg pl-13 pr-13"
+      : "py-2.5 md:py-3 text-sm md:text-base pl-11 pr-11";
+
+  const iconSize = size === "large" ? "w-5 h-5" : "w-4 h-4";
+  const iconLeft = size === "large" ? "left-5" : "left-4";
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <div className="relative">
+      <div className="relative group">
         {/* Search icon */}
         <svg
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none"
+          className={`absolute ${iconLeft} top-1/2 -translate-y-1/2 ${iconSize} text-muted group-focus-within:text-primary pointer-events-none transition-colors`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -216,8 +219,8 @@ export function SearchBox({
             if (results && query.length >= 2) setIsOpen(true);
           }}
           placeholder="Search artists, paintings, articles…"
-          className={`w-full pl-12 pr-12 ${sizeClasses} rounded-full border border-border bg-card text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all ${
-            isOpen ? "rounded-b-none border-b-transparent" : ""
+          className={`w-full ${sizeClasses} rounded-2xl border border-border bg-card text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 focus:shadow-md transition-all duration-200 placeholder:text-muted/50 ${
+            isOpen ? "rounded-b-none border-b-transparent shadow-md" : ""
           }`}
           autoFocus={autoFocus}
           autoComplete="off"
@@ -229,7 +232,7 @@ export function SearchBox({
 
         {/* Loading spinner or clear button */}
         {isLoading ? (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+          <div className="absolute right-5 top-1/2 -translate-y-1/2">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
         ) : query.length > 0 ? (
@@ -240,7 +243,7 @@ export function SearchBox({
               setIsOpen(false);
               inputRef.current?.focus();
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted hover:text-foreground hover:bg-accent transition-all"
             aria-label="Clear search"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,14 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9f7;
-  --foreground: #1a1a1a;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --muted: #6b7280;
-  --border: #e5e5e5;
+  --background: #faf8f5;
+  --foreground: #2d2a26;
+  --primary: #4a7c8a;
+  --primary-hover: #3a6470;
+  --primary-light: #e8f1f3;
+  --muted: #8a8580;
+  --border: #e8e4df;
   --card: #ffffff;
-  --accent: #f0f4ff;
+  --accent: #f3efe9;
+  --warm: #c4956a;
+  --warm-light: #faf0e6;
+  --surface: #f5f2ed;
+  --shadow: rgba(74, 124, 138, 0.08);
+  --shadow-lg: rgba(74, 124, 138, 0.12);
 }
 
 @theme inline {
@@ -16,29 +22,135 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-card: var(--card);
   --color-accent: var(--accent);
+  --color-warm: var(--warm);
+  --color-warm-light: var(--warm-light);
+  --color-surface: var(--surface);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f0f0f;
-    --foreground: #e5e5e5;
-    --primary: #3b82f6;
-    --primary-hover: #60a5fa;
-    --muted: #9ca3af;
-    --border: #2a2a2a;
-    --card: #1a1a1a;
-    --accent: #1e293b;
+    --background: #1a1816;
+    --foreground: #e8e4df;
+    --primary: #6ba3b3;
+    --primary-hover: #89bfcc;
+    --primary-light: #1e2d32;
+    --muted: #9a9590;
+    --border: #302c28;
+    --card: #242120;
+    --accent: #2a2724;
+    --warm: #d4a57a;
+    --warm-light: #2a2420;
+    --surface: #1f1d1a;
+    --shadow: rgba(0, 0, 0, 0.2);
+    --shadow-lg: rgba(0, 0, 0, 0.3);
   }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
+
+/* Smooth page transitions */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Watercolor wash decoration — CSS only */
+.watercolor-wash {
+  position: relative;
+  overflow: hidden;
+}
+
+.watercolor-wash::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 60%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(74, 124, 138, 0.06) 0%,
+    rgba(196, 149, 106, 0.04) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.watercolor-wash::after {
+  content: "";
+  position: absolute;
+  bottom: -30%;
+  left: -15%;
+  width: 50%;
+  height: 80%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(196, 149, 106, 0.05) 0%,
+    rgba(74, 124, 138, 0.03) 50%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Glass effect for dropdowns */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(36, 33, 32, 0.9);
+  }
+}
+
+/* Fade-in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
