@@ -67,12 +67,12 @@ export default function Home() {
       </div>
 
       {/* Search Box */}
-      <div className="w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+      <div className="w-full max-w-2xl animate-fade-in-up relative z-50" style={{ animationDelay: "200ms" }}>
         <SearchBox size="large" autoFocus initialCategory={category} />
       </div>
 
       {/* Quick stats — real counts from DB */}
-      <div className="mt-16 flex items-center gap-8 text-center animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+      <div className="mt-16 flex items-center gap-8 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "300ms" }}>
         <div>
           <div className="text-2xl font-bold text-foreground">{formatCount(stats.artists)}</div>
           <div className="text-xs text-muted mt-0.5">Artists</div>

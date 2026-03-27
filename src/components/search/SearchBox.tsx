@@ -37,6 +37,11 @@ export function SearchBox({
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<SearchCategory>(initialCategory);
   const [results, setResults] = useState<SearchResult | null>(null);
+
+  // Keep category in sync with parent prop
+  useEffect(() => {
+    setCategory(initialCategory);
+  }, [initialCategory]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);

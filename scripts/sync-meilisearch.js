@@ -8,7 +8,23 @@ const meili = new MeiliSearch({
 
 const prisma = new PrismaClient();
 
+// Wait for Meilisearch to be ready (it may still be starting up)
+async function waitForMeilisearch(retries = 10, delay = 2000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await meili.health();
+      console.log("Meilisearch is ready");
+      return;
+    } catch {
+      console.log(`Waiting for Meilisearch... (${i + 1}/${retries})`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw new Error("Meilisearch not available after " + retries + " retries");
+}
+
 async function sync() {
+  await waitForMeilisearch();
   // Sync artists
   const artists = await prisma.artist.findMany();
   if (artists.length > 0) {
