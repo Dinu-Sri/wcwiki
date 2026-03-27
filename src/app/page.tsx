@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchBox, SearchCategory } from "@/components/search/SearchBox";
 
 export default function Home() {
   const [category, setCategory] = useState<SearchCategory>("all");
+  const [stats, setStats] = useState({ artists: 0, paintings: 0, articles: 0 });
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((r) => r.json())
+      .then((data) => setStats(data))
+      .catch(() => {});
+  }, []);
 
   const tabs: { label: string; value: SearchCategory; icon: string }[] = [
     { label: "All", value: "all", icon: "M4 6h16M4 12h16M4 18h16" },
@@ -13,12 +21,13 @@ export default function Home() {
     { label: "Articles", value: "articles", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
   ];
 
+  const formatCount = (n: number) => n.toLocaleString();
+
   return (
     <main className="flex-1 flex flex-col items-center justify-center px-4 watercolor-wash min-h-screen relative">
       {/* Logo & tagline */}
       <div className="mb-10 text-center animate-fade-in-up">
         <div className="mb-4 flex items-center justify-center gap-3">
-          {/* Watercolor palette icon */}
           <svg className="w-10 h-10 md:w-12 md:h-12 text-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
           </svg>
@@ -37,13 +46,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Search Box */}
-      <div className="w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-        <SearchBox size="large" autoFocus initialCategory={category} />
-      </div>
-
-      {/* Category Tabs */}
-      <div className="mt-8 flex gap-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+      {/* Category Tabs — ABOVE the search box so dropdown won't overlap */}
+      <div className="mb-4 flex gap-2 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
         {tabs.map((tab) => (
           <button
             key={tab.value}
@@ -62,20 +66,25 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Quick stats */}
+      {/* Search Box */}
+      <div className="w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+        <SearchBox size="large" autoFocus initialCategory={category} />
+      </div>
+
+      {/* Quick stats — real counts from DB */}
       <div className="mt-16 flex items-center gap-8 text-center animate-fade-in-up" style={{ animationDelay: "300ms" }}>
         <div>
-          <div className="text-2xl font-bold text-foreground">500+</div>
+          <div className="text-2xl font-bold text-foreground">{formatCount(stats.artists)}</div>
           <div className="text-xs text-muted mt-0.5">Artists</div>
         </div>
         <div className="w-px h-8 bg-border"></div>
         <div>
-          <div className="text-2xl font-bold text-foreground">2,000+</div>
+          <div className="text-2xl font-bold text-foreground">{formatCount(stats.paintings)}</div>
           <div className="text-xs text-muted mt-0.5">Paintings</div>
         </div>
         <div className="w-px h-8 bg-border"></div>
         <div>
-          <div className="text-2xl font-bold text-foreground">100+</div>
+          <div className="text-2xl font-bold text-foreground">{formatCount(stats.articles)}</div>
           <div className="text-xs text-muted mt-0.5">Articles</div>
         </div>
       </div>
