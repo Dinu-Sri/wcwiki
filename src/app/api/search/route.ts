@@ -27,13 +27,16 @@ export async function GET(request: NextRequest) {
     const [artists, paintings, articles] = await Promise.all([
       meili
         .index(INDEXES.ARTISTS)
-        .search(query, { ...searchOptions, limit: 5 }),
+        .search(query, { ...searchOptions, limit: 5 })
+        .catch(() => ({ hits: [], estimatedTotalHits: 0 })),
       meili
         .index(INDEXES.PAINTINGS)
-        .search(query, { ...searchOptions, limit: 5 }),
+        .search(query, { ...searchOptions, limit: 5 })
+        .catch(() => ({ hits: [], estimatedTotalHits: 0 })),
       meili
         .index(INDEXES.ARTICLES)
-        .search(query, { ...searchOptions, limit: 5 }),
+        .search(query, { ...searchOptions, limit: 5 })
+        .catch(() => ({ hits: [], estimatedTotalHits: 0 })),
     ]);
 
     return NextResponse.json({
@@ -54,12 +57,21 @@ export async function GET(request: NextRequest) {
         ? INDEXES.PAINTINGS
         : INDEXES.ARTICLES;
 
-  const results = await meili.index(indexName).search(query, searchOptions);
+  try {
+    const results = await meili.index(indexName).search(query, searchOptions);
 
-  return NextResponse.json({
-    hits: results.hits,
-    estimatedTotal: results.estimatedTotalHits || 0,
-    limit,
-    offset,
-  });
+    return NextResponse.json({
+      hits: results.hits,
+      estimatedTotal: results.estimatedTotalHits || 0,
+      limit,
+      offset,
+    });
+  } catch {
+    return NextResponse.json({
+      hits: [],
+      estimatedTotal: 0,
+      limit,
+      offset,
+    });
+  }
 }
