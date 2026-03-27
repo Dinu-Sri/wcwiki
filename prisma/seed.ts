@@ -1,5 +1,14 @@
 import { PrismaClient } from "@prisma/client";
-import { slugify } from "../src/lib/utils";
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 const prisma = new PrismaClient();
 
