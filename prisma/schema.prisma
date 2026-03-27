@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth Models (NextAuth.js v5 / Prisma Adapter) ────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── User ──────────────────────────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?
+
+  role             UserRole @default(USER)
+  isArtist         Boolean  @default(false)
+  artistVerified   Boolean  @default(false)
+  verificationWork String? // URL to uploaded recent original work
+
+  bio         String? @db.Text
+  website     String?
+  socialLinks Json? // { instagram, youtube, x, facebook, pinterest, behance }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  articles      Article[]
+  artistClaims  ArtistClaim[]
+  artistProfile Artist?
+}
+
+enum UserRole {
+  USER
+  EDITOR
+  ADMIN
+}
+
+// ─── Artist ────────────────────────────────────────────────────────────────
+
+model Artist {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  bio         String?  @db.Text
+  nationality String?
+  birthYear   Int?
+  deathYear   Int?
+  styles      String[] @default([])
+  image       String?
+  website     String?
+  socialLinks Json? // { instagram, youtube, x, facebook, pinterest, behance }
+
+  connectedUserId String? @unique
+  connectedUser   User?   @relation(fields: [connectedUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paintings    Painting[]
+  artistClaims ArtistClaim[]
+
+  @@index([name])
+  @@index([nationality])
+}
+
+// ─── Painting ──────────────────────────────────────────────────────────────
+
+model Painting {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  artistId    String
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  description String?  @db.Text
+  medium      String? // e.g., "Watercolor", "Watercolor & Ink"
+  surface     String? // e.g., "Paper", "Canvas"
+  width       Float? // cm
+  height      Float? // cm
+  year        Int?
+  tags        String[] @default([])
+  images      String[] @default([]) // URLs to painting images
+  sourceUrl   String? // Original source URL
+  attribution String?  @db.Text // Custom attribution text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([artistId])
+  @@index([medium])
+  @@index([year])
+}
+
+// ─── Article ───────────────────────────────────────────────────────────────
+
+model Article {
+  id       String        @id @default(cuid())
+  title    String
+  slug     String        @unique
+  body     String        @db.Text // Rich text HTML
+  authorId String
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  status   ArticleStatus @default(DRAFT)
+  language String        @default("en")
+  tags     String[]      @default([])
+  excerpt  String?       @db.Text // Short summary for cards/SEO
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([status])
+  @@index([language])
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─── Artist Claim ──────────────────────────────────────────────────────────
+
+model ArtistClaim {
+  id       String      @id @default(cuid())
+  artistId String
+  artist   Artist      @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status   ClaimStatus @default(PENDING)
+  message  String?     @db.Text // Optional message from the claimer
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([artistId, userId])
+  @@index([status])
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─── Tag ───────────────────────────────────────────────────────────────────
+
+model Tag {
+  id       String      @id @default(cuid())
+  name     String      @unique
+  slug     String      @unique
+  category TagCategory @default(SUBJECT)
+
+  createdAt DateTime @default(now())
+}
+
+enum TagCategory {
+  STYLE
+  TECHNIQUE
+  SUBJECT
+  MEDIUM
+}
