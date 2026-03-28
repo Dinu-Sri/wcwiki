@@ -64,17 +64,27 @@ model User {
   website     String?
   socialLinks Json? // { instagram, youtube, x, facebook, pinterest, behance }
 
+  // Profile fields
+  country          String?
+  specializations  String[] @default([])
+  mediaInterests   String[] @default([])
+  yearsOfExperience Int?
+  portfolioImages  String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  articles      Article[]
-  artistClaims  ArtistClaim[]
-  artistProfile Artist?
-  edits         EditHistory[] @relation("EditAuthor")
-  reviews       EditHistory[] @relation("EditReviewer")
-  media         Media[]
+  accounts             Account[]
+  sessions             Session[]
+  articles             Article[]
+  artistClaims         ArtistClaim[]
+  artistProfile        Artist?
+  edits                EditHistory[]       @relation("EditAuthor")
+  reviews              EditHistory[]       @relation("EditReviewer")
+  media                Media[]
+  apiKeys              ApiKey[]
+  editorApplications   EditorApplication[] @relation("ApplicationAuthor")
+  applicationReviews   EditorApplication[] @relation("ApplicationReviewer")
 }
 
 enum UserRole {
@@ -270,4 +280,84 @@ model Media {
 
   @@index([uploadedById])
   @@index([subfolder])
+}
+
+// ─── API Keys ──────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String // Human-readable key name
+  keyHash     String // bcrypt hash of the full API key
+  keyPrefix   String // First 8 chars for identification (e.g., "wk_abc12...")
+  permissions String[] @default(["read"]) // "read", "write", "delete"
+  enabled     Boolean  @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([keyPrefix])
+  @@index([userId])
+}
+
+// ─── Search Analytics ──────────────────────────────────────────────────────
+
+model SearchQuery {
+  id        String   @id @default(cuid())
+  query     String
+  category  String   @default("all") // all, artists, paintings, articles
+  results   Int      @default(0) // number of results returned
+  country   String?
+  userAgent String?
+  sessionId String? // anonymous session tracking
+
+  createdAt DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
+  @@index([country])
+}
+
+model SearchAggregate {
+  id       String @id @default(cuid())
+  query    String
+  period   String // "hourly" or "daily"
+  periodAt DateTime // start of the period
+  count    Int    @default(0)
+  results  Int    @default(0) // average results
+  country  String?
+
+  @@unique([query, period, periodAt, country])
+  @@index([periodAt])
+  @@index([count])
+}
+
+// ─── Editor Applications ───────────────────────────────────────────────────
+
+model EditorApplication {
+  id      String            @id @default(cuid())
+  userId  String
+  user    User              @relation("ApplicationAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  status  ApplicationStatus @default(PENDING)
+  message String?           @db.Text // Optional cover message
+
+  reviewedById String?
+  reviewedBy   User?     @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewNote   String?   @db.Text
+  reviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

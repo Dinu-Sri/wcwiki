@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -16,11 +16,53 @@ interface EditItem {
   entityId: string;
 }
 
+interface ApplicationStatus {
+  id: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  reviewedAt: string | null;
+}
+
+interface ProfileCompleteness {
+  score: number;
+  missing: string[];
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [edits, setEdits] = useState<EditItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [application, setApplication] = useState<ApplicationStatus | null>(null);
+  const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
+  const [applyMessage, setApplyMessage] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const [editsRes, appRes, profileRes] = await Promise.all([
+        fetch("/api/my-edits"),
+        fetch("/api/editor-application"),
+        fetch("/api/profile"),
+      ]);
+
+      if (editsRes.ok) {
+        const data = await editsRes.json();
+        setEdits(data.edits || []);
+      }
+      if (appRes.ok) {
+        const data = await appRes.json();
+        setApplication(data.application || null);
+      }
+      if (profileRes.ok) {
+        const data = await profileRes.json();
+        setCompleteness(data.completeness || null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -28,15 +70,9 @@ export default function DashboardPage() {
       return;
     }
     if (status === "authenticated") {
-      fetch("/api/my-edits")
-        .then((r) => r.json())
-        .then((data) => {
-          setEdits(data.edits || []);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
+      fetchDashboard();
     }
-  }, [status, router]);
+  }, [status, router, fetchDashboard]);
 
   if (status === "loading" || loading) {
     return (
@@ -51,6 +87,29 @@ export default function DashboardPage() {
   }
 
   if (!session?.user) return null;
+
+  const handleApply = async () => {
+    setApplying(true);
+    setApplyError(null);
+    try {
+      const res = await fetch("/api/editor-application", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: applyMessage }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setApplication(data);
+        setApplyMessage("");
+      } else {
+        setApplyError(data.message || data.error);
+      }
+    } catch {
+      setApplyError("Network error");
+    } finally {
+      setApplying(false);
+    }
+  };
 
   const pending = edits.filter((e) => e.status === "PENDING");
   const approved = edits.filter((e) => e.status === "APPROVED");
@@ -144,6 +203,12 @@ export default function DashboardPage() {
             </h2>
             <div className="flex flex-wrap gap-3">
               <Link
+                href="/profile/edit"
+                className="px-4 py-2 text-sm bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
+              >
+                Edit Profile
+              </Link>
+              <Link
                 href="/artists"
                 className="px-4 py-2 text-sm bg-surface border border-border rounded-xl hover:bg-accent transition-colors"
               >
@@ -173,6 +238,78 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+
+          {/* Profile Completeness */}
+          {completeness && completeness.score < 100 && (
+            <div className="bg-surface border border-border rounded-xl p-4 mb-8">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="font-medium">Profile Completeness</span>
+                <span className="text-primary font-semibold">{completeness.score}%</span>
+              </div>
+              <div className="h-2 bg-accent rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${completeness.score}%` }}
+                />
+              </div>
+              {completeness.missing.length > 0 && (
+                <p className="text-xs text-muted">
+                  Missing: {completeness.missing.join(", ")}.{" "}
+                  <Link href="/profile/edit" className="text-primary hover:underline">
+                    Complete your profile
+                  </Link>
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Apply for Editor (USER role only) */}
+          {session.user.role === "USER" && (
+            <div className="bg-surface border border-border rounded-xl p-4 mb-8">
+              <h2 className="text-sm font-semibold mb-2">Become an Editor</h2>
+              {application?.status === "PENDING" ? (
+                <p className="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                  Your application is pending review. Applied{" "}
+                  {new Date(application.createdAt).toLocaleDateString()}.
+                </p>
+              ) : application?.status === "REJECTED" ? (
+                <div>
+                  <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-2">
+                    Your application was not approved.{" "}
+                    {application.reviewedAt &&
+                      `(${new Date(application.reviewedAt).toLocaleDateString()})`}
+                  </p>
+                  <p className="text-xs text-muted">
+                    You can apply again after improving your profile.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs text-muted mb-3">
+                    Editors can submit edits to articles, artist pages, and paintings.
+                    Complete your profile before applying.
+                  </p>
+                  <textarea
+                    value={applyMessage}
+                    onChange={(e) => setApplyMessage(e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-card text-sm mb-2 focus:ring-2 focus:ring-primary/20"
+                    placeholder="Why do you want to be an editor? (optional)"
+                  />
+                  {applyError && (
+                    <p className="text-xs text-red-600 mb-2">{applyError}</p>
+                  )}
+                  <button
+                    onClick={handleApply}
+                    disabled={applying}
+                    className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    {applying ? "Submitting…" : "Apply for Editor Role"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Recent Edits */}
           <h2 className="text-lg font-semibold text-foreground mb-3">

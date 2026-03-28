@@ -59,6 +59,26 @@ export default async function AdminLayout({
           >
             Media
           </Link>
+          <Link
+            href="/admin/applications"
+            className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
+          >
+            Applications
+          </Link>
+          <Link
+            href="/admin/search-analytics"
+            className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
+          >
+            Search Analytics
+          </Link>
+          {session.user.role === "SUPER_ADMIN" && (
+            <Link
+              href="/admin/api-keys"
+              className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
+            >
+              API Keys
+            </Link>
+          )}
         </nav>
       </aside>
 

@@ -37,6 +37,9 @@ export function SearchBox({
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<SearchCategory>(initialCategory);
   const [results, setResults] = useState<SearchResult | null>(null);
+  const [trending, setTrending] = useState<{ query: string; count: number }[]>([]);
+  const [showTrending, setShowTrending] = useState(false);
+  const trendingFetchedRef = useRef(false);
 
   // Keep category in sync with parent prop
   useEffect(() => {
@@ -45,6 +48,21 @@ export function SearchBox({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+
+  // Fetch trending suggestions once
+  const fetchTrending = useCallback(async () => {
+    if (trendingFetchedRef.current) return;
+    trendingFetchedRef.current = true;
+    try {
+      const res = await fetch("/api/search/suggest");
+      if (res.ok) {
+        const data = await res.json();
+        setTrending(data.suggestions || []);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Flatten results for keyboard navigation
   const flatResults: AnyRecord[] = results
@@ -104,6 +122,14 @@ export function SearchBox({
 
   const handleInputChange = (value: string) => {
     setQuery(value);
+    if (value.length < 2) {
+      setShowTrending(true);
+      setIsOpen(false);
+      setResults(null);
+      fetchTrending();
+    } else {
+      setShowTrending(false);
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       performSearch(value);
@@ -114,6 +140,7 @@ export function SearchBox({
     const q = searchQuery || query;
     if (!q.trim()) return;
     setIsOpen(false);
+    setShowTrending(false);
     const params = new URLSearchParams({ q: q.trim() });
     if (category !== "all") params.set("category", category);
     router.push(`/search?${params}`);
@@ -162,6 +189,7 @@ export function SearchBox({
         break;
       case "Escape":
         setIsOpen(false);
+        setShowTrending(false);
         setActiveIndex(-1);
         break;
     }
@@ -175,6 +203,7 @@ export function SearchBox({
         !containerRef.current.contains(e.target as Node)
       ) {
         setIsOpen(false);
+        setShowTrending(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -221,7 +250,12 @@ export function SearchBox({
           onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (results && query.length >= 2) setIsOpen(true);
+            if (results && query.length >= 2) {
+              setIsOpen(true);
+            } else if (query.length < 2) {
+              fetchTrending();
+              setShowTrending(true);
+            }
           }}
           placeholder="Search artists, paintings, articles…"
           className={`w-full ${sizeClasses} rounded-2xl border border-border bg-card text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 focus:shadow-md transition-all duration-200 placeholder:text-muted/50 ${
@@ -246,6 +280,8 @@ export function SearchBox({
               setQuery("");
               setResults(null);
               setIsOpen(false);
+              setShowTrending(true);
+              fetchTrending();
               inputRef.current?.focus();
             }}
             className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted hover:text-foreground hover:bg-accent transition-all"
@@ -267,6 +303,35 @@ export function SearchBox({
           onViewAll={() => navigateToSearch()}
           query={query}
         />
+      )}
+
+      {/* Trending suggestions */}
+      {showTrending && !isOpen && trending.length > 0 && (
+        <div className="absolute z-50 w-full glass border border-border border-t-0 rounded-b-2xl shadow-lg overflow-hidden">
+          <div className="px-4 py-2 text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-2">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Trending Searches
+          </div>
+          {trending.slice(0, 6).map((item) => (
+            <button
+              key={item.query}
+              onClick={() => {
+                setQuery(item.query);
+                setShowTrending(false);
+                navigateToSearch(item.query);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-accent/60 transition-all duration-150"
+            >
+              <svg className="w-4 h-4 text-muted/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span className="text-sm text-foreground truncate">{item.query}</span>
+              <span className="text-xs text-muted/60 ml-auto shrink-0">{item.count} searches</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );

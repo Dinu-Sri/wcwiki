@@ -92,7 +92,14 @@ export default function AdminEditsPage() {
                   </span>
                 </div>
                 <p className="text-xs text-muted">
-                  by {edit.user.name || edit.user.email} &middot;{" "}
+                  by{" "}
+                  <a
+                    href={`/profile/${edit.user.id}`}
+                    className="text-primary hover:underline"
+                  >
+                    {edit.user.name || edit.user.email}
+                  </a>{" "}
+                  &middot;{" "}
                   {new Date(edit.createdAt).toLocaleString()}
                 </p>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useZoom } from "@/hooks/useZoom";
 
 interface PaintingLightboxProps {
   images: string[];
@@ -10,16 +11,22 @@ interface PaintingLightboxProps {
 export function PaintingLightbox({ images, title }: PaintingLightboxProps) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
+  const { scale, translateX, translateY, containerRef, zoomIn, zoomOut, reset, isZoomed } = useZoom();
 
-  const close = useCallback(() => setOpen(false), []);
-  const prev = useCallback(
-    () => setIndex((i) => (i === 0 ? images.length - 1 : i - 1)),
-    [images.length]
-  );
-  const next = useCallback(
-    () => setIndex((i) => (i === images.length - 1 ? 0 : i + 1)),
-    [images.length]
-  );
+  const close = useCallback(() => {
+    setOpen(false);
+    reset();
+  }, [reset]);
+
+  const prev = useCallback(() => {
+    setIndex((i) => (i === 0 ? images.length - 1 : i - 1));
+    reset();
+  }, [images.length, reset]);
+
+  const next = useCallback(() => {
+    setIndex((i) => (i === images.length - 1 ? 0 : i + 1));
+    reset();
+  }, [images.length, reset]);
 
   useEffect(() => {
     if (!open) return;
@@ -27,6 +34,9 @@ export function PaintingLightbox({ images, title }: PaintingLightboxProps) {
       if (e.key === "Escape") close();
       if (e.key === "ArrowLeft") prev();
       if (e.key === "ArrowRight") next();
+      if (e.key === "+" || e.key === "=") zoomIn();
+      if (e.key === "-") zoomOut();
+      if (e.key === "0") reset();
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handle);
@@ -34,7 +44,7 @@ export function PaintingLightbox({ images, title }: PaintingLightboxProps) {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handle);
     };
-  }, [open, close, prev, next]);
+  }, [open, close, prev, next, zoomIn, zoomOut, reset]);
 
   if (images.length === 0) return null;
 
@@ -196,15 +206,60 @@ export function PaintingLightbox({ images, title }: PaintingLightboxProps) {
             </>
           )}
 
-          <div className="relative z-[1] max-w-[90vw] max-h-[80vh] flex flex-col items-center">
+          <div
+            ref={containerRef}
+            className="relative z-[1] max-w-[90vw] max-h-[80vh] flex flex-col items-center overflow-hidden"
+            style={{ cursor: isZoomed ? "grab" : "default" }}
+          >
             <img
               src={images[index]}
               alt={`${title} — view ${index + 1}`}
-              className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
+              className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl select-none"
+              draggable={false}
+              style={{
+                transform: `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`,
+                transition: isZoomed ? "none" : "transform 0.2s ease-out",
+              }}
             />
             <div className="mt-3 text-center">
               <h3 className="text-white text-base font-medium">{title}</h3>
             </div>
+          </div>
+
+          {/* Zoom controls */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1">
+            <button
+              onClick={zoomOut}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors"
+              aria-label="Zoom out"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              </svg>
+            </button>
+            <span className="text-white/70 text-xs font-mono w-12 text-center">
+              {Math.round(scale * 100)}%
+            </span>
+            <button
+              onClick={zoomIn}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors"
+              aria-label="Zoom in"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            {isZoomed && (
+              <button
+                onClick={reset}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors"
+                aria-label="Reset zoom"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M4 20v-5h5M20 4v5h-5" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       )}
