@@ -161,7 +161,11 @@ export default function EditPaintingPage({
 
           <h1 className="text-2xl font-bold text-foreground mb-1">Edit: {painting.title}</h1>
           <p className="text-sm text-muted mb-6">
-            by {painting.artist.name} &middot;{" "}
+            by{" "}
+            <a href={`/artists/${painting.artist.slug}`} className="text-primary hover:underline">
+              {painting.artist.name}
+            </a>{" "}
+            &middot;{" "}
             {session.user.role === "EDITOR"
               ? "Changes submitted for review."
               : "Changes applied immediately."}

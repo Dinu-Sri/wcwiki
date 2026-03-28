@@ -10,7 +10,7 @@ const ALLOWED_FIELDS = [
   "country",
   "specializations",
   "mediaInterests",
-  "yearsOfExperience",
+  "watercolorStartYear",
   "portfolioImages",
   "image",
 ] as const;
@@ -36,7 +36,7 @@ export async function GET() {
       country: true,
       specializations: true,
       mediaInterests: true,
-      yearsOfExperience: true,
+      watercolorStartYear: true,
       portfolioImages: true,
       isArtist: true,
       artistVerified: true,
@@ -86,10 +86,10 @@ export async function PATCH(request: NextRequest) {
   if (data.portfolioImages && !Array.isArray(data.portfolioImages)) {
     return NextResponse.json({ error: "portfolioImages must be an array" }, { status: 400 });
   }
-  if (data.yearsOfExperience !== undefined && data.yearsOfExperience !== null) {
-    data.yearsOfExperience = parseInt(data.yearsOfExperience, 10);
-    if (isNaN(data.yearsOfExperience)) {
-      return NextResponse.json({ error: "yearsOfExperience must be a number" }, { status: 400 });
+  if (data.watercolorStartYear !== undefined && data.watercolorStartYear !== null) {
+    data.watercolorStartYear = parseInt(data.watercolorStartYear, 10);
+    if (isNaN(data.watercolorStartYear)) {
+      return NextResponse.json({ error: "watercolorStartYear must be a number" }, { status: 400 });
     }
   }
 
@@ -105,7 +105,7 @@ export async function PATCH(request: NextRequest) {
       country: true,
       specializations: true,
       mediaInterests: true,
-      yearsOfExperience: true,
+      watercolorStartYear: true,
       portfolioImages: true,
       image: true,
     },

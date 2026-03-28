@@ -19,7 +19,7 @@ interface Application {
     country: string | null;
     specializations: string[];
     mediaInterests: string[];
-    yearsOfExperience: number | null;
+    watercolorStartYear: number | null;
     createdAt: string;
   };
   reviewedBy: { name: string | null } | null;
@@ -171,9 +171,9 @@ export default function AdminApplicationsPage() {
                         {s}
                       </span>
                     ))}
-                    {app.user.yearsOfExperience != null && (
+                    {app.user.watercolorStartYear != null && (
                       <span className="px-2 py-0.5 rounded-full text-[11px] bg-accent text-muted">
-                        {app.user.yearsOfExperience}y exp
+                        {new Date().getFullYear() - app.user.watercolorStartYear}y exp
                       </span>
                     )}
                   </div>

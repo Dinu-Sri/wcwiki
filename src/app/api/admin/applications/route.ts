@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           country: true,
           specializations: true,
           mediaInterests: true,
-          yearsOfExperience: true,
+          watercolorStartYear: true,
           createdAt: true,
         },
       },

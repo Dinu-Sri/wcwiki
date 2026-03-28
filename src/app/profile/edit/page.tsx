@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -56,7 +56,7 @@ interface ProfileData {
   socialLinks: Record<string, string> | null;
   specializations: string[];
   mediaInterests: string[];
-  yearsOfExperience: number | null;
+  watercolorStartYear: number | null;
   portfolioImages: string[];
   image: string | null;
   completeness: { score: number; missing: string[] };
@@ -65,10 +65,12 @@ interface ProfileData {
 export default function ProfileEditPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -88,8 +90,10 @@ export default function ProfileEditPage() {
     behance: "",
   });
   const [specializations, setSpecializations] = useState<string[]>([]);
+  const [customSpecialization, setCustomSpecialization] = useState("");
   const [mediaInterests, setMediaInterests] = useState<string[]>([]);
-  const [yearsOfExperience, setYearsOfExperience] = useState("");
+  const [watercolorStartYear, setWatercolorStartYear] = useState("");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -101,6 +105,7 @@ export default function ProfileEditPage() {
         setBio(data.bio || "");
         setCountry(data.country || "");
         setWebsite(data.website || "");
+        setProfileImage(data.image || null);
         if (data.socialLinks) {
           setSocialLinks({
             instagram: data.socialLinks.instagram || "",
@@ -113,8 +118,8 @@ export default function ProfileEditPage() {
         }
         setSpecializations(data.specializations || []);
         setMediaInterests(data.mediaInterests || []);
-        setYearsOfExperience(
-          data.yearsOfExperience != null ? String(data.yearsOfExperience) : ""
+        setWatercolorStartYear(
+          data.watercolorStartYear != null ? String(data.watercolorStartYear) : ""
         );
       }
     } finally {
@@ -147,9 +152,10 @@ export default function ProfileEditPage() {
           socialLinks,
           specializations,
           mediaInterests,
-          yearsOfExperience: yearsOfExperience
-            ? parseInt(yearsOfExperience)
+          watercolorStartYear: watercolorStartYear
+            ? parseInt(watercolorStartYear)
             : null,
+          image: profileImage,
         }),
       });
 
@@ -165,6 +171,36 @@ export default function ProfileEditPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("subfolder", "profiles");
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok) {
+        setProfileImage(data.url);
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to upload image." });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Upload failed." });
+    }
+    setUploadingImage(false);
+    e.target.value = "";
+  };
+
+  const addCustomSpecialization = () => {
+    const trimmed = customSpecialization.trim();
+    if (trimmed && !specializations.includes(trimmed)) {
+      setSpecializations([...specializations, trimmed]);
+    }
+    setCustomSpecialization("");
   };
 
   const toggleChip = (
@@ -225,16 +261,24 @@ export default function ProfileEditPage() {
           }`}
         >
           {message.text}
+          {message.type === "success" && (
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="ml-3 text-green-700 font-medium underline hover:no-underline"
+            >
+              Go to Dashboard →
+            </button>
+          )}
         </div>
       )}
 
       <div className="space-y-6">
-        {/* Avatar */}
+        {/* Avatar with upload */}
         <div className="flex items-center gap-4">
-          <div className="relative w-20 h-20 rounded-full overflow-hidden bg-accent border-2 border-border">
-            {profile?.image ? (
+          <div className="relative w-20 h-20 rounded-full overflow-hidden bg-accent border-2 border-border group">
+            {profileImage ? (
               <Image
-                src={profile.image}
+                src={profileImage}
                 alt={name || "Profile"}
                 fill
                 className="object-cover"
@@ -244,12 +288,41 @@ export default function ProfileEditPage() {
                 {name?.[0]?.toUpperCase() || "?"}
               </div>
             )}
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploadingImage}
+              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+            >
+              {uploadingImage ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
           </div>
           <div>
             <p className="text-sm font-medium">{session.user?.email}</p>
             <p className="text-xs text-muted capitalize">
               {(session.user as { role?: string })?.role?.toLowerCase().replace("_", " ")}
             </p>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="text-xs text-primary hover:underline mt-1"
+            >
+              Change photo
+            </button>
           </div>
         </div>
 
@@ -298,20 +371,27 @@ export default function ProfileEditPage() {
           </select>
         </div>
 
-        {/* Years of experience */}
+        {/* Year started watercolor */}
         <div>
           <label className="block text-sm font-medium mb-1.5">
-            Years of Experience
+            Year Started Watercolor
           </label>
-          <input
-            type="number"
-            min="0"
-            max="80"
-            value={yearsOfExperience}
-            onChange={(e) => setYearsOfExperience(e.target.value)}
-            className="w-32 px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
-            placeholder="e.g. 5"
-          />
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min="1940"
+              max={new Date().getFullYear()}
+              value={watercolorStartYear}
+              onChange={(e) => setWatercolorStartYear(e.target.value)}
+              className="w-32 px-3 py-2 rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+              placeholder={`e.g. ${new Date().getFullYear() - 5}`}
+            />
+            {watercolorStartYear && (
+              <span className="text-sm text-muted">
+                ({new Date().getFullYear() - parseInt(watercolorStartYear)} years of experience)
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Specializations */}
@@ -319,7 +399,7 @@ export default function ProfileEditPage() {
           <label className="block text-sm font-medium mb-2">
             Specializations *
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-3">
             {SPECIALIZATIONS.map((s) => (
               <button
                 key={s}
@@ -336,6 +416,43 @@ export default function ProfileEditPage() {
                 {s}
               </button>
             ))}
+            {/* Custom specializations (not in preset list) */}
+            {specializations
+              .filter((s) => !SPECIALIZATIONS.includes(s))
+              .map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() =>
+                    toggleChip(s, specializations, setSpecializations)
+                  }
+                  className="px-3 py-1.5 rounded-full text-sm border transition-all bg-primary text-white border-primary"
+                >
+                  {s} ×
+                </button>
+              ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={customSpecialization}
+              onChange={(e) => setCustomSpecialization(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCustomSpecialization();
+                }
+              }}
+              className="flex-1 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/50"
+              placeholder="Add custom specialization…"
+            />
+            <button
+              type="button"
+              onClick={addCustomSpecialization}
+              className="px-3 py-1.5 text-sm bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+            >
+              Add
+            </button>
           </div>
         </div>
 

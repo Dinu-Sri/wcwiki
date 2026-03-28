@@ -17,6 +17,7 @@ interface ArtistData {
   deathYear: number | null;
   styles: string[];
   website: string | null;
+  socialLinks: Record<string, string> | null;
 }
 
 export default function EditArtistPage({
@@ -28,6 +29,14 @@ export default function EditArtistPage({
   const router = useRouter();
   const [artist, setArtist] = useState<ArtistData | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [socialLinks, setSocialLinks] = useState({
+    instagram: "",
+    youtube: "",
+    x: "",
+    facebook: "",
+    pinterest: "",
+    behance: "",
+  });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -56,6 +65,16 @@ export default function EditArtistPage({
           styles: (data.styles || []).join(", "),
           website: data.website || "",
         });
+        if (data.socialLinks) {
+          setSocialLinks({
+            instagram: data.socialLinks.instagram || "",
+            youtube: data.socialLinks.youtube || "",
+            x: data.socialLinks.x || "",
+            facebook: data.socialLinks.facebook || "",
+            pinterest: data.socialLinks.pinterest || "",
+            behance: data.socialLinks.behance || "",
+          });
+        }
         setReferences((data.references ?? []) as Reference[]);
         setLoading(false);
       });
@@ -115,6 +134,11 @@ export default function EditArtistPage({
     }
     if (form.website !== (artist.website || "")) {
       edits.push({ field: "website", oldValue: artist.website, newValue: form.website || null });
+    }
+    const oldSocial = JSON.stringify(artist.socialLinks || {});
+    const newSocial = JSON.stringify(socialLinks);
+    if (oldSocial !== newSocial) {
+      edits.push({ field: "socialLinks", oldValue: oldSocial, newValue: newSocial });
     }
     const oldRefs = JSON.stringify((artist as unknown as { references?: Reference[] }).references ?? []);
     const newRefs = JSON.stringify(references);
@@ -231,6 +255,34 @@ export default function EditArtistPage({
                 className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary"
                 placeholder="https://..."
               />
+            </div>
+
+            {/* Social Links */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Social Links
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Object.entries(socialLinks).map(([key, value]) => (
+                  <div key={key}>
+                    <label className="text-xs text-muted capitalize mb-1 block">
+                      {key === "x" ? "X (Twitter)" : key}
+                    </label>
+                    <input
+                      type="url"
+                      value={value}
+                      onChange={(e) =>
+                        setSocialLinks((prev) => ({
+                          ...prev,
+                          [key]: e.target.value,
+                        }))
+                      }
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder={`https://${key === "x" ? "x" : key}.com/…`}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             <ReferencesEditor references={references} onChange={setReferences} />

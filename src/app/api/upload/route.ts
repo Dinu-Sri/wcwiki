@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { validateApiKey } from "@/lib/api-auth";
 import { uploadImage } from "@/lib/storage";
 import { db } from "@/lib/db";
 
@@ -13,11 +14,24 @@ const ALLOWED_TYPES = [
 ];
 
 export async function POST(req: NextRequest) {
+  // Try session auth first, then API key
+  let userId: string | null = null;
+
   const session = await auth();
   if (
-    !session?.user ||
-    !["EDITOR", "APPROVER", "SUPER_ADMIN"].includes(session.user.role as string)
+    session?.user &&
+    ["EDITOR", "APPROVER", "SUPER_ADMIN"].includes(session.user.role as string)
   ) {
+    userId = session.user.id;
+  } else {
+    // Fallback to API key auth
+    const apiUser = await validateApiKey(req);
+    if (apiUser && apiUser.permissions.includes("write")) {
+      userId = apiUser.id;
+    }
+  }
+
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -66,7 +80,7 @@ export async function POST(req: NextRequest) {
         size: result.size,
         format: result.format,
         subfolder,
-        uploadedById: session.user.id,
+        uploadedById: userId,
       },
     });
 

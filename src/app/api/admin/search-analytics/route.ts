@@ -67,7 +67,7 @@ export async function POST() {
 }
 
 // GET /api/admin/search-analytics/aggregate — Get analytics data
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (
     !session?.user ||
@@ -76,7 +76,16 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const { searchParams } = new URL(req.url);
+  const days = Math.min(parseInt(searchParams.get("days") || "30"), 365);
+  const countryFilter = searchParams.get("country") || "";
+
+  const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const countryWhere: Record<string, any> = countryFilter
+    ? { country: countryFilter }
+    : {};
 
   const [
     topQueries,
@@ -85,10 +94,10 @@ export async function GET() {
     dailyVolume,
     topCountries,
   ] = await Promise.all([
-    // Top queries (last 30 days)
+    // Top queries
     db.searchQuery.groupBy({
       by: ["query"],
-      where: { createdAt: { gte: thirtyDaysAgo } },
+      where: { createdAt: { gte: sinceDate }, ...countryWhere },
       _count: { query: true },
       orderBy: { _count: { query: "desc" } },
       take: 20,
@@ -96,21 +105,25 @@ export async function GET() {
 
     // Total searches
     db.searchQuery.count({
-      where: { createdAt: { gte: thirtyDaysAgo } },
+      where: { createdAt: { gte: sinceDate }, ...countryWhere },
     }),
 
     // Zero-result queries
     db.searchQuery.groupBy({
       by: ["query"],
-      where: { createdAt: { gte: thirtyDaysAgo }, results: 0 },
+      where: { createdAt: { gte: sinceDate }, results: 0, ...countryWhere },
       _count: { query: true },
       orderBy: { _count: { query: "desc" } },
       take: 20,
     }),
 
-    // Daily volume (last 30 days)
+    // Daily volume
     db.searchAggregate.findMany({
-      where: { period: "daily", periodAt: { gte: thirtyDaysAgo } },
+      where: {
+        period: "daily",
+        periodAt: { gte: sinceDate },
+        ...(countryFilter ? { country: countryFilter } : {}),
+      },
       orderBy: { periodAt: "asc" },
     }),
 
@@ -118,7 +131,7 @@ export async function GET() {
     db.searchQuery.groupBy({
       by: ["country"],
       where: {
-        createdAt: { gte: thirtyDaysAgo },
+        createdAt: { gte: sinceDate },
         country: { not: null },
       },
       _count: { country: true },

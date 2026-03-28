@@ -28,7 +28,7 @@ export async function GET(
       country: true,
       specializations: true,
       mediaInterests: true,
-      yearsOfExperience: true,
+      watercolorStartYear: true,
       portfolioImages: true,
       isArtist: true,
       artistVerified: true,

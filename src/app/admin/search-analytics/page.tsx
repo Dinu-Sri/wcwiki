@@ -41,11 +41,15 @@ export default function SearchAnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [aggregating, setAggregating] = useState(false);
+  const [days, setDays] = useState(30);
+  const [countryFilter, setCountryFilter] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/search-analytics");
+      const params = new URLSearchParams({ days: String(days) });
+      if (countryFilter) params.set("country", countryFilter);
+      const res = await fetch(`/api/admin/search-analytics?${params}`);
       if (res.ok) {
         setData(await res.json());
       }
@@ -54,7 +58,7 @@ export default function SearchAnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [days, countryFilter]);
 
   useEffect(() => {
     fetchData();
@@ -102,18 +106,60 @@ export default function SearchAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Search Analytics</h1>
-          <p className="text-muted text-sm mt-1">Last 30 days</p>
+          <p className="text-muted text-sm mt-1">
+            Last {days} days{countryFilter ? ` · ${countryFilter}` : ""}
+          </p>
         </div>
-        <button
-          onClick={runAggregation}
-          disabled={aggregating}
-          className="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors"
-        >
-          {aggregating ? "Aggregating…" : "Run Aggregation"}
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Date range filter */}
+          <div className="flex rounded-lg border border-border overflow-hidden">
+            {[
+              { label: "7d", value: 7 },
+              { label: "30d", value: 30 },
+              { label: "90d", value: 90 },
+              { label: "1y", value: 365 },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setDays(opt.value)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  days === opt.value
+                    ? "bg-primary text-white"
+                    : "bg-card text-muted hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Country filter */}
+          {data?.topCountries && data.topCountries.length > 0 && (
+            <select
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              className="px-3 py-1.5 text-xs rounded-lg border border-border bg-card text-foreground focus:ring-1 focus:ring-primary"
+            >
+              <option value="">All countries</option>
+              {data.topCountries.map((c) => (
+                <option key={c.country} value={c.country}>
+                  {c.country} ({c.count})
+                </option>
+              ))}
+            </select>
+          )}
+
+          <button
+            onClick={runAggregation}
+            disabled={aggregating}
+            className="px-4 py-1.5 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          >
+            {aggregating ? "Aggregating…" : "Run Aggregation"}
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}

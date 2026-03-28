@@ -16,7 +16,7 @@ interface UserProfile {
   country: string | null;
   specializations: string[];
   mediaInterests: string[];
-  yearsOfExperience: number | null;
+  watercolorStartYear: number | null;
   portfolioImages: string[];
   isArtist: boolean;
   artistVerified: boolean;
@@ -120,9 +120,9 @@ export default function ProfilePage() {
               <span className="text-sm text-muted">{profile.country}</span>
             )}
           </div>
-          {profile.yearsOfExperience != null && (
+          {profile.watercolorStartYear != null && (
             <p className="text-sm text-muted mt-1">
-              {profile.yearsOfExperience} years of experience
+              {new Date().getFullYear() - profile.watercolorStartYear} years of experience (since {profile.watercolorStartYear})
             </p>
           )}
           <p className="text-xs text-muted/60 mt-1">

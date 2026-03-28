@@ -106,12 +106,12 @@ export default function AdminApiKeysPage() {
 
       {/* New token display */}
       {newToken && (
-        <div className="mb-6 bg-green-950/20 border border-green-800/40 rounded-xl p-4">
-          <p className="text-sm font-semibold text-green-400 mb-2">
+        <div className="mb-6 bg-green-50 border border-green-300 rounded-xl p-4">
+          <p className="text-sm font-semibold text-green-800 mb-2">
             API Key Created — Copy it now, it won&apos;t be shown again!
           </p>
           <div className="flex gap-2">
-            <code className="flex-1 bg-black/40 rounded-lg px-3 py-2 text-sm text-green-300 font-mono break-all">
+            <code className="flex-1 bg-green-100 rounded-lg px-3 py-2 text-sm text-green-900 font-mono break-all">
               {newToken}
             </code>
             <button
@@ -219,15 +219,15 @@ export default function AdminApiKeysPage() {
                     onClick={() => handleToggle(key.id, key.enabled)}
                     className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                       key.enabled
-                        ? "border-yellow-300 text-yellow-700 hover:bg-yellow-50"
-                        : "border-green-300 text-green-700 hover:bg-green-50"
+                        ? "border-amber-400 text-amber-800 bg-amber-50 hover:bg-amber-100"
+                        : "border-green-400 text-green-800 bg-green-50 hover:bg-green-100"
                     }`}
                   >
                     {key.enabled ? "Disable" : "Enable"}
                   </button>
                   <button
                     onClick={() => handleDelete(key.id)}
-                    className="px-3 py-1.5 text-xs rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                    className="px-3 py-1.5 text-xs rounded-lg border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
                   >
                     Delete
                   </button>

@@ -61,10 +61,12 @@ export async function POST(req: NextRequest) {
     // If auto-approved, apply immediately
     if (autoApprove) {
       const arrayFields = ['images', 'tags', 'styles', 'references'];
+      const jsonFields = ['socialLinks'];
       const isArrayField = arrayFields.includes(edit.field);
+      const isJsonField = jsonFields.includes(edit.field);
       const updateData: Record<string, unknown> = {
-        [edit.field]: isArrayField
-          ? (edit.newValue ? JSON.parse(edit.newValue) : [])
+        [edit.field]: (isArrayField || isJsonField)
+          ? (edit.newValue ? JSON.parse(edit.newValue) : (isArrayField ? [] : null))
           : edit.newValue,
       };
 
