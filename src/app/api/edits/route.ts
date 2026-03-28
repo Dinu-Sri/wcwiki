@@ -60,8 +60,12 @@ export async function POST(req: NextRequest) {
 
     // If auto-approved, apply immediately
     if (autoApprove) {
-      const updateData: Record<string, string | null> = {
-        [edit.field]: edit.newValue,
+      const arrayFields = ['images', 'tags', 'styles', 'references'];
+      const isArrayField = arrayFields.includes(edit.field);
+      const updateData: Record<string, unknown> = {
+        [edit.field]: isArrayField
+          ? (edit.newValue ? JSON.parse(edit.newValue) : [])
+          : edit.newValue,
       };
 
       switch (entityType) {

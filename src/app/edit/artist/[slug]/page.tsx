@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ReferencesEditor, type Reference } from "@/components/editor/ReferencesEditor";
 
 interface ArtistData {
   id: string;
@@ -31,6 +32,7 @@ export default function EditArtistPage({
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [slug, setSlug] = useState<string>("");
+  const [references, setReferences] = useState<Reference[]>([]);
 
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
@@ -54,6 +56,7 @@ export default function EditArtistPage({
           styles: (data.styles || []).join(", "),
           website: data.website || "",
         });
+        setReferences((data.references ?? []) as Reference[]);
         setLoading(false);
       });
   }, [slug]);
@@ -112,6 +115,11 @@ export default function EditArtistPage({
     }
     if (form.website !== (artist.website || "")) {
       edits.push({ field: "website", oldValue: artist.website, newValue: form.website || null });
+    }
+    const oldRefs = JSON.stringify((artist as unknown as { references?: Reference[] }).references ?? []);
+    const newRefs = JSON.stringify(references);
+    if (oldRefs !== newRefs) {
+      edits.push({ field: "references", oldValue: oldRefs, newValue: newRefs });
     }
 
     if (edits.length === 0) {
@@ -224,6 +232,8 @@ export default function EditArtistPage({
                 placeholder="https://..."
               />
             </div>
+
+            <ReferencesEditor references={references} onChange={setReferences} />
 
             {/* Actions */}
             <div className="flex items-center gap-3 pt-2">

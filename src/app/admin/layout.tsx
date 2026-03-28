@@ -53,6 +53,12 @@ export default async function AdminLayout({
           >
             Content
           </Link>
+          <Link
+            href="/admin/media"
+            className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
+          >
+            Media
+          </Link>
         </nav>
       </aside>
 

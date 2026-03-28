@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { LightboxGallery } from "@/components/gallery/LightboxGallery";
 import { EditHistoryButton } from "@/components/EditHistoryButton";
+import { ReferencesSection } from "@/components/ReferencesSection";
 
 export const dynamic = "force-dynamic";
 
@@ -207,6 +208,9 @@ export default async function ArtistPage({ params }: Props) {
             />
           </section>
         )}
+
+        {/* References */}
+        <ReferencesSection references={(artist.references as { title: string; url?: string; author?: string; publishedDate?: string; accessDate?: string; note?: string }[]) ?? []} />
 
         {/* Related Artists */}
         {relatedArtists.length > 0 && (

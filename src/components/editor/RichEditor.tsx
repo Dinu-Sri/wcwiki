@@ -2,12 +2,14 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
+import ImageResize from "tiptap-extension-resize-image";
+import "@tiptap/extension-image"; // setImage command types
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
+import { MediaLibrary } from "@/components/MediaLibrary";
 
 interface RichEditorProps {
   content: string;
@@ -21,12 +23,13 @@ export function RichEditor({
   placeholder = "Start writing...",
 }: RichEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mediaOpen, setMediaOpen] = useState(false);
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
-      Image.configure({ inline: false, allowBase64: false }),
+      ImageResize,
       Link.configure({ openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer" } }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Placeholder.configure({ placeholder }),
@@ -91,6 +94,14 @@ export function RichEditor({
       .setLink({ href: url })
       .run();
   }, [editor]);
+
+  const handleMediaSelect = useCallback(
+    (url: string) => {
+      if (!editor) return;
+      editor.chain().focus().setImage({ src: url }).run();
+    },
+    [editor]
+  );
 
   if (!editor) return null;
 
@@ -192,11 +203,17 @@ export function RichEditor({
           </svg>
         </ToolBtn>
 
-        <ToolBtn active={false} onClick={addImage} title="Insert Image">
+        <ToolBtn active={false} onClick={addImage} title="Upload Image">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
             <circle cx="8.5" cy="8.5" r="1.5" />
             <path d="M21 15l-5-5L5 21" />
+          </svg>
+        </ToolBtn>
+
+        <ToolBtn active={false} onClick={() => setMediaOpen(true)} title="Media Library">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
           </svg>
         </ToolBtn>
 
@@ -241,6 +258,14 @@ export function RichEditor({
 
       {/* Editor */}
       <EditorContent editor={editor} />
+
+      {/* Media Library Modal */}
+      <MediaLibrary
+        open={mediaOpen}
+        onClose={() => setMediaOpen(false)}
+        onSelect={handleMediaSelect}
+        subfolder="articles"
+      />
     </div>
   );
 }

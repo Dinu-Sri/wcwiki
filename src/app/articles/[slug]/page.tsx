@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { EditHistoryButton } from "@/components/EditHistoryButton";
+import { ReferencesSection } from "@/components/ReferencesSection";
 
 export const dynamic = "force-dynamic";
 
@@ -178,6 +179,9 @@ export default async function ArticlePage({ params }: Props) {
             [&_strong]:text-foreground [&_strong]:font-semibold"
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
+
+        {/* References */}
+        <ReferencesSection references={(article.references as { title: string; url?: string; author?: string; publishedDate?: string; accessDate?: string; note?: string }[]) ?? []} />
 
         {/* Related Articles */}
         {relatedArticles.length > 0 && (

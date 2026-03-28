@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { uploadImage } from "@/lib/storage";
+import { db } from "@/lib/db";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = [
@@ -53,6 +54,21 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const result = await uploadImage(buffer, file.name, subfolder);
+
+    // Create Media record
+    await db.media.create({
+      data: {
+        url: result.url,
+        filename: file.name,
+        alt: formData.get("alt") as string || null,
+        width: result.width,
+        height: result.height,
+        size: result.size,
+        format: result.format,
+        subfolder,
+        uploadedById: session.user.id,
+      },
+    });
 
     return NextResponse.json(result);
   } catch (error) {

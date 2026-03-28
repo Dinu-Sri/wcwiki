@@ -54,8 +54,12 @@ export async function PATCH(req: NextRequest) {
 
   // If approved, apply the change to the entity
   if (action === "APPROVED") {
-    const updateData: Record<string, string | null> = {
-      [edit.field]: edit.newValue,
+    const arrayFields = ['images', 'tags', 'styles', 'references'];
+    const isArrayField = arrayFields.includes(edit.field);
+    const updateData: Record<string, unknown> = {
+      [edit.field]: isArrayField
+        ? (edit.newValue ? JSON.parse(edit.newValue) : [])
+        : edit.newValue,
     };
 
     switch (edit.entityType) {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MediaLibrary } from "@/components/MediaLibrary";
 
 interface PaintingData {
   id: string;
@@ -15,6 +16,7 @@ interface PaintingData {
   surface: string | null;
   year: number | null;
   tags: string[];
+  images: string[];
   artist: { name: string; slug: string };
 }
 
@@ -31,6 +33,10 @@ export default function EditPaintingPage({
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [slug, setSlug] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [mediaOpen, setMediaOpen] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
@@ -48,6 +54,7 @@ export default function EditPaintingPage({
           medium: data.medium || "",
           surface: data.surface || "",
         });
+        setImages(data.images || []);
         setLoading(false);
       });
   }, [slug]);
@@ -64,6 +71,32 @@ export default function EditPaintingPage({
     return (<><Header /><main className="min-h-screen flex items-center justify-center text-muted">Painting not found.</main><Footer /></>);
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("subfolder", "paintings");
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok) {
+        setImages((prev) => [...prev, data.url]);
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to upload image." });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Upload failed." });
+    }
+    setUploading(false);
+    e.target.value = "";
+  };
+
+  const removeImage = (idx: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -78,6 +111,11 @@ export default function EditPaintingPage({
     }
     if (form.surface !== (painting.surface || "")) {
       edits.push({ field: "surface", oldValue: painting.surface, newValue: form.surface || null });
+    }
+    const oldImages = JSON.stringify(painting.images || []);
+    const newImages = JSON.stringify(images);
+    if (oldImages !== newImages) {
+      edits.push({ field: "images", oldValue: oldImages, newValue: newImages });
     }
 
     if (edits.length === 0) {
@@ -137,6 +175,55 @@ export default function EditPaintingPage({
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Images</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+                {images.map((url, idx) => (
+                  <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-surface">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs font-bold"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center text-muted hover:text-primary transition-colors disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-xs mt-1">Add</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              <button
+                type="button"
+                onClick={() => setMediaOpen(true)}
+                className="text-sm text-primary hover:underline flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                </svg>
+                Choose from library
+              </button>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
               <textarea
                 value={form.description}
@@ -182,6 +269,12 @@ export default function EditPaintingPage({
         </div>
       </main>
       <Footer />
+      <MediaLibrary
+        open={mediaOpen}
+        onClose={() => setMediaOpen(false)}
+        onSelect={(url) => setImages((prev) => [...prev, url])}
+        subfolder="paintings"
+      />
     </>
   );
 }

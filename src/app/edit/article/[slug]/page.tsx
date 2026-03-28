@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { RichEditor } from "@/components/editor/RichEditor";
+import { ReferencesEditor, type Reference } from "@/components/editor/ReferencesEditor";
 
 interface ArticleData {
   id: string;
@@ -14,6 +15,7 @@ interface ArticleData {
   body: string;
   excerpt: string | null;
   tags: string[];
+  references: Reference[];
   author: { name: string | null };
 }
 
@@ -30,6 +32,7 @@ export default function EditArticlePage({
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [slug, setSlug] = useState("");
+  const [references, setReferences] = useState<Reference[]>([]);
 
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
@@ -48,6 +51,7 @@ export default function EditArticlePage({
           excerpt: data.excerpt || "",
           tags: (data.tags || []).join(", "),
         });
+        setReferences((data.references ?? []) as Reference[]);
         setLoading(false);
       });
   }, [slug]);
@@ -78,6 +82,11 @@ export default function EditArticlePage({
     }
     if (form.excerpt !== (article.excerpt || "")) {
       edits.push({ field: "excerpt", oldValue: article.excerpt, newValue: form.excerpt || null });
+    }
+    const oldRefs = JSON.stringify(article.references ?? []);
+    const newRefs = JSON.stringify(references);
+    if (oldRefs !== newRefs) {
+      edits.push({ field: "references", oldValue: oldRefs, newValue: newRefs });
     }
 
     if (edits.length === 0) {
@@ -164,6 +173,8 @@ export default function EditArticlePage({
                 placeholder="Write your article content here..."
               />
             </div>
+
+            <ReferencesEditor references={references} onChange={setReferences} />
 
             <div className="flex items-center gap-3 pt-2">
               <button type="submit" disabled={submitting} className="px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50">

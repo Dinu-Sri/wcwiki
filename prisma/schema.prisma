@@ -74,6 +74,7 @@ model User {
   artistProfile Artist?
   edits         EditHistory[] @relation("EditAuthor")
   reviews       EditHistory[] @relation("EditReviewer")
+  media         Media[]
 }
 
 enum UserRole {
@@ -97,6 +98,7 @@ model Artist {
   image       String?
   website     String?
   socialLinks Json? // { instagram, youtube, x, facebook, pinterest, behance }
+  references  Json? @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
 
   connectedUserId String? @unique
   connectedUser   User?   @relation(fields: [connectedUserId], references: [id], onDelete: SetNull)
@@ -151,6 +153,7 @@ model Article {
   language String        @default("en")
   tags     String[]      @default([])
   excerpt  String?       @db.Text // Short summary for cards/SEO
+  references Json?       @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
 
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
@@ -245,4 +248,26 @@ enum EditStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+// ─── Media Library ─────────────────────────────────────────────────────────
+
+model Media {
+  id        String  @id @default(cuid())
+  url       String  @unique
+  filename  String
+  alt       String?
+  width     Int?
+  height    Int?
+  size      Int? // bytes
+  format    String? // e.g., "webp"
+  subfolder String? // e.g., "articles", "paintings"
+
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([uploadedById])
+  @@index([subfolder])
 }
