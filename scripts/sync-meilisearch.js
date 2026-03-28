@@ -162,6 +162,21 @@ async function sync() {
       }
     }
   }
+  // Add popular search queries from the database
+  const popularQueries = await prisma.searchQuery.groupBy({
+    by: ["query"],
+    _count: { query: true },
+    orderBy: { _count: { query: "desc" } },
+    take: 200,
+  });
+  for (const pq of popularQueries) {
+    const qId = `query-${pq.query.replace(/\W+/g, "-").toLowerCase()}`;
+    if (!suggestionDocs.find((d) => d.id === qId)) {
+      suggestionDocs.push({ id: qId, text: pq.query, type: "query" });
+    }
+  }
+  console.log(`Including ${popularQueries.length} popular queries`);
+
   if (suggestionDocs.length > 0) {
     await meili.index("suggestions").addDocuments(suggestionDocs);
   }

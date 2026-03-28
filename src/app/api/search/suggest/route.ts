@@ -2,53 +2,76 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { meili, INDEXES } from "@/lib/search/client";
 
+type Suggestion = { text: string; type: string; sourceSlug: string | null; highlighted: string; count?: number };
+
 // GET /api/search/suggest — Content-aware suggestions + trending
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q")?.trim().toLowerCase() || "";
+  const q = searchParams.get("q")?.trim() || "";
   const limit = Math.min(parseInt(searchParams.get("limit") || "8"), 20);
 
-  // If user is typing, query MeiliSearch suggestions index
+  // If user is typing, query MeiliSearch main indexes + popular past queries
   if (q.length >= 1) {
+    const items: Suggestion[] = [];
+    const seen = new Set<string>();
+
+    const add = (s: Suggestion) => {
+      const key = s.text.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      items.push(s);
+    };
+
+    // 1. Query the MAIN MeiliSearch indexes (artists, paintings, articles)
+    //    These are the same indexes the search page uses — known to work.
     try {
-      const results = await meili.index(INDEXES.SUGGESTIONS).search(q, {
-        limit,
-        attributesToHighlight: ["text"],
+      const searchOpts = {
+        limit: 3,
+        attributesToHighlight: ["name", "title"],
         highlightPreTag: "<mark>",
         highlightPostTag: "</mark>",
-        matchingStrategy: "frequency",
-      });
+        matchingStrategy: "frequency" as const,
+      };
 
-      return NextResponse.json({
-        suggestions: results.hits.map((hit) => ({
-          text: hit.text as string,
-          type: hit.type as string,
-          sourceSlug: (hit.sourceSlug as string) || null,
-          highlighted: (hit._formatted?.text as string) || (hit.text as string),
-        })),
-      });
-    } catch {
-      // Fallback to Prisma if MeiliSearch is unavailable
+      const [artists, paintings, articles] = await Promise.all([
+        meili.index(INDEXES.ARTISTS).search(q, searchOpts).catch(() => ({ hits: [] as Record<string, unknown>[] })),
+        meili.index(INDEXES.PAINTINGS).search(q, searchOpts).catch(() => ({ hits: [] as Record<string, unknown>[] })),
+        meili.index(INDEXES.ARTICLES).search(q, searchOpts).catch(() => ({ hits: [] as Record<string, unknown>[] })),
+      ]);
+
+      for (const h of artists.hits) {
+        add({ text: h.name as string, type: "artist", sourceSlug: `/artists/${h.slug}`, highlighted: (h._formatted?.name as string) || (h.name as string) });
+      }
+      for (const h of paintings.hits) {
+        add({ text: h.title as string, type: "painting", sourceSlug: `/paintings/${h.slug}`, highlighted: (h._formatted?.title as string) || (h.title as string) });
+      }
+      for (const h of articles.hits) {
+        add({ text: h.title as string, type: "article", sourceSlug: `/articles/${h.slug}`, highlighted: (h._formatted?.title as string) || (h.title as string) });
+      }
+    } catch (err) {
+      console.error("[suggest] MeiliSearch error:", err);
+    }
+
+    // 2. Popular past queries from DB (case-insensitive contains)
+    try {
       const popular = await db.searchQuery.groupBy({
         by: ["query"],
         where: {
-          query: { startsWith: q },
+          query: { contains: q, mode: "insensitive" },
           createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
         },
         _count: { query: true },
         orderBy: { _count: { query: "desc" } },
         take: limit,
       });
-
-      return NextResponse.json({
-        suggestions: popular.map((p) => ({
-          text: p.query,
-          type: "query",
-          sourceSlug: null,
-          highlighted: p.query,
-        })),
-      });
+      for (const p of popular) {
+        add({ text: p.query, type: "query", sourceSlug: null, highlighted: p.query });
+      }
+    } catch (err) {
+      console.error("[suggest] DB error:", err);
     }
+
+    return NextResponse.json({ suggestions: items.slice(0, limit) });
   }
 
   // No input: return overall trending terms (last 7 days)
