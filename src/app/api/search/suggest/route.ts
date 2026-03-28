@@ -25,18 +25,19 @@ export async function GET(req: NextRequest) {
     // 1. Query the MAIN MeiliSearch indexes (artists, paintings, articles)
     //    These are the same indexes the search page uses — known to work.
     try {
-      const searchOpts = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const searchOpts: any = {
         limit: 3,
         attributesToHighlight: ["name", "title"],
         highlightPreTag: "<mark>",
         highlightPostTag: "</mark>",
-        matchingStrategy: "frequency" as const,
+        matchingStrategy: "frequency",
       };
 
       const [artists, paintings, articles] = await Promise.all([
-        meili.index(INDEXES.ARTISTS).search(q, searchOpts).catch(() => ({ hits: [] as Record<string, unknown>[] })),
-        meili.index(INDEXES.PAINTINGS).search(q, searchOpts).catch(() => ({ hits: [] as Record<string, unknown>[] })),
-        meili.index(INDEXES.ARTICLES).search(q, searchOpts).catch(() => ({ hits: [] as Record<string, unknown>[] })),
+        meili.index(INDEXES.ARTISTS).search(q, searchOpts).catch(() => ({ hits: [] as any[] })),
+        meili.index(INDEXES.PAINTINGS).search(q, searchOpts).catch(() => ({ hits: [] as any[] })),
+        meili.index(INDEXES.ARTICLES).search(q, searchOpts).catch(() => ({ hits: [] as any[] })),
       ]);
 
       for (const h of artists.hits) {
