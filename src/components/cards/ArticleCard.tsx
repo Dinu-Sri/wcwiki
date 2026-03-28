@@ -19,15 +19,15 @@ export function ArticleCard({
   return (
     <Link
       href={`/articles/${slug}`}
-      className="group block px-4 py-3 rounded-xl hover:bg-card hover:shadow-sm transition-all duration-200"
+      className="group block px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl hover:bg-card hover:shadow-sm transition-all duration-200"
     >
       {/* URL-style breadcrumb */}
-      <div className="text-xs text-primary mb-0.5 truncate">
+      <div className="text-[11px] sm:text-xs text-primary mb-0.5 truncate">
         wcwiki.com › articles › {slug}
       </div>
 
       {/* Title */}
-      <h3 className="text-lg font-medium text-primary group-hover:underline leading-snug">
+      <h3 className="text-base sm:text-lg font-medium text-primary group-hover:underline leading-snug">
         {_formatted?.title ? (
           <span
             dangerouslySetInnerHTML={{ __html: _formatted.title }}
@@ -40,7 +40,7 @@ export function ArticleCard({
 
       {/* Excerpt */}
       {(excerpt || _formatted?.excerpt) && (
-        <p className="mt-1 text-sm text-muted line-clamp-2 leading-relaxed">
+        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted line-clamp-2 leading-relaxed">
           {_formatted?.excerpt ? (
             <span
               dangerouslySetInnerHTML={{ __html: _formatted.excerpt }}

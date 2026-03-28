@@ -27,30 +27,31 @@ export default function Home() {
 
   return (
     <main className="flex-1 flex flex-col min-h-screen watercolor-wash relative">
-      {/* Top bar — Google-style: right-aligned auth */}
+      {/* Top bar — right-aligned auth */}
       <div className="w-full flex items-center justify-end px-4 sm:px-6 py-3 animate-fade-in-up">
         <UserMenu />
       </div>
 
       {/* Centered content area — pushes to visual center */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 -mt-8">
-        {/* Logo & tagline */}
+        {/* Logo — smaller on mobile */}
         <div className="mb-6 md:mb-8 text-center animate-fade-in-up">
-          <div className="mb-3 flex items-center justify-center">
-            <img src="/logo.webp" alt="wcWIKI" className="h-16 sm:h-20 md:h-24 w-auto" />
+          <div className="mb-2 sm:mb-3 flex items-center justify-center">
+            <img src="/logo.webp" alt="wcWIKI" className="h-10 sm:h-20 md:h-24 w-auto" />
           </div>
-          <p className="text-muted text-sm sm:text-base tracking-wide">
+          {/* Tagline — hidden on mobile for cleaner look */}
+          <p className="hidden sm:block text-muted text-sm sm:text-base tracking-wide">
             The Watercolor Art Encyclopedia
           </p>
         </div>
 
         {/* Search Box — Google-style prominent */}
         <div className="w-full max-w-xl animate-fade-in-up relative z-50" style={{ animationDelay: "100ms" }}>
-          <SearchBox size="large" autoFocus initialCategory={category} />
+          <SearchBox size="large" initialCategory={category} />
         </div>
 
-        {/* Category Tabs — clean pill buttons below search */}
-        <div className="mt-5 flex flex-wrap justify-center gap-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+        {/* Category Tabs — hidden on mobile, shown on sm+ */}
+        <div className="hidden sm:flex mt-5 flex-wrap justify-center gap-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
           {tabs.map((tab) => (
             <button
               key={tab.value}
@@ -69,8 +70,8 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Quick stats — compact, muted */}
-        <div className="mt-10 flex items-center gap-6 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "300ms" }}>
+        {/* Quick stats — hidden on mobile, shown on sm+ */}
+        <div className="hidden sm:flex mt-10 items-center gap-6 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "300ms" }}>
           <div>
             <div className="text-lg font-semibold text-foreground">{formatCount(stats.artists)}</div>
             <div className="text-[11px] text-muted">Artists</div>
@@ -88,7 +89,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bottom footer — Google-style */}
+      {/* Bottom footer — minimal */}
       <footer className="border-t border-border bg-surface/50">
         <div className="px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted/70">
           <p>© {new Date().getFullYear()} wcWIKI.com</p>

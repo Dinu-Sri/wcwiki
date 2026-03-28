@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   const apiUser = result as ApiKeyUser;
 
   const body = await req.json();
-  const { title, body: articleBody, tags, excerpt, language, references, status: articleStatus } = body;
+  const { title, body: articleBody, coverImage, tags, excerpt, language, references, status: articleStatus } = body;
 
   if (!title || typeof title !== "string") {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
       title,
       slug,
       body: articleBody,
+      coverImage: coverImage || null,
       authorId: apiUser.id,
       status: articleStatus === "APPROVED" ? "APPROVED" : "DRAFT",
       language: language || "en",

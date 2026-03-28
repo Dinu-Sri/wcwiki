@@ -157,6 +157,7 @@ model Article {
   title    String
   slug     String        @unique
   body     String        @db.Text // Rich text HTML
+  coverImage String?      // Cover/featured image URL
   authorId String
   author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
   status   ArticleStatus @default(DRAFT)

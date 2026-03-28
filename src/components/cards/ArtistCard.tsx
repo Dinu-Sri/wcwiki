@@ -36,15 +36,15 @@ export function ArtistCard({
   return (
     <Link
       href={`/artists/${slug}`}
-      className="group block px-4 py-3 rounded-xl hover:bg-card hover:shadow-sm transition-all duration-200"
+      className="group block px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl hover:bg-card hover:shadow-sm transition-all duration-200"
     >
       {/* URL-style breadcrumb */}
-      <div className="text-xs text-primary mb-0.5 truncate">
+      <div className="text-[11px] sm:text-xs text-primary mb-0.5 truncate">
         wcwiki.com › artists › {slug}
       </div>
 
       {/* Title */}
-      <h3 className="text-lg font-medium text-primary group-hover:underline leading-snug">
+      <h3 className="text-base sm:text-lg font-medium text-primary group-hover:underline leading-snug">
         {_formatted?.name ? (
           <span
             dangerouslySetInnerHTML={{ __html: _formatted.name }}
@@ -54,13 +54,13 @@ export function ArtistCard({
           name
         )}
         {subtitle && (
-          <span className="text-muted font-normal text-sm ml-2">— {subtitle}</span>
+          <span className="text-muted font-normal text-xs sm:text-sm ml-1.5 sm:ml-2">— {subtitle}</span>
         )}
       </h3>
 
       {/* Description */}
       {(bio || _formatted?.bio) && (
-        <p className="mt-1 text-sm text-muted line-clamp-2 leading-relaxed">
+        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted line-clamp-2 leading-relaxed">
           {_formatted?.bio ? (
             <span
               dangerouslySetInnerHTML={{ __html: _formatted.bio }}

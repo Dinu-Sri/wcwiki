@@ -35,7 +35,7 @@ export async function PATCH(
   const { id } = await params;
   const body = await req.json();
 
-  const allowedFields = ["title", "body", "tags", "excerpt", "language", "references", "status"];
+  const allowedFields = ["title", "body", "coverImage", "tags", "excerpt", "language", "references", "status"];
   const data: Record<string, unknown> = {};
   for (const field of allowedFields) {
     if (body[field] !== undefined) data[field] = body[field];
