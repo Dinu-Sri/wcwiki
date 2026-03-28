@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { SearchBox, SearchCategory } from "@/components/search/SearchBox";
+import { UserMenu } from "@/components/auth/UserMenu";
+import Link from "next/link";
 
 export default function Home() {
   const [category, setCategory] = useState<SearchCategory>("all");
@@ -24,71 +26,77 @@ export default function Home() {
   const formatCount = (n: number) => n.toLocaleString();
 
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-4 watercolor-wash min-h-screen relative">
-      {/* Logo & tagline */}
-      <div className="mb-10 text-center animate-fade-in-up">
-        <div className="mb-4 flex items-center justify-center">
-          <img src="/logo.webp" alt="wcWIKI" className="h-20 md:h-28 w-auto" />
+    <main className="flex-1 flex flex-col min-h-screen watercolor-wash relative">
+      {/* Top bar — Google-style: right-aligned auth */}
+      <div className="w-full flex items-center justify-end px-4 sm:px-6 py-3 animate-fade-in-up">
+        <UserMenu />
+      </div>
+
+      {/* Centered content area — pushes to visual center */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 -mt-8">
+        {/* Logo & tagline */}
+        <div className="mb-6 md:mb-8 text-center animate-fade-in-up">
+          <div className="mb-3 flex items-center justify-center">
+            <img src="/logo.webp" alt="wcWIKI" className="h-16 sm:h-20 md:h-24 w-auto" />
+          </div>
+          <p className="text-muted text-sm sm:text-base tracking-wide">
+            The Watercolor Art Encyclopedia
+          </p>
         </div>
-        <p className="text-muted text-base md:text-lg tracking-wide">
-          The Watercolor Art Encyclopedia
-        </p>
-        <div className="mt-3 flex items-center justify-center gap-1.5">
-          <span className="w-8 h-px bg-border"></span>
-          <span className="text-xs text-muted/60 uppercase tracking-widest">Search · Discover · Learn</span>
-          <span className="w-8 h-px bg-border"></span>
+
+        {/* Search Box — Google-style prominent */}
+        <div className="w-full max-w-xl animate-fade-in-up relative z-50" style={{ animationDelay: "100ms" }}>
+          <SearchBox size="large" autoFocus initialCategory={category} />
+        </div>
+
+        {/* Category Tabs — clean pill buttons below search */}
+        <div className="mt-5 flex flex-wrap justify-center gap-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setCategory(tab.value)}
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 ${
+                category === tab.value
+                  ? "bg-primary/10 text-primary border border-primary/30"
+                  : "bg-transparent text-muted border border-border hover:border-primary/30 hover:text-foreground"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={tab.icon} />
+              </svg>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Quick stats — compact, muted */}
+        <div className="mt-10 flex items-center gap-6 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "300ms" }}>
+          <div>
+            <div className="text-lg font-semibold text-foreground">{formatCount(stats.artists)}</div>
+            <div className="text-[11px] text-muted">Artists</div>
+          </div>
+          <div className="w-px h-6 bg-border"></div>
+          <div>
+            <div className="text-lg font-semibold text-foreground">{formatCount(stats.paintings)}</div>
+            <div className="text-[11px] text-muted">Paintings</div>
+          </div>
+          <div className="w-px h-6 bg-border"></div>
+          <div>
+            <div className="text-lg font-semibold text-foreground">{formatCount(stats.articles)}</div>
+            <div className="text-[11px] text-muted">Articles</div>
+          </div>
         </div>
       </div>
 
-      {/* Category Tabs — ABOVE the search box so dropdown won't overlap */}
-      <div className="mb-4 flex gap-2 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setCategory(tab.value)}
-            className={`group flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 ${
-              category === tab.value
-                ? "bg-primary text-white shadow-md shadow-primary/20"
-                : "bg-card text-muted border border-border hover:border-primary/30 hover:text-foreground hover:shadow-sm"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={tab.icon} />
-            </svg>
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Search Box */}
-      <div className="w-full max-w-2xl animate-fade-in-up relative z-50" style={{ animationDelay: "200ms" }}>
-        <SearchBox size="large" autoFocus initialCategory={category} />
-      </div>
-
-      {/* Quick stats — real counts from DB */}
-      <div className="mt-16 flex items-center gap-8 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "300ms" }}>
-        <div>
-          <div className="text-2xl font-bold text-foreground">{formatCount(stats.artists)}</div>
-          <div className="text-xs text-muted mt-0.5">Artists</div>
+      {/* Bottom footer — Google-style */}
+      <footer className="border-t border-border bg-surface/50">
+        <div className="px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted/70">
+          <p>© {new Date().getFullYear()} wcWIKI.com</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Use</Link>
+          </div>
         </div>
-        <div className="w-px h-8 bg-border"></div>
-        <div>
-          <div className="text-2xl font-bold text-foreground">{formatCount(stats.paintings)}</div>
-          <div className="text-xs text-muted mt-0.5">Paintings</div>
-        </div>
-        <div className="w-px h-8 bg-border"></div>
-        <div>
-          <div className="text-2xl font-bold text-foreground">{formatCount(stats.articles)}</div>
-          <div className="text-xs text-muted mt-0.5">Articles</div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="mt-auto py-8 text-center text-xs text-muted/60">
-        <p>
-          © {new Date().getFullYear()} wcWIKI.com — A community-driven
-          watercolor encyclopedia
-        </p>
       </footer>
     </main>
   );

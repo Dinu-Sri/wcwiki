@@ -22,9 +22,9 @@ export default async function ArticlesPage() {
   return (
     <>
       <Header />
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8">
         {/* Breadcrumb */}
-        <nav className="text-xs text-muted mb-6 flex items-center gap-1.5">
+        <nav className="text-xs text-muted mb-4 sm:mb-6 flex items-center gap-1.5">
           <Link href="/" className="hover:text-primary transition-colors">
             Home
           </Link>
@@ -32,10 +32,10 @@ export default async function ArticlesPage() {
           <span className="text-foreground">Articles</span>
         </nav>
 
-        <h1 className="text-3xl font-bold text-foreground mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Articles
         </h1>
-        <p className="text-muted mb-8">
+        <p className="text-sm sm:text-base text-muted mb-6 sm:mb-8">
           {articles.length} articles on watercolor art
         </p>
 

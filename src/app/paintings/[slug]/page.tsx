@@ -4,6 +4,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { EditHistoryButton } from "@/components/EditHistoryButton";
 
 export const dynamic = "force-dynamic";
 
@@ -104,9 +105,9 @@ export default async function PaintingPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Header />
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8">
         {/* Breadcrumb */}
-        <nav className="text-xs text-muted mb-6 flex items-center gap-1.5">
+        <nav className="text-xs text-muted mb-4 sm:mb-6 flex items-center gap-1.5 overflow-x-auto">
           <Link href="/" className="hover:text-primary transition-colors">
             Home
           </Link>
@@ -120,6 +121,17 @@ export default async function PaintingPage({ params }: Props) {
           <span>›</span>
           <span className="text-foreground">{painting.title}</span>
         </nav>
+
+        {/* Edit Actions */}
+        <div className="flex items-center gap-3 mb-6">
+          <Link
+            href={`/edit/painting/${painting.slug}`}
+            className="text-xs text-primary hover:underline"
+          >
+            Edit this page
+          </Link>
+          <EditHistoryButton entityType="PAINTING" entityId={painting.id} />
+        </div>
 
         {/* Main image */}
         {painting.images.length > 0 && (

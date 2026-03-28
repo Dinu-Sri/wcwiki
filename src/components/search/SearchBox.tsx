@@ -190,11 +190,11 @@ export function SearchBox({
 
   const sizeClasses =
     size === "large"
-      ? "py-4 md:py-5 text-base md:text-lg pl-13 pr-13"
-      : "py-2.5 md:py-3 text-sm md:text-base pl-11 pr-11";
+      ? "py-3 sm:py-4 text-sm sm:text-base pl-11 sm:pl-13 pr-11 sm:pr-13"
+      : "py-2.5 text-sm pl-10 sm:pl-11 pr-10 sm:pr-11";
 
-  const iconSize = size === "large" ? "w-5 h-5" : "w-4 h-4";
-  const iconLeft = size === "large" ? "left-5" : "left-4";
+  const iconSize = size === "large" ? "w-4 h-4 sm:w-5 sm:h-5" : "w-4 h-4";
+  const iconLeft = size === "large" ? "left-3.5 sm:left-5" : "left-3 sm:left-4";
 
   return (
     <div ref={containerRef} className="relative w-full">

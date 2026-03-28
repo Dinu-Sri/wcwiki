@@ -72,12 +72,15 @@ model User {
   articles      Article[]
   artistClaims  ArtistClaim[]
   artistProfile Artist?
+  edits         EditHistory[] @relation("EditAuthor")
+  reviews       EditHistory[] @relation("EditReviewer")
 }
 
 enum UserRole {
   USER
   EDITOR
-  ADMIN
+  APPROVER
+  SUPER_ADMIN
 }
 
 // ─── Artist ────────────────────────────────────────────────────────────────
@@ -205,4 +208,41 @@ enum TagCategory {
   TECHNIQUE
   SUBJECT
   MEDIUM
+}
+
+// ─── Edit History ──────────────────────────────────────────────────────────
+
+model EditHistory {
+  id         String     @id @default(cuid())
+  entityType EntityType
+  entityId   String
+  field      String // e.g., "bio", "title", "body"
+  oldValue   String?    @db.Text
+  newValue   String?    @db.Text
+  status     EditStatus @default(PENDING)
+
+  userId     String
+  user       User       @relation("EditAuthor", fields: [userId], references: [id], onDelete: Cascade)
+
+  reviewedById String?
+  reviewedBy   User?      @relation("EditReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum EntityType {
+  ARTIST
+  PAINTING
+  ARTICLE
+}
+
+enum EditStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

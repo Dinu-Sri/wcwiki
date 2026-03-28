@@ -22,7 +22,7 @@ async function main() {
     create: {
       email: "admin@wcwiki.com",
       name: "wcWIKI Admin",
-      role: "ADMIN",
+      role: "SUPER_ADMIN",
     },
   });
   console.log(`✓ Admin user: ${admin.email}`);

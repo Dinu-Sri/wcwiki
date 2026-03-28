@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { SearchBox } from "@/components/search/SearchBox";
+import { UserMenu } from "@/components/auth/UserMenu";
+import { MobileNav } from "@/components/layout/MobileNav";
 
 export function Header() {
   return (
     <header className="glass border-b border-border/60 sticky top-0 z-40">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-5">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center gap-3 sm:gap-5">
+        {/* Mobile menu */}
+        <MobileNav />
+
         {/* Logo */}
         <Link href="/" className="shrink-0 flex items-center gap-2 group">
-          <img src="/logo.webp" alt="wcWIKI" className="h-8 w-auto group-hover:scale-110 transition-transform duration-300" />
+          <img src="/logo.webp" alt="wcWIKI" className="h-7 sm:h-8 w-auto group-hover:scale-110 transition-transform duration-300" />
         </Link>
 
         {/* Search */}
@@ -15,7 +20,7 @@ export function Header() {
           <SearchBox size="default" />
         </div>
 
-        {/* Nav links */}
+        {/* Nav links — desktop only */}
         <nav className="hidden md:flex items-center gap-1 text-sm">
           <Link href="/artists" className="px-3 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-accent transition-all">
             Artists
@@ -27,6 +32,9 @@ export function Header() {
             Articles
           </Link>
         </nav>
+
+        {/* User menu */}
+        <UserMenu />
       </div>
     </header>
   );

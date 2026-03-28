@@ -3,7 +3,7 @@ import Link from "next/link";
 export function Footer() {
   return (
     <footer className="border-t border-border bg-surface mt-auto">
-      <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-8 sm:py-10">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-sm">
           {/* Brand */}
           <div>
@@ -66,7 +66,16 @@ export function Footer() {
 
         <div className="mt-8 pt-5 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted/60">
           <p>© {new Date().getFullYear()} wcWIKI.com — All rights reserved.</p>
-          <p>All artworks are for educational purposes only.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-foreground transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">
+              Terms of Use
+            </Link>
+            <span className="hidden sm:inline">·</span>
+            <p className="hidden sm:inline">All artworks are for educational purposes only.</p>
+          </div>
         </div>
       </div>
     </footer>
