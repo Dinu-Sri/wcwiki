@@ -52,9 +52,8 @@
 > It does NOT show entity cards, direct links, or type indicators.
 > Every suggestion, when clicked, triggers a search — just like Google.
 
-### Suggestion Sources (Priority Order)
-1. **MeiliSearch content** (highest priority) — Artist names, painting titles, article titles, and matching tags extracted from the main search indexes. These are always high-quality because they come from real curated content.
-2. **Popular past queries** (lower priority) — Completed searches from the DB that passed quality filters. These improve over time as user volume grows.
+### Suggestion Source
+- **Past user queries ONLY** — Completed searches from the DB that passed quality filters. No content titles, artist names, painting titles, or tags. This keeps suggestions clean and purely based on real user search behavior, just like Google.
 
 ### Quality Filters for DB Queries
 | Rule | Value | Reason |
@@ -86,25 +85,25 @@ When the user focuses the search box with no input:
 ## 4. What NOT to Do
 
 ### Never
+- Show content titles, artist names, painting titles, or tags in auto-suggest
 - Show entity types (Artist, Painting, Article) in auto-suggest
 - Navigate directly to an entity page from auto-suggest (always search first)
 - Log auto-suggest API calls as search queries
 - Show queries shorter than 3 characters in suggestions
-- Use a separate suggestions MeiliSearch index (query main indexes directly instead)
+- Use MeiliSearch indexes for auto-suggest (only use past DB queries)
 
 ### Avoid
 - Showing partial keystroke queries (e.g., "waterc", "tur") as suggestions
-- Changing suggestion priority (MeiliSearch content first, DB queries second)
+- Adding any non-query data source to suggestions
 - Removing the quality filter without replacing it with something better
 
 ---
 
 ## 5. Scaling Notes (10K+ Queries)
 
-As query volume grows, the DB suggestions will become the primary source since they reflect real user intent. The system is designed for this:
+As query volume grows, the suggestions will naturally improve since they are purely based on real user searches:
 
 - **No code changes needed** — the `MIN_QUERY_COUNT` filter (≥2) naturally surfaces popular queries and hides one-off junk
-- **MeiliSearch content suggestions stay** — they provide suggestions for content that hasn't been searched yet (cold-start coverage)
 - **Consider increasing `MIN_QUERY_COUNT`** to 3-5 when you reach 50K+ queries to keep suggestions clean
 - **90-day window** ensures seasonal/trending relevance without noise from ancient searches
 
