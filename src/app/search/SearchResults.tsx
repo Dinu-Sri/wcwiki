@@ -105,12 +105,8 @@ export default function SearchPage() {
       <div className="glass border-b border-border/60 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
-            <a href="/" className="shrink-0 flex items-center gap-2 group">
-              <img src="/logo.webp" alt="wcWIKI" className="w-7 h-7 group-hover:scale-110 transition-transform duration-300" />
-              <span className="text-xl font-bold">
-                <span className="text-primary">wc</span>
-                <span className="text-foreground">WIKI</span>
-              </span>
+            <a href="/" className="shrink-0 group">
+              <img src="/logo.webp" alt="wcWIKI" className="h-8 w-auto group-hover:scale-110 transition-transform duration-300" />
             </a>
             <div className="flex-1">
               <SearchBox initialQuery={q} initialCategory={category} />

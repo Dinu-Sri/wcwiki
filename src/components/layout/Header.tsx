@@ -7,11 +7,7 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-5">
         {/* Logo */}
         <Link href="/" className="shrink-0 flex items-center gap-2 group">
-          <img src="/logo.webp" alt="wcWIKI" className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
-          <span className="text-xl font-bold">
-            <span className="text-primary">wc</span>
-            <span className="text-foreground">WIKI</span>
-          </span>
+          <img src="/logo.webp" alt="wcWIKI" className="h-8 w-auto group-hover:scale-110 transition-transform duration-300" />
         </Link>
 
         {/* Search */}

@@ -8,8 +8,10 @@ const meili = new MeiliSearch({
 
 const prisma = new PrismaClient();
 
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
 // Wait for Meilisearch to be ready (it may still be starting up)
-async function waitForMeilisearch(retries = 10, delay = 2000) {
+async function waitForMeilisearch(retries = 10, wait = 2000) {
   for (let i = 0; i < retries; i++) {
     try {
       await meili.health();
@@ -17,26 +19,10 @@ async function waitForMeilisearch(retries = 10, delay = 2000) {
       return;
     } catch {
       console.log(`Waiting for Meilisearch... (${i + 1}/${retries})`);
-      await new Promise((r) => setTimeout(r, delay));
+      await delay(wait);
     }
   }
   throw new Error("Meilisearch not available after " + retries + " retries");
-}
-
-// Poll a task until it succeeds or fails
-async function waitForTask(taskUid, timeout = 30000) {
-  const start = Date.now();
-  while (Date.now() - start < timeout) {
-    const task = await meili.getTask(taskUid);
-    if (task.status === "succeeded" || task.status === "failed") {
-      if (task.status === "failed") {
-        console.warn(`Task ${taskUid} failed:`, task.error?.message || "unknown error");
-      }
-      return task;
-    }
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  console.warn(`Task ${taskUid} timed out after ${timeout}ms`);
 }
 
 async function sync() {
@@ -46,38 +32,30 @@ async function sync() {
   try { await meili.deleteIndex("artists"); } catch {}
   try { await meili.deleteIndex("paintings"); } catch {}
   try { await meili.deleteIndex("articles"); } catch {}
+  await delay(2000);
 
-  // Small delay to let deletes process
-  await new Promise((r) => setTimeout(r, 1000));
+  // Create indexes
+  await meili.createIndex("artists", { primaryKey: "id" });
+  await meili.createIndex("paintings", { primaryKey: "id" });
+  await meili.createIndex("articles", { primaryKey: "id" });
+  await delay(2000);
 
-  // Create indexes with proper searchable attributes
-  let task;
-
-  task = await meili.createIndex("artists", { primaryKey: "id" });
-  await waitForTask(task.taskUid);
+  // Set searchable attributes
   await meili.index("artists").updateSearchableAttributes([
     "name", "nationality", "bio", "styles"
   ]);
-
-  task = await meili.createIndex("paintings", { primaryKey: "id" });
-  await waitForTask(task.taskUid);
   await meili.index("paintings").updateSearchableAttributes([
     "title", "artistName", "medium", "description", "tags"
   ]);
-
-  task = await meili.createIndex("articles", { primaryKey: "id" });
-  await waitForTask(task.taskUid);
   await meili.index("articles").updateSearchableAttributes([
     "title", "excerpt", "tags", "authorName"
   ]);
-
-  // Small delay to let settings process
-  await new Promise((r) => setTimeout(r, 1000));
+  await delay(2000);
 
   // Sync artists
   const artists = await prisma.artist.findMany();
   if (artists.length > 0) {
-    const t = await meili.index("artists").addDocuments(
+    await meili.index("artists").addDocuments(
       artists.map((a) => ({
         id: a.id,
         name: a.name,
@@ -90,7 +68,6 @@ async function sync() {
         image: a.image,
       }))
     );
-    await waitForTask(t.taskUid);
   }
   console.log(`Indexed ${artists.length} artists`);
 
@@ -99,7 +76,7 @@ async function sync() {
     include: { artist: true },
   });
   if (paintings.length > 0) {
-    const t = await meili.index("paintings").addDocuments(
+    await meili.index("paintings").addDocuments(
       paintings.map((p) => ({
         id: p.id,
         title: p.title,
@@ -112,7 +89,6 @@ async function sync() {
         artistName: p.artist?.name,
       }))
     );
-    await waitForTask(t.taskUid);
   }
   console.log(`Indexed ${paintings.length} paintings`);
 
@@ -122,7 +98,7 @@ async function sync() {
     include: { author: true },
   });
   if (articles.length > 0) {
-    const t = await meili.index("articles").addDocuments(
+    await meili.index("articles").addDocuments(
       articles.map((a) => ({
         id: a.id,
         title: a.title,
@@ -133,10 +109,11 @@ async function sync() {
         publishedAt: a.publishedAt,
       }))
     );
-    await waitForTask(t.taskUid);
   }
   console.log(`Indexed ${articles.length} articles`);
 
+  // Wait for indexing to complete
+  await delay(3000);
   console.log("Meilisearch sync complete!");
 }
 

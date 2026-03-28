@@ -8,11 +8,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <img src="/logo.webp" alt="wcWIKI" className="w-6 h-6" />
-              <span className="text-lg font-bold">
-                <span className="text-primary">wc</span>
-                <span className="text-foreground">WIKI</span>
-              </span>
+              <img src="/logo.webp" alt="wcWIKI" className="h-6 w-auto" />
             </div>
             <p className="text-muted text-xs leading-relaxed max-w-xs">
               A community-driven watercolor encyclopedia. Explore the beauty of

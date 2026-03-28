@@ -27,12 +27,8 @@ export default function Home() {
     <main className="flex-1 flex flex-col items-center justify-center px-4 watercolor-wash min-h-screen relative">
       {/* Logo & tagline */}
       <div className="mb-10 text-center animate-fade-in-up">
-        <div className="mb-4 flex items-center justify-center gap-3">
-          <img src="/logo.webp" alt="wcWIKI" className="w-14 h-14 md:w-18 md:h-18" />
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            <span className="text-primary">wc</span>
-            <span className="text-foreground">WIKI</span>
-          </h1>
+        <div className="mb-4 flex items-center justify-center">
+          <img src="/logo.webp" alt="wcWIKI" className="h-20 md:h-28 w-auto" />
         </div>
         <p className="text-muted text-base md:text-lg tracking-wide">
           The Watercolor Art Encyclopedia
