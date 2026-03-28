@@ -2,8 +2,8 @@
 set -e
 
 echo "Running database migrations..."
-./node_modules/.bin/prisma db push --skip-generate 2>/dev/null || \
-  node node_modules/prisma/build/index.js db push --skip-generate
+./node_modules/.bin/prisma db push --skip-generate --accept-data-loss 2>/dev/null || \
+  node node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
 
 echo "Seeding initial data..."
 node scripts/seed-data.js || echo "Seed skipped (will retry on next restart)"
