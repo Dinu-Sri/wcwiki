@@ -23,6 +23,22 @@ async function waitForMeilisearch(retries = 10, delay = 2000) {
   throw new Error("Meilisearch not available after " + retries + " retries");
 }
 
+// Poll a task until it succeeds or fails
+async function waitForTask(taskUid, timeout = 30000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const task = await meili.getTask(taskUid);
+    if (task.status === "succeeded" || task.status === "failed") {
+      if (task.status === "failed") {
+        console.warn(`Task ${taskUid} failed:`, task.error?.message || "unknown error");
+      }
+      return task;
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  console.warn(`Task ${taskUid} timed out after ${timeout}ms`);
+}
+
 async function sync() {
   await waitForMeilisearch();
 
@@ -31,26 +47,32 @@ async function sync() {
   try { await meili.deleteIndex("paintings"); } catch {}
   try { await meili.deleteIndex("articles"); } catch {}
 
+  // Small delay to let deletes process
+  await new Promise((r) => setTimeout(r, 1000));
+
   // Create indexes with proper searchable attributes
   let task;
 
   task = await meili.createIndex("artists", { primaryKey: "id" });
-  await meili.waitForTask(task.taskUid);
+  await waitForTask(task.taskUid);
   await meili.index("artists").updateSearchableAttributes([
     "name", "nationality", "bio", "styles"
   ]);
 
   task = await meili.createIndex("paintings", { primaryKey: "id" });
-  await meili.waitForTask(task.taskUid);
+  await waitForTask(task.taskUid);
   await meili.index("paintings").updateSearchableAttributes([
     "title", "artistName", "medium", "description", "tags"
   ]);
 
   task = await meili.createIndex("articles", { primaryKey: "id" });
-  await meili.waitForTask(task.taskUid);
+  await waitForTask(task.taskUid);
   await meili.index("articles").updateSearchableAttributes([
     "title", "excerpt", "tags", "authorName"
   ]);
+
+  // Small delay to let settings process
+  await new Promise((r) => setTimeout(r, 1000));
 
   // Sync artists
   const artists = await prisma.artist.findMany();
@@ -68,7 +90,7 @@ async function sync() {
         image: a.image,
       }))
     );
-    await meili.waitForTask(t.taskUid);
+    await waitForTask(t.taskUid);
   }
   console.log(`Indexed ${artists.length} artists`);
 
@@ -90,7 +112,7 @@ async function sync() {
         artistName: p.artist?.name,
       }))
     );
-    await meili.waitForTask(t.taskUid);
+    await waitForTask(t.taskUid);
   }
   console.log(`Indexed ${paintings.length} paintings`);
 
@@ -111,7 +133,7 @@ async function sync() {
         publishedAt: a.publishedAt,
       }))
     );
-    await meili.waitForTask(t.taskUid);
+    await waitForTask(t.taskUid);
   }
   console.log(`Indexed ${articles.length} articles`);
 

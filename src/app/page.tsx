@@ -28,9 +28,7 @@ export default function Home() {
       {/* Logo & tagline */}
       <div className="mb-10 text-center animate-fade-in-up">
         <div className="mb-4 flex items-center justify-center gap-3">
-          <svg className="w-10 h-10 md:w-12 md:h-12 text-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-          </svg>
+          <img src="/logo.webp" alt="wcWIKI" className="w-14 h-14 md:w-18 md:h-18" />
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             <span className="text-primary">wc</span>
             <span className="text-foreground">WIKI</span>

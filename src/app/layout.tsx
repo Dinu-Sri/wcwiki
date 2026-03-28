@@ -26,6 +26,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com"
   ),
+  icons: {
+    icon: "/favicon.webp",
+    apple: "/favicon.webp",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
