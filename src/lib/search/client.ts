@@ -18,4 +18,5 @@ export const INDEXES = {
   ARTISTS: "artists",
   PAINTINGS: "paintings",
   ARTICLES: "articles",
+  SUGGESTIONS: "suggestions",
 } as const;

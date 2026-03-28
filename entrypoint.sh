@@ -8,5 +8,8 @@ echo "Running database migrations..."
 echo "Syncing data to Meilisearch..."
 node scripts/sync-meilisearch.js || echo "Meilisearch sync skipped (will retry on next restart)"
 
+echo "Starting daily aggregation scheduler..."
+node scripts/daily-aggregate.js &
+
 echo "Starting server..."
 exec node server.js

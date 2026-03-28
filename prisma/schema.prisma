@@ -321,6 +321,8 @@ model SearchQuery {
   @@index([query])
   @@index([createdAt])
   @@index([country])
+  @@index([category])
+  @@index([query, createdAt])
 }
 
 model SearchAggregate {
@@ -331,8 +333,9 @@ model SearchAggregate {
   count    Int    @default(0)
   results  Int    @default(0) // average results
   country  String?
+  category String @default("all")
 
-  @@unique([query, period, periodAt, country])
+  @@unique([query, period, periodAt, country, category])
   @@index([periodAt])
   @@index([count])
 }

@@ -1,5 +1,6 @@
 import { meili, INDEXES } from "./client";
 import { db } from "@/lib/db";
+import { stripHtml } from "./utils";
 
 // ─── Configure Index Settings ──────────────────────────────────────────────
 
@@ -45,9 +46,24 @@ export async function configureIndexes() {
   // Articles index
   const articles = meili.index(INDEXES.ARTICLES);
   await articles.updateSettings({
-    searchableAttributes: ["title", "excerpt", "tags", "authorName"],
+    searchableAttributes: ["title", "excerpt", "content", "tags", "authorName"],
     filterableAttributes: ["tags", "language", "authorName"],
     sortableAttributes: ["title", "publishedAt", "createdAt"],
+    rankingRules: [
+      "words",
+      "typo",
+      "proximity",
+      "attribute",
+      "sort",
+      "exactness",
+    ],
+  });
+
+  // Suggestions index
+  const suggestions = meili.index(INDEXES.SUGGESTIONS);
+  await suggestions.updateSettings({
+    searchableAttributes: ["text"],
+    filterableAttributes: ["type"],
     rankingRules: [
       "words",
       "typo",
@@ -164,6 +180,7 @@ export async function syncAllArticles() {
     title: article.title,
     slug: article.slug,
     excerpt: article.excerpt || "",
+    content: stripHtml(article.body),
     authorName: article.author.name || "Anonymous",
     tags: article.tags,
     language: article.language,
@@ -187,6 +204,7 @@ export async function syncArticle(articleId: string) {
       title: article.title,
       slug: article.slug,
       excerpt: article.excerpt || "",
+      content: stripHtml(article.body),
       authorName: article.author.name || "Anonymous",
       tags: article.tags,
       language: article.language,
@@ -200,6 +218,69 @@ export async function removeArticle(articleId: string) {
   await meili.index(INDEXES.ARTICLES).deleteDocument(articleId);
 }
 
+// ─── Sync Suggestions ──────────────────────────────────────────────────────
+
+export async function syncSuggestions() {
+  const [artists, paintings, articles, popularQueries] = await Promise.all([
+    db.artist.findMany({ select: { id: true, name: true, slug: true } }),
+    db.painting.findMany({
+      select: { id: true, title: true, slug: true, tags: true },
+    }),
+    db.article.findMany({
+      where: { status: "APPROVED" },
+      select: { id: true, title: true, slug: true, excerpt: true, tags: true },
+    }),
+    db.searchQuery.groupBy({
+      by: ["query"],
+      _count: { query: true },
+      orderBy: { _count: { query: "desc" } },
+      take: 200,
+    }),
+  ]);
+
+  const docs: { id: string; text: string; type: string; sourceSlug?: string }[] = [];
+
+  // Artist names
+  for (const a of artists) {
+    docs.push({ id: `artist-${a.id}`, text: a.name, type: "artist", sourceSlug: `/artists/${a.slug}` });
+  }
+
+  // Painting titles
+  for (const p of paintings) {
+    docs.push({ id: `painting-${p.id}`, text: p.title, type: "painting", sourceSlug: `/paintings/${p.slug}` });
+    for (const tag of p.tags) {
+      const tagId = `tag-painting-${tag}`;
+      if (!docs.find((d) => d.id === tagId)) {
+        docs.push({ id: tagId, text: tag, type: "tag" });
+      }
+    }
+  }
+
+  // Article titles + excerpt snippets
+  for (const a of articles) {
+    docs.push({ id: `article-${a.id}`, text: a.title, type: "article", sourceSlug: `/articles/${a.slug}` });
+    if (a.excerpt) {
+      docs.push({ id: `excerpt-${a.id}`, text: a.excerpt, type: "article", sourceSlug: `/articles/${a.slug}` });
+    }
+    for (const tag of a.tags) {
+      const tagId = `tag-article-${tag}`;
+      if (!docs.find((d) => d.id === tagId)) {
+        docs.push({ id: tagId, text: tag, type: "tag" });
+      }
+    }
+  }
+
+  // Popular queries
+  for (const q of popularQueries) {
+    const qId = `query-${q.query.replace(/\W+/g, "-")}`;
+    if (!docs.find((d) => d.id === qId)) {
+      docs.push({ id: qId, text: q.query, type: "query" });
+    }
+  }
+
+  await meili.index(INDEXES.SUGGESTIONS).addDocuments(docs);
+}
+
 // ─── Full Reindex ──────────────────────────────────────────────────────────
 
 export async function reindexAll() {
@@ -208,6 +289,7 @@ export async function reindexAll() {
     meili.index(INDEXES.ARTISTS).deleteAllDocuments(),
     meili.index(INDEXES.PAINTINGS).deleteAllDocuments(),
     meili.index(INDEXES.ARTICLES).deleteAllDocuments(),
+    meili.index(INDEXES.SUGGESTIONS).deleteAllDocuments(),
   ]);
 
   // Configure and sync
@@ -216,5 +298,6 @@ export async function reindexAll() {
     syncAllArtists(),
     syncAllPaintings(),
     syncAllArticles(),
+    syncSuggestions(),
   ]);
 }

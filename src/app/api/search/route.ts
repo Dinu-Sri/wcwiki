@@ -32,6 +32,13 @@ export async function GET(request: NextRequest) {
     attributesToHighlight: ["*"],
     highlightPreTag: "<mark>",
     highlightPostTag: "</mark>",
+    matchingStrategy: "frequency" as const,
+  };
+
+  const articleSearchOptions = {
+    ...searchOptions,
+    attributesToCrop: ["content"],
+    cropLength: 30,
   };
 
   if (category === "all") {
@@ -46,7 +53,7 @@ export async function GET(request: NextRequest) {
         .catch(() => ({ hits: [], estimatedTotalHits: 0 })),
       meili
         .index(INDEXES.ARTICLES)
-        .search(query, { ...searchOptions, limit: 5 })
+        .search(query, { ...articleSearchOptions, limit: 5 })
         .catch(() => ({ hits: [], estimatedTotalHits: 0 })),
     ]);
 
@@ -74,7 +81,8 @@ export async function GET(request: NextRequest) {
         : INDEXES.ARTICLES;
 
   try {
-    const results = await meili.index(indexName).search(query, searchOptions);
+    const opts = indexName === INDEXES.ARTICLES ? articleSearchOptions : searchOptions;
+    const results = await meili.index(indexName).search(query, opts);
 
     // Log search (fire-and-forget)
     logSearch(query, category, results.estimatedTotalHits || 0, request);

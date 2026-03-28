@@ -25,8 +25,8 @@ export function SearchBox({
 
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<SearchCategory>(initialCategory);
-  const [suggestions, setSuggestions] = useState<{ query: string; count: number }[]>([]);
-  const [trending, setTrending] = useState<{ query: string; count: number }[]>([]);
+  const [suggestions, setSuggestions] = useState<{ text: string; type: string; sourceSlug: string | null; highlighted: string; count?: number }[]>([]);
+  const [trending, setTrending] = useState<{ text: string; type: string; sourceSlug: string | null; highlighted: string; count?: number }[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [mode, setMode] = useState<"trending" | "suggestions">("trending");
   const trendingFetchedRef = useRef(false);
@@ -100,6 +100,17 @@ export function SearchBox({
     }, 150);
   };
 
+  const handleSuggestionClick = (item: typeof dropdownItems[number]) => {
+    if (item.sourceSlug) {
+      setShowDropdown(false);
+      router.push(item.sourceSlug);
+    } else {
+      setQuery(item.text);
+      setShowDropdown(false);
+      navigateToSearch(item.text);
+    }
+  };
+
   const navigateToSearch = (searchQuery?: string) => {
     const q = searchQuery || query;
     if (!q.trim()) return;
@@ -133,9 +144,8 @@ export function SearchBox({
       case "Enter":
         e.preventDefault();
         if (activeIndex >= 0 && activeIndex < dropdownItems.length) {
-          const selected = dropdownItems[activeIndex].query;
-          setQuery(selected);
-          navigateToSearch(selected);
+          const selected = dropdownItems[activeIndex];
+          handleSuggestionClick(selected);
         } else {
           navigateToSearch();
         }
@@ -213,7 +223,7 @@ export function SearchBox({
             }
           }}
           onMouseDown={() => { userInteractedRef.current = true; }}
-          placeholder="Search artists, paintings, articles…"
+          placeholder='Search artists, paintings, articles… Use "quotes" for exact phrases'
           className={`w-full ${sizeClasses} rounded-2xl border border-border bg-card text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 focus:shadow-md transition-all duration-200 placeholder:text-muted/50 ${
             showDropdown && dropdownItems.length > 0 ? "rounded-b-none border-b-transparent shadow-md" : ""
           }`}
@@ -265,12 +275,8 @@ export function SearchBox({
           </div>
           {dropdownItems.slice(0, 8).map((item, idx) => (
             <button
-              key={item.query}
-              onClick={() => {
-                setQuery(item.query);
-                setShowDropdown(false);
-                navigateToSearch(item.query);
-              }}
+              key={`${item.type}-${item.text}-${idx}`}
+              onClick={() => handleSuggestionClick(item)}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 ${
                 idx === activeIndex
                   ? "bg-primary/8 border-l-2 border-l-primary"
@@ -279,12 +285,45 @@ export function SearchBox({
               role="option"
               aria-selected={idx === activeIndex}
             >
-              <svg className="w-4 h-4 text-muted/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span className="text-sm text-foreground truncate">{item.query}</span>
-              {mode === "trending" && (
+              {/* Type-specific icons */}
+              {item.type === "artist" ? (
+                <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              ) : item.type === "painting" ? (
+                <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              ) : item.type === "article" ? (
+                <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              ) : item.type === "tag" ? (
+                <svg className="w-4 h-4 text-purple-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-muted/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mode === "trending" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  )}
+                </svg>
+              )}
+              <span className="flex-1 min-w-0">
+                <span className="text-sm text-foreground truncate block">{item.text}</span>
+                {item.type !== "trending" && item.type !== "query" && (
+                  <span className="text-[11px] text-muted/60 capitalize">{item.type}</span>
+                )}
+              </span>
+              {mode === "trending" && item.count && (
                 <span className="text-xs text-muted/60 ml-auto shrink-0">{item.count} searches</span>
+              )}
+              {item.sourceSlug && (
+                <svg className="w-3.5 h-3.5 text-muted/40 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               )}
             </button>
           ))}

@@ -10,6 +10,21 @@ const prisma = new PrismaClient();
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Simple HTML-to-text for indexing article body content
+function stripHtml(html) {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // Wait for Meilisearch to be ready (it may still be starting up)
 async function waitForMeilisearch(retries = 10, wait = 2000) {
   for (let i = 0; i < retries; i++) {
@@ -32,12 +47,14 @@ async function sync() {
   try { await meili.deleteIndex("artists"); } catch {}
   try { await meili.deleteIndex("paintings"); } catch {}
   try { await meili.deleteIndex("articles"); } catch {}
+  try { await meili.deleteIndex("suggestions"); } catch {}
   await delay(2000);
 
   // Create indexes
   await meili.createIndex("artists", { primaryKey: "id" });
   await meili.createIndex("paintings", { primaryKey: "id" });
   await meili.createIndex("articles", { primaryKey: "id" });
+  await meili.createIndex("suggestions", { primaryKey: "id" });
   await delay(2000);
 
   // Set searchable attributes
@@ -48,7 +65,13 @@ async function sync() {
     "title", "artistName", "medium", "description", "tags"
   ]);
   await meili.index("articles").updateSearchableAttributes([
-    "title", "excerpt", "tags", "authorName"
+    "title", "excerpt", "content", "tags", "authorName"
+  ]);
+  await meili.index("suggestions").updateSearchableAttributes([
+    "text"
+  ]);
+  await meili.index("suggestions").updateFilterableAttributes([
+    "type"
   ]);
   await delay(2000);
 
@@ -104,6 +127,7 @@ async function sync() {
         title: a.title,
         slug: a.slug,
         excerpt: a.excerpt,
+        content: stripHtml(a.body),
         tags: a.tags,
         authorName: a.author?.name,
         publishedAt: a.publishedAt,
@@ -111,6 +135,37 @@ async function sync() {
     );
   }
   console.log(`Indexed ${articles.length} articles`);
+
+  // Build and sync suggestions index
+  const suggestionDocs = [];
+  for (const a of artists) {
+    suggestionDocs.push({ id: `artist-${a.id}`, text: a.name, type: "artist", sourceSlug: `/artists/${a.slug}` });
+  }
+  for (const p of paintings) {
+    suggestionDocs.push({ id: `painting-${p.id}`, text: p.title, type: "painting", sourceSlug: `/paintings/${p.slug}` });
+    for (const tag of (p.tags || [])) {
+      const tagId = `tag-painting-${tag}`;
+      if (!suggestionDocs.find((d) => d.id === tagId)) {
+        suggestionDocs.push({ id: tagId, text: tag, type: "tag" });
+      }
+    }
+  }
+  for (const a of articles) {
+    suggestionDocs.push({ id: `article-${a.id}`, text: a.title, type: "article", sourceSlug: `/articles/${a.slug}` });
+    if (a.excerpt) {
+      suggestionDocs.push({ id: `excerpt-${a.id}`, text: a.excerpt, type: "article", sourceSlug: `/articles/${a.slug}` });
+    }
+    for (const tag of (a.tags || [])) {
+      const tagId = `tag-article-${tag}`;
+      if (!suggestionDocs.find((d) => d.id === tagId)) {
+        suggestionDocs.push({ id: tagId, text: tag, type: "tag" });
+      }
+    }
+  }
+  if (suggestionDocs.length > 0) {
+    await meili.index("suggestions").addDocuments(suggestionDocs);
+  }
+  console.log(`Indexed ${suggestionDocs.length} suggestions`);
 
   // Wait for indexing to complete
   await delay(3000);
