@@ -187,6 +187,188 @@ async function seed() {
   } else {
     console.log(`Articles already exist (${articleCount}), skipping`);
   }
+
+  // Seed paintings if none exist
+  const paintingCount = await prisma.painting.count();
+  if (paintingCount === 0) {
+    // Look up artist IDs
+    const artistMap = {};
+    const allArtists = await prisma.artist.findMany({ select: { id: true, slug: true } });
+    for (const a of allArtists) artistMap[a.slug] = a.id;
+
+    const paintings = [
+      {
+        title: "Water Lilies",
+        slug: "water-lilies-monet",
+        artistSlug: "claude-monet",
+        description: "One of approximately 250 oil and watercolor paintings of Monet's flower garden at Giverny.",
+        medium: "Watercolor",
+        year: 1906,
+        tags: ["impressionism", "flowers", "garden", "series"],
+      },
+      {
+        title: "Impression, Sunrise",
+        slug: "impression-sunrise",
+        artistSlug: "claude-monet",
+        description: "The painting that gave Impressionism its name. A hazy harbor scene at Le Havre.",
+        medium: "Oil on canvas",
+        year: 1872,
+        tags: ["impressionism", "harbor", "sunrise"],
+      },
+      {
+        title: "The Fighting Temeraire",
+        slug: "fighting-temeraire",
+        artistSlug: "jmw-turner",
+        description: "A warship being towed to be broken up, symbolizing the passing of the age of sail.",
+        medium: "Oil on canvas",
+        year: 1839,
+        tags: ["romanticism", "maritime", "ships"],
+      },
+      {
+        title: "Rain, Steam and Speed",
+        slug: "rain-steam-speed",
+        artistSlug: "jmw-turner",
+        description: "A Great Western Railway locomotive crossing the Thames on Maidenhead Railway Bridge in rain.",
+        medium: "Oil on canvas",
+        year: 1844,
+        tags: ["romanticism", "landscape", "train", "weather"],
+      },
+      {
+        title: "The Blue Rigi, Sunrise",
+        slug: "blue-rigi-sunrise",
+        artistSlug: "jmw-turner",
+        description: "A masterful watercolor depicting Lake Lucerne at sunrise with the Rigi mountain in blue haze.",
+        medium: "Watercolor",
+        year: 1842,
+        tags: ["watercolor", "landscape", "mountain", "sunrise"],
+      },
+      {
+        title: "Breezing Up (A Fair Wind)",
+        slug: "breezing-up",
+        artistSlug: "winslow-homer",
+        description: "Boys sailing a catboat in choppy waters, one of Homer's most celebrated works.",
+        medium: "Oil on canvas",
+        year: 1876,
+        tags: ["realism", "marine", "sailing"],
+      },
+      {
+        title: "The Gulf Stream",
+        slug: "the-gulf-stream",
+        artistSlug: "winslow-homer",
+        description: "A lone man on a small dismasted boat surrounded by sharks and an approaching waterspout.",
+        medium: "Watercolor & Oil",
+        year: 1899,
+        tags: ["realism", "marine", "drama"],
+      },
+      {
+        title: "Sloop, Nassau",
+        slug: "sloop-nassau",
+        artistSlug: "winslow-homer",
+        description: "A brilliant watercolor of a sloop in the clear turquoise waters of the Bahamas.",
+        medium: "Watercolor",
+        year: 1899,
+        tags: ["watercolor", "marine", "bahamas"],
+      },
+      {
+        title: "Venetian Canal",
+        slug: "venetian-canal-sargent",
+        artistSlug: "john-singer-sargent",
+        description: "A luminous watercolor capturing the play of light on Venetian architecture and water.",
+        medium: "Watercolor",
+        year: 1913,
+        tags: ["watercolor", "venice", "architecture"],
+      },
+      {
+        title: "Mountain Fire",
+        slug: "mountain-fire-sargent",
+        artistSlug: "john-singer-sargent",
+        description: "A dramatic watercolor landscape showing a mountain scene with brilliant light effects.",
+        medium: "Watercolor",
+        year: 1903,
+        tags: ["watercolor", "landscape", "mountain"],
+      },
+      {
+        title: "Mont Sainte-Victoire",
+        slug: "mont-sainte-victoire",
+        artistSlug: "paul-cezanne",
+        description: "One of many paintings of this mountain, showing Cézanne's approach to form and color.",
+        medium: "Watercolor",
+        year: 1902,
+        tags: ["post-impressionism", "landscape", "mountain"],
+      },
+      {
+        title: "The Large Piece of Turf",
+        slug: "large-piece-of-turf",
+        artistSlug: "albrecht-durer",
+        description: "An extraordinarily detailed watercolor study of a patch of wild plants and grasses.",
+        medium: "Watercolor & Gouache",
+        year: 1503,
+        tags: ["renaissance", "botanical", "nature study"],
+      },
+      {
+        title: "Young Hare",
+        slug: "young-hare-durer",
+        artistSlug: "albrecht-durer",
+        description: "One of the most famous watercolor studies in art history, depicting a hare with astonishing detail.",
+        medium: "Watercolor & Gouache",
+        year: 1502,
+        tags: ["renaissance", "animal study", "masterwork"],
+      },
+      {
+        title: "Carolina Parakeet",
+        slug: "carolina-parakeet",
+        artistSlug: "john-james-audubon",
+        description: "A vibrant watercolor illustration of the now-extinct Carolina parakeet from Birds of America.",
+        medium: "Watercolor",
+        year: 1833,
+        tags: ["ornithological", "birds", "naturalism"],
+      },
+      {
+        title: "Red Canna",
+        slug: "red-canna-okeeffe",
+        artistSlug: "georgia-okeeffe",
+        description: "A bold, close-up watercolor study of a red canna lily, showing O'Keeffe's signature magnified flora.",
+        medium: "Watercolor",
+        year: 1924,
+        tags: ["modernism", "flowers", "close-up"],
+      },
+      {
+        title: "Wildly Dancing Waves",
+        slug: "wildly-dancing-waves",
+        artistSlug: "emil-nolde",
+        description: "An expressive watercolor seascape with dramatic, turbulent waves in vivid blues and greens.",
+        medium: "Watercolor",
+        year: 1930,
+        tags: ["expressionism", "seascape", "waves"],
+      },
+      {
+        title: "The Lighthouse at Two Lights",
+        slug: "lighthouse-two-lights",
+        artistSlug: "edward-hopper",
+        description: "A watercolor of the Cape Elizabeth lighthouse in Maine, showing Hopper's mastery of light and shadow.",
+        medium: "Watercolor",
+        year: 1929,
+        tags: ["realism", "lighthouse", "american scene"],
+      },
+    ];
+
+    for (const p of paintings) {
+      const artistId = artistMap[p.artistSlug];
+      if (!artistId) {
+        console.log(`Skipping painting "${p.title}" — artist ${p.artistSlug} not found`);
+        continue;
+      }
+      const { artistSlug, ...data } = p;
+      await prisma.painting.upsert({
+        where: { slug: data.slug },
+        update: {},
+        create: { ...data, artistId },
+      });
+    }
+    console.log(`Seeded ${paintings.length} paintings`);
+  } else {
+    console.log(`Paintings already exist (${paintingCount}), skipping`);
+  }
 }
 
 seed()

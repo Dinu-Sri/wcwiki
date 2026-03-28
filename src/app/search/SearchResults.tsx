@@ -165,7 +165,7 @@ export default function SearchPage() {
         {/* Results */}
         {!isLoading && (
           <div className="space-y-10 stagger-children">
-            {/* Artists section */}
+            {/* Artists section — single column, Google-style */}
             {artists.length > 0 && (
               <section>
                 {category === "all" && (
@@ -189,7 +189,7 @@ export default function SearchPage() {
                     </button>
                   </div>
                 )}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
                   {artists.map((artist: Record<string, unknown>) => (
                     <ArtistCard
                       key={artist.id as string}
@@ -198,7 +198,7 @@ export default function SearchPage() {
                       nationality={artist.nationality as string}
                       birthYear={artist.birthYear as number}
                       deathYear={artist.deathYear as number}
-                      image={artist.image as string}
+                      bio={artist.bio as string}
                       styles={artist.styles as string[]}
                       _formatted={artist._formatted as Record<string, string>}
                     />
@@ -207,7 +207,7 @@ export default function SearchPage() {
               </section>
             )}
 
-            {/* Paintings section */}
+            {/* Paintings section — Google Images grid */}
             {paintings.length > 0 && (
               <section>
                 {category === "all" && (
@@ -231,7 +231,7 @@ export default function SearchPage() {
                     </button>
                   </div>
                 )}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                   {paintings.map((painting: Record<string, unknown>) => (
                     <PaintingCard
                       key={painting.id as string}
@@ -248,7 +248,7 @@ export default function SearchPage() {
               </section>
             )}
 
-            {/* Articles section */}
+            {/* Articles section — single column, Google-style */}
             {articles.length > 0 && (
               <section>
                 {category === "all" && (
@@ -272,16 +272,13 @@ export default function SearchPage() {
                     </button>
                   </div>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
                   {articles.map((article: Record<string, unknown>) => (
                     <ArticleCard
                       key={article.id as string}
                       slug={article.slug as string}
                       title={article.title as string}
                       excerpt={article.excerpt as string}
-                      authorName={article.authorName as string}
-                      publishedAt={article.publishedAt as string}
-                      tags={article.tags as string[]}
                       _formatted={article._formatted as Record<string, string>}
                     />
                   ))}

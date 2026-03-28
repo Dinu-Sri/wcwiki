@@ -25,15 +25,50 @@ async function waitForMeilisearch(retries = 10, delay = 2000) {
 
 async function sync() {
   await waitForMeilisearch();
+
+  // Delete existing indexes to ensure clean state
+  try { await meili.deleteIndex("artists"); } catch {}
+  try { await meili.deleteIndex("paintings"); } catch {}
+  try { await meili.deleteIndex("articles"); } catch {}
+
+  // Create indexes with proper searchable attributes
+  let task;
+
+  task = await meili.createIndex("artists", { primaryKey: "id" });
+  await meili.waitForTask(task.taskUid);
+  await meili.index("artists").updateSearchableAttributes([
+    "name", "nationality", "bio", "styles"
+  ]);
+
+  task = await meili.createIndex("paintings", { primaryKey: "id" });
+  await meili.waitForTask(task.taskUid);
+  await meili.index("paintings").updateSearchableAttributes([
+    "title", "artistName", "medium", "description", "tags"
+  ]);
+
+  task = await meili.createIndex("articles", { primaryKey: "id" });
+  await meili.waitForTask(task.taskUid);
+  await meili.index("articles").updateSearchableAttributes([
+    "title", "excerpt", "tags", "authorName"
+  ]);
+
   // Sync artists
   const artists = await prisma.artist.findMany();
   if (artists.length > 0) {
-    await meili.index("artists").addDocuments(
-      artists.map((a) => ({ ...a, id: a.id }))
+    const t = await meili.index("artists").addDocuments(
+      artists.map((a) => ({
+        id: a.id,
+        name: a.name,
+        slug: a.slug,
+        bio: a.bio,
+        nationality: a.nationality,
+        birthYear: a.birthYear,
+        deathYear: a.deathYear,
+        styles: a.styles,
+        image: a.image,
+      }))
     );
-  } else {
-    // Create empty index so searches don't 404
-    await meili.createIndex("artists", { primaryKey: "id" });
+    await meili.waitForTask(t.taskUid);
   }
   console.log(`Indexed ${artists.length} artists`);
 
@@ -42,15 +77,20 @@ async function sync() {
     include: { artist: true },
   });
   if (paintings.length > 0) {
-    await meili.index("paintings").addDocuments(
+    const t = await meili.index("paintings").addDocuments(
       paintings.map((p) => ({
-        ...p,
-        artistName: p.artist?.name,
         id: p.id,
+        title: p.title,
+        slug: p.slug,
+        description: p.description,
+        medium: p.medium,
+        year: p.year,
+        tags: p.tags,
+        images: p.images,
+        artistName: p.artist?.name,
       }))
     );
-  } else {
-    await meili.createIndex("paintings", { primaryKey: "id" });
+    await meili.waitForTask(t.taskUid);
   }
   console.log(`Indexed ${paintings.length} paintings`);
 
@@ -60,7 +100,7 @@ async function sync() {
     include: { author: true },
   });
   if (articles.length > 0) {
-    await meili.index("articles").addDocuments(
+    const t = await meili.index("articles").addDocuments(
       articles.map((a) => ({
         id: a.id,
         title: a.title,
@@ -71,8 +111,7 @@ async function sync() {
         publishedAt: a.publishedAt,
       }))
     );
-  } else {
-    await meili.createIndex("articles", { primaryKey: "id" });
+    await meili.waitForTask(t.taskUid);
   }
   console.log(`Indexed ${articles.length} articles`);
 
