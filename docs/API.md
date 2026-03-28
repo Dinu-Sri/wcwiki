@@ -225,6 +225,7 @@ Content-Type: application/json
 {
   "title": "Watercolor Techniques for Beginners",  // required
   "body": "<p>Rich HTML content...</p>",            // required
+  "coverImage": "/uploads/articles/cover.webp",
   "tags": ["technique", "beginner"],
   "excerpt": "A comprehensive guide to...",
   "language": "en",
@@ -234,6 +235,17 @@ Content-Type: application/json
 ```
 
 Articles default to `DRAFT` status. Set `status: "APPROVED"` to publish immediately.
+
+**Embedding images in article body:** Use standard HTML `<img>` tags in the `body` field:
+
+```html
+<figure>
+  <img src="/uploads/articles/my-image.webp" alt="Description" style="max-width:100%;" />
+  <figcaption>Caption text</figcaption>
+</figure>
+```
+
+Upload the image first via `POST /api/v1/upload`, then use the returned `url` in your HTML.
 
 **Permission:** `write`
 
@@ -245,13 +257,14 @@ Content-Type: application/json
 
 {
   "body": "<p>Updated content...</p>",
+  "coverImage": "/uploads/articles/new-cover.webp",
   "status": "APPROVED"
 }
 ```
 
 Setting `status` to `APPROVED` auto-sets `publishedAt`.
 
-**Updatable fields:** `title`, `body`, `tags`, `excerpt`, `language`, `references`, `status`
+**Updatable fields:** `title`, `body`, `coverImage`, `tags`, `excerpt`, `language`, `references`, `status`
 
 **Permission:** `write`
 
@@ -265,17 +278,105 @@ DELETE /api/v1/articles/{id}
 
 ---
 
-## Media
+## Media / Upload
 
-### List Media
+### Upload Image
+
+Upload an image file from your local machine. Returns the hosted URL.
 
 ```
-GET /api/v1/media?limit=20&offset=0&subfolder=paintings
+POST /api/v1/upload
+Content-Type: multipart/form-data
+
+Form fields:
+  file       — (required) The image file (JPEG, PNG, WebP, GIF, AVIF, max 10MB)
+  subfolder  — (optional) Where to store: "paintings", "articles", "general", "profiles" (default: "general")
+  alt        — (optional) Alt text for the image
+```
+
+**Response (201):**
+
+```json
+{
+  "data": {
+    "id": "clxyz123",
+    "url": "/uploads/paintings/my-image_1711234567890.webp",
+    "width": 800,
+    "height": 600,
+    "size": 45230,
+    "format": "webp"
+  }
+}
+```
+
+Images are automatically converted to WebP, resized to max 2000px width, quality 80.
+
+**Permission:** `write`
+
+**Example (curl):**
+
+```bash
+curl -X POST http://your-server/api/v1/upload \
+  -H "Authorization: Bearer wk_your_key" \
+  -F "file=@/path/to/painting.jpg" \
+  -F "subfolder=paintings" \
+  -F "alt=Sunset watercolor painting"
+```
+
+**Example (Node.js):**
+
+```javascript
+import fs from 'fs';
+
+const form = new FormData();
+const blob = new Blob([fs.readFileSync('painting.jpg')], { type: 'image/jpeg' });
+form.append('file', blob, 'painting.jpg');
+form.append('subfolder', 'paintings');
+form.append('alt', 'Sunset watercolor');
+
+const res = await fetch('http://your-server/api/v1/upload', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer wk_your_key' },
+  body: form,
+});
+const { data } = await res.json();
+console.log(data.url); // /uploads/paintings/painting_1711234567890.webp
+```
+
+### List Uploaded Media
+
+```
+GET /api/v1/upload?limit=20&offset=0&subfolder=paintings
 ```
 
 **Query Parameters:**
-- `limit`, `offset`
+- `limit` (int, max 100, default 20)
+- `offset` (int, default 0)
 - `subfolder` — filter by folder (e.g., `paintings`, `articles`, `general`)
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "clxyz123",
+      "url": "/uploads/paintings/image_123.webp",
+      "filename": "original-name.jpg",
+      "alt": "Description",
+      "width": 800,
+      "height": 600,
+      "size": 45230,
+      "format": "webp",
+      "subfolder": "paintings",
+      "createdAt": "2026-03-28T10:00:00.000Z"
+    }
+  ],
+  "total": 7,
+  "limit": 20,
+  "offset": 0
+}
+```
 
 **Permission:** `read`
 
@@ -298,3 +399,81 @@ All create/update/delete operations on Artists, Paintings, and Articles automati
 | 403 | Missing required permission |
 | 404 | Resource not found |
 | 500 | Internal server error |
+
+---
+
+## Common Workflows
+
+### Upload an image and attach it to a painting
+
+```bash
+# Step 1: Upload the image
+curl -X POST http://your-server/api/v1/upload \
+  -H "Authorization: Bearer wk_your_key" \
+  -F "file=@sunset-painting.jpg" \
+  -F "subfolder=paintings" \
+  -F "alt=Sunset over the sea"
+# Returns: { "data": { "url": "/uploads/paintings/sunset_123.webp", ... } }
+
+# Step 2: Attach it to the painting
+curl -X PATCH http://your-server/api/v1/paintings/PAINTING_ID \
+  -H "Authorization: Bearer wk_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"images": ["/uploads/paintings/sunset_123.webp"]}'
+```
+
+### Upload an image and set it as article cover + inline
+
+```bash
+# Step 1: Upload
+curl -X POST http://your-server/api/v1/upload \
+  -H "Authorization: Bearer wk_your_key" \
+  -F "file=@brushes.jpg" \
+  -F "subfolder=articles"
+# Returns: { "data": { "url": "/uploads/articles/brushes_123.webp", ... } }
+
+# Step 2: Set as cover image
+curl -X PATCH http://your-server/api/v1/articles/ARTICLE_ID \
+  -H "Authorization: Bearer wk_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"coverImage": "/uploads/articles/brushes_123.webp"}'
+
+# Step 3: Insert into article body (include existing body + new img)
+curl -X PATCH http://your-server/api/v1/articles/ARTICLE_ID \
+  -H "Authorization: Bearer wk_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"body": "<figure><img src=\"/uploads/articles/brushes_123.webp\" /></figure><p>Rest of article...</p>"}'
+```
+
+### Create a full article with images (Node.js)
+
+```javascript
+import fs from 'fs';
+
+const API = 'http://your-server/api/v1';
+const KEY = 'wk_your_key';
+const headers = { 'Authorization': `Bearer ${KEY}` };
+
+// 1. Upload cover image
+const form = new FormData();
+form.append('file', new Blob([fs.readFileSync('cover.jpg')], { type: 'image/jpeg' }), 'cover.jpg');
+form.append('subfolder', 'articles');
+const upload = await (await fetch(`${API}/upload`, { method: 'POST', headers, body: form })).json();
+
+// 2. Create article with cover and inline image
+const article = await (await fetch(`${API}/articles`, {
+  method: 'POST',
+  headers: { ...headers, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'My Article',
+    coverImage: upload.data.url,
+    body: `<h2>Introduction</h2><p>Text here...</p>
+           <figure><img src="${upload.data.url}" alt="Cover" style="max-width:100%" /></figure>
+           <p>More text...</p>`,
+    tags: ['watercolor', 'tutorial'],
+    status: 'APPROVED',
+  }),
+})).json();
+
+console.log('Created:', article.data.slug);
+```
