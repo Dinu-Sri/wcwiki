@@ -160,21 +160,21 @@ export default function SearchPage() {
         {/* Results */}
         {!isLoading && (
           <div className="space-y-6 sm:space-y-10 stagger-children">
-            {/* Artists section — single column, Google-style */}
-            {artists.length > 0 && (
+            {/* Articles section — shown first */}
+            {articles.length > 0 && (
               <section>
                 {category === "all" && (
                   <div className="flex items-center justify-between mb-2 sm:mb-4">
                     <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary-light flex items-center justify-center">
-                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-accent flex items-center justify-center">
+                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      Artists
+                      Articles
                     </h2>
                     <button
-                      onClick={() => handleTabChange("artists")}
+                      onClick={() => handleTabChange("articles")}
                       className="text-sm text-primary hover:text-primary-hover font-medium flex items-center gap-1 transition-colors"
                     >
                       View all
@@ -185,17 +185,13 @@ export default function SearchPage() {
                   </div>
                 )}
                 <div className="space-y-1">
-                  {artists.map((artist: Record<string, unknown>) => (
-                    <ArtistCard
-                      key={artist.id as string}
-                      slug={artist.slug as string}
-                      name={artist.name as string}
-                      nationality={artist.nationality as string}
-                      birthYear={artist.birthYear as number}
-                      deathYear={artist.deathYear as number}
-                      bio={artist.bio as string}
-                      styles={artist.styles as string[]}
-                      _formatted={artist._formatted as Record<string, string>}
+                  {articles.map((article: Record<string, unknown>) => (
+                    <ArticleCard
+                      key={article.id as string}
+                      slug={article.slug as string}
+                      title={article.title as string}
+                      excerpt={article.excerpt as string}
+                      _formatted={article._formatted as Record<string, string>}
                     />
                   ))}
                 </div>
@@ -243,21 +239,21 @@ export default function SearchPage() {
               </section>
             )}
 
-            {/* Articles section — single column, Google-style */}
-            {articles.length > 0 && (
+            {/* Artists section — shown last */}
+            {artists.length > 0 && (
               <section>
                 {category === "all" && (
                   <div className="flex items-center justify-between mb-2 sm:mb-4">
                     <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-accent flex items-center justify-center">
-                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary-light flex items-center justify-center">
+                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
-                      Articles
+                      Artists
                     </h2>
                     <button
-                      onClick={() => handleTabChange("articles")}
+                      onClick={() => handleTabChange("artists")}
                       className="text-sm text-primary hover:text-primary-hover font-medium flex items-center gap-1 transition-colors"
                     >
                       View all
@@ -268,13 +264,17 @@ export default function SearchPage() {
                   </div>
                 )}
                 <div className="space-y-1">
-                  {articles.map((article: Record<string, unknown>) => (
-                    <ArticleCard
-                      key={article.id as string}
-                      slug={article.slug as string}
-                      title={article.title as string}
-                      excerpt={article.excerpt as string}
-                      _formatted={article._formatted as Record<string, string>}
+                  {artists.map((artist: Record<string, unknown>) => (
+                    <ArtistCard
+                      key={artist.id as string}
+                      slug={artist.slug as string}
+                      name={artist.name as string}
+                      nationality={artist.nationality as string}
+                      birthYear={artist.birthYear as number}
+                      deathYear={artist.deathYear as number}
+                      bio={artist.bio as string}
+                      styles={artist.styles as string[]}
+                      _formatted={artist._formatted as Record<string, string>}
                     />
                   ))}
                 </div>

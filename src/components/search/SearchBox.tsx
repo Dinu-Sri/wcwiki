@@ -170,8 +170,8 @@ export function SearchBox({
 
   const sizeClasses =
     size === "large"
-      ? "py-3 sm:py-4 text-sm sm:text-base pl-11 sm:pl-13 pr-11 sm:pr-13"
-      : "py-2 sm:py-2.5 text-[13px] sm:text-sm pl-9 sm:pl-11 pr-9 sm:pr-11";
+      ? "py-3 sm:py-4 text-[16px] sm:text-base pl-11 sm:pl-13 pr-11 sm:pr-13"
+      : "py-2 sm:py-2.5 text-[16px] sm:text-sm pl-9 sm:pl-11 pr-9 sm:pr-11";
 
   const iconSize = size === "large" ? "w-4 h-4 sm:w-5 sm:h-5" : "w-4 h-4";
   const iconLeft = size === "large" ? "left-3.5 sm:left-5" : "left-3 sm:left-4";

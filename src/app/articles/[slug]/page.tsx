@@ -90,14 +90,14 @@ export default async function ArticlePage({ params }: Props) {
       <Header />
       <main className="flex-1 max-w-3xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8">
         {/* Breadcrumb */}
-        <nav className="text-xs text-muted mb-4 sm:mb-6 flex items-center gap-1.5 overflow-x-auto">
-          <Link href="/" className="hover:text-primary transition-colors">
+        <nav className="text-xs text-muted mb-4 sm:mb-6 flex items-center gap-1.5 min-w-0">
+          <Link href="/" className="shrink-0 hover:text-primary transition-colors">
             Home
           </Link>
-          <span>›</span>
+          <span className="shrink-0">›</span>
           <Link
             href="/articles"
-            className="hover:text-primary transition-colors"
+            className="shrink-0 hover:text-primary transition-colors"
           >
             Articles
           </Link>
@@ -118,7 +118,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* Header */}
         <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3 leading-tight">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-3 leading-tight">
             {article.title}
           </h1>
 
@@ -175,8 +175,9 @@ export default async function ArticlePage({ params }: Props) {
             [&_li]:mb-1.5 [&_li]:leading-relaxed
             [&_a]:text-primary [&_a]:underline [&_a]:hover:text-primary-hover
             [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted
-            [&_img]:rounded-xl [&_img]:my-6
-            [&_strong]:text-foreground [&_strong]:font-semibold"
+            [&_img]:rounded-xl [&_img]:my-6 [&_img]:max-w-full [&_img]:h-auto
+            [&_strong]:text-foreground [&_strong]:font-semibold
+            break-words overflow-wrap-anywhere"
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
 

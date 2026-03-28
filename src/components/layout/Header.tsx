@@ -16,7 +16,7 @@ export function Header() {
         </Link>
 
         {/* Search */}
-        <div className="flex-1 max-w-xl">
+        <div className="flex-1 min-w-0 max-w-xl">
           <SearchBox size="default" />
         </div>
 

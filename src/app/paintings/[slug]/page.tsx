@@ -108,19 +108,19 @@ export default async function PaintingPage({ params }: Props) {
       <Header />
       <main className="flex-1 max-w-5xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8">
         {/* Breadcrumb */}
-        <nav className="text-xs text-muted mb-4 sm:mb-6 flex items-center gap-1.5 overflow-x-auto">
-          <Link href="/" className="hover:text-primary transition-colors">
+        <nav className="text-xs text-muted mb-4 sm:mb-6 flex items-center gap-1.5 min-w-0">
+          <Link href="/" className="shrink-0 hover:text-primary transition-colors">
             Home
           </Link>
-          <span>›</span>
+          <span className="shrink-0">›</span>
           <Link
             href="/paintings"
-            className="hover:text-primary transition-colors"
+            className="shrink-0 hover:text-primary transition-colors"
           >
             Paintings
           </Link>
-          <span>›</span>
-          <span className="text-foreground">{painting.title}</span>
+          <span className="shrink-0">›</span>
+          <span className="text-foreground truncate">{painting.title}</span>
         </nav>
 
         {/* Edit Actions */}
@@ -141,7 +141,7 @@ export default async function PaintingPage({ params }: Props) {
 
         {/* Title + Artist */}
         <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">
             {painting.title}
           </h1>
           <p className="text-lg text-muted">

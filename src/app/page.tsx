@@ -33,25 +33,43 @@ export default function Home() {
       </div>
 
       {/* Centered content area — pushes to visual center */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 -mt-8">
-        {/* Logo — smaller on mobile */}
-        <div className="mb-6 md:mb-8 text-center animate-fade-in-up">
-          <div className="mb-2 sm:mb-3 flex items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4">
+        {/* Logo */}
+        <div className="mb-4 md:mb-8 text-center animate-fade-in-up">
+          <div className="mb-1 sm:mb-3 flex items-center justify-center">
             <img src="/logo.webp" alt="wcWIKI" className="h-10 sm:h-20 md:h-24 w-auto" />
           </div>
-          {/* Tagline — hidden on mobile for cleaner look */}
-          <p className="hidden sm:block text-muted text-sm sm:text-base tracking-wide">
+          {/* Tagline — always visible */}
+          <p className="text-muted text-xs sm:text-base tracking-wide">
             The Watercolor Art Encyclopedia
           </p>
         </div>
 
-        {/* Search Box — Google-style prominent */}
+        {/* Search Box */}
         <div className="w-full max-w-xl animate-fade-in-up relative z-50" style={{ animationDelay: "100ms" }}>
           <SearchBox size="large" initialCategory={category} />
         </div>
 
-        {/* Category Tabs — hidden on mobile, shown on sm+ */}
-        <div className="hidden sm:flex mt-5 flex-wrap justify-center gap-2 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+        {/* Stats — always visible, compact on mobile */}
+        <div className="mt-4 sm:mt-8 flex items-center gap-4 sm:gap-6 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "200ms" }}>
+          <div>
+            <div className="text-sm sm:text-lg font-semibold text-foreground">{formatCount(stats.paintings)}</div>
+            <div className="text-[10px] sm:text-[11px] text-muted">Paintings</div>
+          </div>
+          <div className="w-px h-4 sm:h-6 bg-border"></div>
+          <div>
+            <div className="text-sm sm:text-lg font-semibold text-foreground">{formatCount(stats.articles)}</div>
+            <div className="text-[10px] sm:text-[11px] text-muted">Articles</div>
+          </div>
+          <div className="w-px h-4 sm:h-6 bg-border"></div>
+          <div>
+            <div className="text-sm sm:text-lg font-semibold text-foreground">{formatCount(stats.artists)}</div>
+            <div className="text-[10px] sm:text-[11px] text-muted">Artists</div>
+          </div>
+        </div>
+
+        {/* Category Tabs — hidden on mobile */}
+        <div className="hidden sm:flex mt-5 flex-wrap justify-center gap-2 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
           {tabs.map((tab) => (
             <button
               key={tab.value}
@@ -68,24 +86,6 @@ export default function Home() {
               {tab.label}
             </button>
           ))}
-        </div>
-
-        {/* Quick stats — hidden on mobile, shown on sm+ */}
-        <div className="hidden sm:flex mt-10 items-center gap-6 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "300ms" }}>
-          <div>
-            <div className="text-lg font-semibold text-foreground">{formatCount(stats.artists)}</div>
-            <div className="text-[11px] text-muted">Artists</div>
-          </div>
-          <div className="w-px h-6 bg-border"></div>
-          <div>
-            <div className="text-lg font-semibold text-foreground">{formatCount(stats.paintings)}</div>
-            <div className="text-[11px] text-muted">Paintings</div>
-          </div>
-          <div className="w-px h-6 bg-border"></div>
-          <div>
-            <div className="text-lg font-semibold text-foreground">{formatCount(stats.articles)}</div>
-            <div className="text-[11px] text-muted">Articles</div>
-          </div>
         </div>
       </div>
 
