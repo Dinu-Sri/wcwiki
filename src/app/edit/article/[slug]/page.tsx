@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { RichEditor } from "@/components/editor/RichEditor";
 
 interface ArticleData {
   id: string;
@@ -128,7 +129,7 @@ export default function EditArticlePage({
           </p>
 
           {message && (
-            <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${message.type === "success" ? "bg-green-900/20 border border-green-800/30 text-green-400" : "bg-red-900/20 border border-red-800/30 text-red-400"}`}>
+            <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${message.type === "success" ? "bg-green-50 border border-green-200 text-green-800" : "bg-red-50 border border-red-200 text-red-800"}`}>
               {message.text}
             </div>
           )}
@@ -156,13 +157,11 @@ export default function EditArticlePage({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Body (HTML)</label>
-              <textarea
-                value={form.body}
-                onChange={(e) => setForm({ ...form, body: e.target.value })}
-                rows={16}
-                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-foreground font-mono placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary resize-y"
-                placeholder="Article body HTML..."
+              <label className="block text-sm font-medium text-foreground mb-1.5">Body</label>
+              <RichEditor
+                content={form.body || ""}
+                onChange={(html) => setForm({ ...form, body: html })}
+                placeholder="Write your article content here..."
               />
             </div>
 

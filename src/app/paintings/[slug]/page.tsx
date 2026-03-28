@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { EditHistoryButton } from "@/components/EditHistoryButton";
+import { PaintingLightbox } from "@/components/gallery/PaintingLightbox";
 
 export const dynamic = "force-dynamic";
 
@@ -133,15 +134,9 @@ export default async function PaintingPage({ params }: Props) {
           <EditHistoryButton entityType="PAINTING" entityId={painting.id} />
         </div>
 
-        {/* Main image */}
+        {/* Main image + lightbox */}
         {painting.images.length > 0 && (
-          <div className="mb-8 rounded-2xl overflow-hidden bg-accent shadow-md">
-            <img
-              src={painting.images[0]}
-              alt={painting.title}
-              className="w-full max-h-[70vh] object-contain mx-auto"
-            />
-          </div>
+          <PaintingLightbox images={painting.images} title={painting.title} />
         )}
 
         {/* Title + Artist */}
@@ -225,30 +220,6 @@ export default async function PaintingPage({ params }: Props) {
             <p className="mt-1">{painting.attribution}</p>
           )}
         </div>
-
-        {/* Additional images */}
-        {painting.images.length > 1 && (
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              More Views
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {painting.images.slice(1).map((img, i) => (
-                <div
-                  key={i}
-                  className="aspect-square rounded-xl overflow-hidden bg-accent"
-                >
-                  <img
-                    src={img}
-                    alt={`${painting.title} — view ${i + 2}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* More by this artist */}
         {relatedByArtist.length > 0 && (

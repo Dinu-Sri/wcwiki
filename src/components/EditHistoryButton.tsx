@@ -36,9 +36,9 @@ export function EditHistoryButton({ entityType, entityId }: EditHistoryButtonPro
 
   const statusColor = (s: string) => {
     switch (s) {
-      case "APPROVED": return "bg-green-900/30 text-green-400";
-      case "REJECTED": return "bg-red-900/30 text-red-400";
-      default: return "bg-yellow-900/30 text-yellow-400";
+      case "APPROVED": return "bg-green-50 text-green-700 border border-green-200";
+      case "REJECTED": return "bg-red-50 text-red-700 border border-red-200";
+      default: return "bg-yellow-50 text-yellow-700 border border-yellow-200";
     }
   };
 

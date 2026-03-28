@@ -46,8 +46,8 @@ export function Footer() {
             <h4 className="font-semibold text-foreground mb-3 text-xs uppercase tracking-wider">Community</h4>
             <ul className="space-y-2 text-muted">
               <li>
-                <Link href="/submit" className="hover:text-primary transition-colors">
-                  Submit an Article
+                <Link href="/dashboard" className="hover:text-primary transition-colors">
+                  Contribute
                 </Link>
               </li>
               <li>

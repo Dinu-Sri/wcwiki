@@ -174,8 +174,8 @@ export default function EditArtistPage({
             <div
               className={`mb-6 px-4 py-3 rounded-lg text-sm ${
                 message.type === "success"
-                  ? "bg-green-900/20 border border-green-800/30 text-green-400"
-                  : "bg-red-900/20 border border-red-800/30 text-red-400"
+                  ? "bg-green-50 border border-green-200 text-green-800"
+                  : "bg-red-50 border border-red-200 text-red-800"
               }`}
             >
               {message.text}
