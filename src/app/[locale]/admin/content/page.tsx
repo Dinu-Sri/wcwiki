@@ -44,7 +44,7 @@ export default async function AdminContentPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-foreground">Content</h1>
         <Link
-          href="/admin/content/new-article"
+          href="/edit/article/new"
           className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
           + New Article

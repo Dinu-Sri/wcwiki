@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface Suggestion {
   id: string;
@@ -19,6 +19,8 @@ interface Suggestion {
 
 export default function AdminSuggestionsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const localePrefix = pathname.match(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)/)?.[0] || "";
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
@@ -54,7 +56,7 @@ export default function AdminSuggestionsPage() {
       if (res.ok) {
         const data = await res.json();
         if (action === "claim" && data.redirectUrl) {
-          router.push(data.redirectUrl);
+          router.push(`${localePrefix}${data.redirectUrl}`);
           return;
         }
         fetchSuggestions();
@@ -179,13 +181,22 @@ export default function AdminSuggestionsPage() {
                               Start
                             </button>
                           )}
-                          <button
-                            onClick={() => performAction(s.id, "publish")}
-                            disabled={acting === s.id}
-                            className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50"
-                          >
-                            Publish
-                          </button>
+                          {s.type === "NEW_ARTICLE" && !s.entityId ? (
+                            <button
+                              onClick={() => router.push(`${localePrefix}/edit/article/new?suggestion=${s.id}`)}
+                              className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                            >
+                              Write Article
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => performAction(s.id, "publish")}
+                              disabled={acting === s.id}
+                              className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50"
+                            >
+                              Publish
+                            </button>
+                          )}
                           <button
                             onClick={() => performAction(s.id, "unclaim")}
                             disabled={acting === s.id}

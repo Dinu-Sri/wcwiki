@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       // Build redirect URL based on suggestion type
       let redirectUrl = "/dashboard";
       if (suggestion.type === "NEW_ARTICLE") {
-        redirectUrl = `/admin/content/new-article?suggestion=${id}`;
+        redirectUrl = `/edit/article/new?suggestion=${id}`;
       } else if (suggestion.entityType && suggestion.entityId) {
         // For translation suggestions, look up the entity slug
         const entitySlug = suggestion.entityId;

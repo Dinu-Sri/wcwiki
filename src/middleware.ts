@@ -23,10 +23,17 @@ export async function middleware(req: NextRequest) {
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
+  // Build login redirect with callbackUrl
+  const loginRedirect = () => {
+    const loginUrl = new URL("/auth/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  };
+
   // /admin — only SUPER_ADMIN and APPROVER
   if (pathWithoutLocale.startsWith("/admin")) {
     if (!token || (token.role !== "SUPER_ADMIN" && token.role !== "APPROVER")) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+      return loginRedirect();
     }
   }
 
@@ -36,14 +43,14 @@ export async function middleware(req: NextRequest) {
       !token ||
       !["EDITOR", "APPROVER", "SUPER_ADMIN"].includes(token.role as string)
     ) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+      return loginRedirect();
     }
   }
 
   // /dashboard — any authenticated user
   if (pathWithoutLocale.startsWith("/dashboard")) {
     if (!token) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+      return loginRedirect();
     }
   }
 
