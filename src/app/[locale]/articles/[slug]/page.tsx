@@ -10,6 +10,8 @@ import {
   generateArticleSchema,
   generateBreadcrumbSchema,
 } from "@/lib/schema";
+import { TranslatePanel } from "@/components/TranslatePanel";
+import { getTranslations } from "@/lib/translations";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
 
   const article = await db.article.findUnique({
     where: { slug, status: "APPROVED" },
@@ -70,6 +72,12 @@ export default async function ArticlePage({ params }: Props) {
   });
 
   if (!article) notFound();
+
+  // Fetch approved translations for this locale
+  const t = await getTranslations("ARTICLE", article.id, locale);
+  const displayTitle = t.title || article.title;
+  const displayExcerpt = t.excerpt || article.excerpt;
+  const displayBody = t.body || article.body;
 
   // Related articles by shared tags
   const relatedArticles =
@@ -129,7 +137,7 @@ export default async function ArticlePage({ params }: Props) {
             Articles
           </Link>
           <span>›</span>
-          <span className="text-foreground line-clamp-1">{article.title}</span>
+          <span className="text-foreground line-clamp-1">{displayTitle}</span>
         </nav>
 
         {/* Edit Actions */}
@@ -141,12 +149,26 @@ export default async function ArticlePage({ params }: Props) {
             Edit this page
           </Link>
           <EditHistoryButton entityType="ARTICLE" entityId={article.id} />
+          <TranslatePanel
+            entityType="ARTICLE"
+            entityId={article.id}
+            fields={[
+              { key: "title", label: "Title" },
+              { key: "excerpt", label: "Excerpt", multiline: true },
+              { key: "body", label: "Body", multiline: true },
+            ]}
+            originalValues={{
+              title: article.title,
+              excerpt: article.excerpt || "",
+              body: article.body,
+            }}
+          />
         </div>
 
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-3 leading-tight">
-            {article.title}
+            {displayTitle}
           </h1>
 
           {/* Meta */}
@@ -184,9 +206,9 @@ export default async function ArticlePage({ params }: Props) {
         </header>
 
         {/* Excerpt */}
-        {article.excerpt && (
+        {displayExcerpt && (
           <p className="text-lg text-muted leading-relaxed mb-8 pb-8 border-b border-border">
-            {article.excerpt}
+            {displayExcerpt}
           </p>
         )}
 
@@ -205,7 +227,7 @@ export default async function ArticlePage({ params }: Props) {
             [&_img]:rounded-xl [&_img]:my-6 [&_img]:max-w-full [&_img]:h-auto
             [&_strong]:text-foreground [&_strong]:font-semibold
             break-words overflow-wrap-anywhere"
-          dangerouslySetInnerHTML={{ __html: article.body }}
+          dangerouslySetInnerHTML={{ __html: displayBody }}
         />
 
         {/* References */}

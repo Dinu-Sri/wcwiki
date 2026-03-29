@@ -10,6 +10,8 @@ import {
   generateVisualArtworkSchema,
   generateBreadcrumbSchema,
 } from "@/lib/schema";
+import { TranslatePanel } from "@/components/TranslatePanel";
+import { getTranslations } from "@/lib/translations";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PaintingPage({ params }: Props) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
 
   const painting = await db.painting.findUnique({
     where: { slug },
@@ -67,6 +69,11 @@ export default async function PaintingPage({ params }: Props) {
   });
 
   if (!painting) notFound();
+
+  // Fetch approved translations for this locale
+  const tr = await getTranslations("PAINTING", painting.id, locale);
+  const displayTitle = tr.title || painting.title;
+  const displayDescription = tr.description || painting.description;
 
   // Related paintings by same artist
   const relatedByArtist = await db.painting.findMany({
@@ -137,7 +144,7 @@ export default async function PaintingPage({ params }: Props) {
             Paintings
           </Link>
           <span className="shrink-0">›</span>
-          <span className="text-foreground truncate">{painting.title}</span>
+          <span className="text-foreground truncate">{displayTitle}</span>
         </nav>
 
         {/* Edit Actions */}
@@ -149,6 +156,18 @@ export default async function PaintingPage({ params }: Props) {
             Edit this page
           </Link>
           <EditHistoryButton entityType="PAINTING" entityId={painting.id} />
+          <TranslatePanel
+            entityType="PAINTING"
+            entityId={painting.id}
+            fields={[
+              { key: "title", label: "Title" },
+              { key: "description", label: "Description", multiline: true },
+            ]}
+            originalValues={{
+              title: painting.title,
+              description: painting.description || "",
+            }}
+          />
         </div>
 
         {/* Main image + lightbox */}
@@ -159,7 +178,7 @@ export default async function PaintingPage({ params }: Props) {
         {/* Title + Artist */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">
-            {painting.title}
+            {displayTitle}
           </h1>
           <p className="text-lg text-muted">
             by{" "}
@@ -206,13 +225,13 @@ export default async function PaintingPage({ params }: Props) {
         )}
 
         {/* Description */}
-        {painting.description && (
+        {displayDescription && (
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-foreground mb-3">
               About This Work
             </h2>
             <p className="text-muted leading-relaxed whitespace-pre-line">
-              {painting.description}
+              {displayDescription}
             </p>
           </section>
         )}

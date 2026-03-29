@@ -11,6 +11,8 @@ import {
   generatePersonSchema,
   generateBreadcrumbSchema,
 } from "@/lib/schema";
+import { TranslatePanel } from "@/components/TranslatePanel";
+import { getTranslations } from "@/lib/translations";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +73,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArtistPage({ params }: Props) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
 
   const artist = await db.artist.findUnique({
     where: { slug },
@@ -83,6 +85,11 @@ export default async function ArtistPage({ params }: Props) {
   });
 
   if (!artist) notFound();
+
+  // Fetch approved translations for this locale
+  const tr = await getTranslations("ARTIST", artist.id, locale);
+  const displayName = tr.name || artist.name;
+  const displayBio = tr.bio || artist.bio;
 
   const socialLinks = (artist.socialLinks || {}) as Record<string, string>;
   const isVerified = !!artist.connectedUserId;
@@ -146,7 +153,7 @@ export default async function ArtistPage({ params }: Props) {
             Artists
           </Link>
           <span>›</span>
-          <span className="text-foreground">{artist.name}</span>
+          <span className="text-foreground">{displayName}</span>
         </nav>
 
         {/* Edit Actions */}
@@ -158,6 +165,18 @@ export default async function ArtistPage({ params }: Props) {
             Edit this page
           </Link>
           <EditHistoryButton entityType="ARTIST" entityId={artist.id} />
+          <TranslatePanel
+            entityType="ARTIST"
+            entityId={artist.id}
+            fields={[
+              { key: "name", label: "Name" },
+              { key: "bio", label: "Biography", multiline: true },
+            ]}
+            originalValues={{
+              name: artist.name,
+              bio: artist.bio || "",
+            }}
+          />
         </div>
 
         {/* Hero */}
@@ -174,7 +193,7 @@ export default async function ArtistPage({ params }: Props) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-                {artist.name}
+                {displayName}
               </h1>
               {isVerified && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">
@@ -250,13 +269,13 @@ export default async function ArtistPage({ params }: Props) {
         </div>
 
         {/* Bio */}
-        {artist.bio && (
+        {displayBio && (
           <section className="mb-10">
             <h2 className="text-xl font-semibold text-foreground mb-3">
               Biography
             </h2>
             <p className="text-muted leading-relaxed whitespace-pre-line">
-              {artist.bio}
+              {displayBio}
             </p>
           </section>
         )}
