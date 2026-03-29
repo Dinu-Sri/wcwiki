@@ -72,6 +72,12 @@ export default async function AdminLayout({
             Search Analytics
           </Link>
           <Link
+            href="/admin/suggestions"
+            className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
+          >
+            Suggestions
+          </Link>
+          <Link
             href="/admin/translations"
             className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
           >

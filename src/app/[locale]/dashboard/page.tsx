@@ -16,6 +16,17 @@ interface EditItem {
   entityId: string;
 }
 
+interface SuggestionItem {
+  id: string;
+  type: string;
+  topic: string | null;
+  status: string;
+  createdAt: string;
+  entityType: string | null;
+  entityId: string | null;
+  targetLocale: string | null;
+}
+
 interface ApplicationStatus {
   id: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -32,6 +43,7 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [edits, setEdits] = useState<EditItem[]>([]);
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<ApplicationStatus | null>(null);
   const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
@@ -41,10 +53,11 @@ export default function DashboardPage() {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const [editsRes, appRes, profileRes] = await Promise.all([
+      const [editsRes, appRes, profileRes, suggestRes] = await Promise.all([
         fetch("/api/my-edits"),
         fetch("/api/editor-application"),
         fetch("/api/profile"),
+        fetch("/api/suggestions?mine=true"),
       ]);
 
       if (editsRes.ok) {
@@ -58,6 +71,10 @@ export default function DashboardPage() {
       if (profileRes.ok) {
         const data = await profileRes.json();
         setCompleteness(data.completeness || null);
+      }
+      if (suggestRes.ok) {
+        const data = await suggestRes.json();
+        setSuggestions(data.data || []);
       }
     } finally {
       setLoading(false);
@@ -308,6 +325,52 @@ export default function DashboardPage() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* My Suggestions */}
+          {suggestions.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-foreground mb-3">
+                My Suggestions
+              </h2>
+              <div className="bg-surface border border-border rounded-xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-muted">
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Topic</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {suggestions.map((s) => (
+                      <tr key={s.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-3 text-foreground text-xs">
+                          {s.type === "NEW_ARTICLE" ? "New Article" : s.type === "TRANSLATE_ARTICLE" ? "Translate Article" : "Translate Artist"}
+                        </td>
+                        <td className="px-4 py-3 text-foreground">
+                          {s.topic || `${s.entityType?.toLowerCase()} \u2192 ${s.targetLocale}`}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
+                            s.status === "PUBLISHED" ? "bg-green-50 text-green-700 border border-green-200" :
+                            s.status === "REJECTED" ? "bg-red-50 text-red-700 border border-red-200" :
+                            s.status === "OPEN" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                            "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                          }`}>
+                            {s.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted">
+                          {new Date(s.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
