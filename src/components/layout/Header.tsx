@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SearchBox } from "@/components/search/SearchBox";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 export function Header() {
   return (
@@ -32,6 +33,11 @@ export function Header() {
             Articles
           </Link>
         </nav>
+
+        {/* Language switcher — desktop only */}
+        <div className="hidden md:block">
+          <LanguageSwitcher />
+        </div>
 
         {/* User menu */}
         <UserMenu />

@@ -110,6 +110,11 @@ model Artist {
   socialLinks Json? // { instagram, youtube, x, facebook, pinterest, behance }
   references  Json? @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
 
+  // SEO overrides
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  ogImage         String?
+
   connectedUserId String? @unique
   connectedUser   User?   @relation(fields: [connectedUserId], references: [id], onDelete: SetNull)
 
@@ -142,6 +147,11 @@ model Painting {
   sourceUrl   String? // Original source URL
   attribution String?  @db.Text // Custom attribution text
 
+  // SEO overrides
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  ogImage         String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -165,6 +175,11 @@ model Article {
   tags     String[]      @default([])
   excerpt  String?       @db.Text // Short summary for cards/SEO
   references Json?       @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
+
+  // SEO overrides
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  ogImage         String?
 
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
@@ -362,6 +377,75 @@ model EditorApplication {
 
 enum ApplicationStatus {
   PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─── Site Settings (SEO Dashboard) ─────────────────────────────────────────
+
+model SiteSettings {
+  id    String @id @default("default")
+
+  // Site identity
+  siteName        String  @default("wcWIKI")
+  siteDescription String? @db.Text
+  siteUrl         String  @default("https://wcwiki.com")
+  logoUrl         String?
+  faviconUrl      String?
+  foundedYear     Int?    @default(2025)
+  founderName     String?
+
+  // Social profiles (for Organization schema + footer)
+  socialFacebook  String?
+  socialInstagram String?
+  socialX         String?
+  socialYoutube   String?
+  socialPinterest String?
+  socialLinkedin  String?
+
+  // Tracking & Verification codes
+  googleSiteVerification String? // Google Search Console meta tag value
+  googleAnalyticsId      String? // GA4 measurement ID (G-XXXXXXX)
+  googleTagManagerId     String? // GTM container ID (GTM-XXXXXXX)
+  bingSiteVerification   String? // Bing Webmaster verification
+  pinterestVerification  String?
+  yandexVerification     String?
+
+  // SEO defaults
+  defaultOgImage    String?  // Fallback OG image when none specified
+  robotsCustomRules String?  @db.Text // Additional robots.txt rules (JSON)
+
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Content Translations ──────────────────────────────────────────────────
+
+model Translation {
+  id         String            @id @default(cuid())
+  entityType EntityType
+  entityId   String
+  locale     String            // "si", "ta", "ja", etc.
+  field      String            // "bio", "title", "description", "body", "excerpt", "name"
+  value      String            @db.Text
+  status     TranslationStatus @default(MACHINE)
+
+  translatedById String?       // userId of human translator (null = machine)
+  reviewedById   String?       // userId of reviewer
+  reviewedAt     DateTime?
+  machineSource  String?       // "google" | "deepl" | "openai"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([entityType, entityId, locale, field])
+  @@index([entityType, entityId, locale])
+  @@index([status])
+  @@index([locale])
+}
+
+enum TranslationStatus {
+  MACHINE
+  IN_REVIEW
   APPROVED
   REJECTED
 }

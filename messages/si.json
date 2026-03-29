@@ -1,0 +1,73 @@
+{
+  "common": {
+    "search": "සොයන්න",
+    "searchPlaceholder": "කලාකරුවන්, චිත්‍ර, ලිපි සොයන්න…",
+    "all": "සියල්ල",
+    "artists": "කලාකරුවන්",
+    "paintings": "චිත්‍ර",
+    "articles": "ලිපි",
+    "loadMore": "තව පූරණය කරන්න",
+    "noResults": "ප්‍රතිඵල හමු නොවීය",
+    "signIn": "පිවිසෙන්න",
+    "signOut": "පිටවන්න",
+    "submit": "ඉදිරිපත් කරන්න",
+    "cancel": "අවලංගු කරන්න",
+    "save": "සුරකින්න",
+    "edit": "සංස්කරණය",
+    "delete": "මකන්න",
+    "approve": "අනුමත කරන්න",
+    "reject": "ප්‍රතික්ෂේප කරන්න",
+    "pending": "අපේක්ෂිත",
+    "approved": "අනුමත",
+    "draft": "කෙටුම්පත"
+  },
+  "home": {
+    "tagline": "ජලවර්ණ විශ්වකෝෂය",
+    "description": "ලොව පුරා ජලවර්ණ කලාකරුවන්, චිත්‍ර සහ ලිපි සොයා අත්විඳින්න."
+  },
+  "artist": {
+    "biography": "ජීවන චරිතය",
+    "paintings": "චිත්‍ර",
+    "nationality": "ජාතිකත්වය",
+    "styles": "ශෛලීන්",
+    "lifespan": "ජීවිත කාලය",
+    "website": "වෙබ් අඩවිය",
+    "claimProfile": "මෙම පැතිකඩ හිමිකර ගන්න",
+    "relatedArtists": "අදාළ කලාකරුවන්"
+  },
+  "painting": {
+    "medium": "මාධ්‍යය",
+    "surface": "පෘෂ්ඨය",
+    "dimensions": "මාන",
+    "year": "වර්ෂය",
+    "artist": "කලාකරුවා",
+    "tags": "ටැග්",
+    "attribution": "මෙම කෘතිය අධ්‍යාපනික අරමුණු සඳහා පමණක් ලැයිස්තුගත කර ඇත. සියලු අයිතිවාසිකම් අදාළ කලාකරුවාට හිමි වේ.",
+    "source": "මූලාශ්‍රය",
+    "relatedPaintings": "අදාළ චිත්‍ර"
+  },
+  "article": {
+    "by": "විසින්",
+    "publishedOn": "ප්‍රකාශිත දිනය",
+    "tableOfContents": "අන්තර්ගත වගුව",
+    "relatedArticles": "අදාළ ලිපි"
+  },
+  "auth": {
+    "signInTitle": "wcWIKI වෙත පිවිසෙන්න",
+    "signInGoogle": "Google සමඟ ඉදිරියට",
+    "signInEmail": "ඊමේල් මගින් පිවිසෙන්න",
+    "registerTitle": "ඔබේ ගිණුම සාදන්න",
+    "areYouArtist": "ඔබ ජලවර්ණ කලාකරුවෙක්ද?",
+    "artistDescription": "ඔව් නම්, සත්‍යාපනය සඳහා මෑත මුල් කෘතියක් ඉදිරිපත් කළ යුතුය.",
+    "uploadWork": "ඔබේ මෑත කෘතිය උඩුගත කරන්න",
+    "profileFields": "ඔබේ පැතිකඩ සම්පූර්ණ කරන්න"
+  },
+  "footer": {
+    "copyright": "© {year} wcWIKI.com — ප්‍රජා මූලික ජලවර්ණ විශ්වකෝෂයකි",
+    "educationalDisclaimer": "සියලුම කලා කෘති අධ්‍යාපනික අරමුණු සඳහා පමණක් ලැයිස්තුගත කර ඇත. අයිතිවාසිකම් අදාළ කලාකරුවන්ට හිමි වේ.",
+    "about": "පිළිබඳව",
+    "contact": "සම්බන්ධ වන්න",
+    "terms": "නියම",
+    "privacy": "පෞද්ගලිකත්වය"
+  }
+}

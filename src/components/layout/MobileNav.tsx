@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -51,6 +52,9 @@ export function MobileNav() {
               >
                 Articles
               </Link>
+              <div className="px-3 py-2.5 border-t border-border/60 mt-1 pt-2">
+                <LanguageSwitcher />
+              </div>
             </div>
           </nav>
         </>
