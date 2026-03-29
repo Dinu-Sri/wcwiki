@@ -93,7 +93,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Bottom footer — minimal */}
+      {/* Vision statement + footer */}
+      <div className="text-center px-6 sm:px-8 pb-1 pt-1">
+        <p className="text-[10px] sm:text-xs font-medium tracking-widest uppercase text-muted/80 mb-0.5">
+          Artists Building for Artists
+        </p>
+        <p className="text-[9px] sm:text-[10px] text-muted/50 leading-snug max-w-md mx-auto">
+          The world&apos;s first peer-reviewed watercolor encyclopedia, created exclusively by human artists. We safeguard authentic art philosophy through a unique, human-verified knowledge base that remains accessible to all, forever.
+        </p>
+      </div>
       <footer className="border-t border-border bg-surface/50">
         <div className="px-4 sm:px-8 py-2 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted/70">
           <p>© {new Date().getFullYear()} wcWIKI.com</p>
