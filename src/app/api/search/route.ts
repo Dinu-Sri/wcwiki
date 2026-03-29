@@ -12,10 +12,48 @@ function logSearch(query: string, category: string, results: number, req: NextRe
   }).catch(() => {});
 }
 
+// Overlay approved translations onto search hits for a given locale
+async function overlayTranslations(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  hits: any[],
+  entityType: "ARTIST" | "PAINTING" | "ARTICLE",
+  locale: string,
+  fields: string[] // e.g. ["name", "bio"] or ["title", "excerpt"]
+) {
+  if (!locale || locale === "en" || hits.length === 0) return hits;
+
+  const entityIds = hits.map((h) => h.id as string);
+
+  const translations = await db.translation.findMany({
+    where: {
+      entityType,
+      entityId: { in: entityIds },
+      locale,
+      field: { in: fields },
+      status: "APPROVED",
+    },
+  });
+
+  // Group by entityId
+  const byEntity = new Map<string, Record<string, string>>();
+  for (const t of translations) {
+    if (!byEntity.has(t.entityId)) byEntity.set(t.entityId, {});
+    byEntity.get(t.entityId)![t.field] = t.value;
+  }
+
+  // Overlay onto hits
+  return hits.map((hit) => {
+    const overrides = byEntity.get(hit.id as string);
+    if (!overrides) return hit;
+    return { ...hit, ...overrides };
+  });
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const query = searchParams.get("q")?.trim() || "";
   const category = searchParams.get("category") || "all";
+  const locale = searchParams.get("locale") || "en";
   const limit = Math.min(
     parseInt(searchParams.get("limit") || "10", 10),
     50
@@ -65,10 +103,17 @@ export async function GET(request: NextRequest) {
     // Log search (fire-and-forget)
     logSearch(query, category, estimatedTotal, request);
 
+    // Overlay translations if non-English locale
+    const [translatedArtists, translatedPaintings, translatedArticles] = await Promise.all([
+      overlayTranslations(artists.hits, "ARTIST", locale, ["name", "bio"]),
+      overlayTranslations(paintings.hits, "PAINTING", locale, ["title", "description"]),
+      overlayTranslations(articles.hits, "ARTICLE", locale, ["title", "excerpt"]),
+    ]);
+
     return NextResponse.json({
-      artists: artists.hits,
-      paintings: paintings.hits,
-      articles: articles.hits,
+      artists: translatedArtists,
+      paintings: translatedPaintings,
+      articles: translatedArticles,
       estimatedTotal,
     });
   }
@@ -87,8 +132,16 @@ export async function GET(request: NextRequest) {
     // Log search (fire-and-forget)
     logSearch(query, category, results.estimatedTotalHits || 0, request);
 
+    // Overlay translations
+    const translationFields =
+      category === "artists" ? ["name", "bio"] :
+      category === "paintings" ? ["title", "description"] :
+      ["title", "excerpt"];
+    const entityType = category === "artists" ? "ARTIST" : category === "paintings" ? "PAINTING" : "ARTICLE";
+    const translatedHits = await overlayTranslations(results.hits, entityType, locale, translationFields);
+
     return NextResponse.json({
-      hits: results.hits,
+      hits: translatedHits,
       estimatedTotal: results.estimatedTotalHits || 0,
       limit,
       offset,

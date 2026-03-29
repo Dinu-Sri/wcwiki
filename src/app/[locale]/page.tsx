@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { SearchBox, SearchCategory } from "@/components/search/SearchBox";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import Link from "next/link";
 
 export default function Home() {
@@ -28,7 +29,8 @@ export default function Home() {
   return (
     <main className="flex-1 flex flex-col min-h-screen watercolor-wash relative">
       {/* Top bar — right-aligned auth */}
-      <div className="w-full flex items-center justify-end px-4 sm:px-6 py-3 animate-fade-in-up">
+      <div className="w-full flex items-center justify-end gap-2 px-4 sm:px-6 py-3 animate-fade-in-up">
+        <LanguageSwitcher compact />
         <UserMenu />
       </div>
 

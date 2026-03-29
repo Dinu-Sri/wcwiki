@@ -7,6 +7,14 @@ import { useState, useRef, useEffect } from "react";
 
 const LOCALES = [
   { code: "en", name: "EN", fullName: "English" },
+  { code: "zh", name: "中", fullName: "中文" },
+  { code: "ja", name: "日", fullName: "日本語" },
+  { code: "ko", name: "한", fullName: "한국어" },
+  { code: "es", name: "ES", fullName: "Español" },
+  { code: "fr", name: "FR", fullName: "Français" },
+  { code: "ru", name: "RU", fullName: "Русский" },
+  { code: "tr", name: "TR", fullName: "Türkçe" },
+  { code: "ta", name: "த", fullName: "தமிழ்" },
   { code: "si", name: "සි", fullName: "සිංහල" },
 ] as const;
 
@@ -34,7 +42,7 @@ export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
   const current = LOCALES.find((l) => l.code === locale) || LOCALES[0];
 
   const switchLocale = (newLocale: string) => {
-    router.replace(pathname, { locale: newLocale as "en" | "si" });
+    router.replace(pathname, { locale: newLocale as "en" | "zh" | "ja" | "ko" | "es" | "fr" | "ru" | "tr" | "ta" | "si" });
     setOpen(false);
   };
 
@@ -53,7 +61,7 @@ export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
         </button>
 
         {open && (
-          <div className="absolute right-0 mt-1 w-36 bg-card border rounded-lg shadow-lg overflow-hidden z-50">
+          <div className="absolute right-0 mt-1 w-40 bg-card border rounded-lg shadow-lg overflow-y-auto max-h-80 z-50">
             {LOCALES.map((l) => (
               <button
                 key={l.code}
@@ -89,7 +97,7 @@ export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1 w-36 bg-card border rounded-lg shadow-lg overflow-hidden z-50">
+        <div className="absolute right-0 mt-1 w-40 bg-card border rounded-lg shadow-lg overflow-y-auto max-h-80 z-50">
           {LOCALES.map((l) => (
             <button
               key={l.code}

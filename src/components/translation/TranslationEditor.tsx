@@ -14,7 +14,17 @@ interface TranslationEditorProps {
   entityTypeSlug: string;
 }
 
-const LOCALES = [{ code: "si", name: "Sinhala", nativeName: "සිංහල" }];
+const LOCALES = [
+  { code: "zh", name: "Chinese", nativeName: "中文" },
+  { code: "ja", name: "Japanese", nativeName: "日本語" },
+  { code: "ko", name: "Korean", nativeName: "한국어" },
+  { code: "es", name: "Spanish", nativeName: "Español" },
+  { code: "fr", name: "French", nativeName: "Français" },
+  { code: "ru", name: "Russian", nativeName: "Русский" },
+  { code: "tr", name: "Turkish", nativeName: "Türkçe" },
+  { code: "ta", name: "Tamil", nativeName: "தமிழ்" },
+  { code: "si", name: "Sinhala", nativeName: "සිංහල" },
+];
 
 export function TranslationEditor({
   entityType,
@@ -24,7 +34,7 @@ export function TranslationEditor({
   originalValues,
   existingTranslations,
 }: TranslationEditorProps) {
-  const [locale, setLocale] = useState("si");
+  const [locale, setLocale] = useState("zh");
   const [values, setValues] = useState<Record<string, string>>({});
   const [statuses, setStatuses] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);

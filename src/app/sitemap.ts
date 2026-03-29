@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 
-const locales = ["en", "si"] as const;
+const locales = ["en", "zh", "ja", "ko", "es", "fr", "ru", "tr", "ta", "si"] as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";

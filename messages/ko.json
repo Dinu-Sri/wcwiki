@@ -1,0 +1,73 @@
+{
+  "common": {
+    "search": "Search",
+    "searchPlaceholder": "Search artists, paintings, articles…",
+    "all": "All",
+    "artists": "Artists",
+    "paintings": "Paintings",
+    "articles": "Articles",
+    "loadMore": "Load more",
+    "noResults": "No results found",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "approve": "Approve",
+    "reject": "Reject",
+    "pending": "Pending",
+    "approved": "Approved",
+    "draft": "Draft"
+  },
+  "home": {
+    "tagline": "The Watercolor Encyclopedia",
+    "description": "Search and discover watercolor artists, paintings, and articles from around the world."
+  },
+  "artist": {
+    "biography": "Biography",
+    "paintings": "Paintings",
+    "nationality": "Nationality",
+    "styles": "Styles",
+    "lifespan": "Lifespan",
+    "website": "Website",
+    "claimProfile": "Claim this profile",
+    "relatedArtists": "Related Artists"
+  },
+  "painting": {
+    "medium": "Medium",
+    "surface": "Surface",
+    "dimensions": "Dimensions",
+    "year": "Year",
+    "artist": "Artist",
+    "tags": "Tags",
+    "attribution": "This work is listed for educational purposes only. All rights belong to the respective artist.",
+    "source": "Source",
+    "relatedPaintings": "Related Paintings"
+  },
+  "article": {
+    "by": "By",
+    "publishedOn": "Published on",
+    "tableOfContents": "Table of Contents",
+    "relatedArticles": "Related Articles"
+  },
+  "auth": {
+    "signInTitle": "Sign in to wcWIKI",
+    "signInGoogle": "Continue with Google",
+    "signInEmail": "Sign in with email",
+    "registerTitle": "Create your account",
+    "areYouArtist": "Are you a watercolor artist?",
+    "artistDescription": "If yes, you'll need to submit a recent original work for verification.",
+    "uploadWork": "Upload your recent work",
+    "profileFields": "Complete your profile"
+  },
+  "footer": {
+    "copyright": "© {year} wcWIKI.com — A community-driven watercolor encyclopedia",
+    "educationalDisclaimer": "All artworks are listed for educational purposes only. Rights belong to respective artists.",
+    "about": "About",
+    "contact": "Contact",
+    "terms": "Terms",
+    "privacy": "Privacy"
+  }
+}

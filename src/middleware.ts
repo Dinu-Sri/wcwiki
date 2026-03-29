@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Strip locale prefix for auth checks
-  const pathWithoutLocale = pathname.replace(/^\/(en|si)/, "") || "/";
+  const pathWithoutLocale = pathname.replace(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)/, "") || "/";
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
