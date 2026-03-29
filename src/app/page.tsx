@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { SearchBox, SearchCategory } from "@/components/search/SearchBox";
 import { UserMenu } from "@/components/auth/UserMenu";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { SuggestButton } from "@/components/SuggestButton";
+import { NotificationBell } from "@/components/NotificationBell";
 import Link from "next/link";
 
 export default function Home() {
@@ -29,8 +30,9 @@ export default function Home() {
   return (
     <main className="flex-1 flex flex-col min-h-screen watercolor-wash relative">
       {/* Top bar — right-aligned auth */}
-      <div className="w-full flex items-center justify-end gap-2 px-4 sm:px-6 py-3 animate-fade-in-up">
-        <LanguageSwitcher compact />
+      <div className="w-full flex items-center justify-end gap-1 px-4 sm:px-6 py-3 animate-fade-in-up">
+        <SuggestButton />
+        <NotificationBell />
         <UserMenu />
       </div>
 
@@ -89,16 +91,6 @@ export default function Home() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Vision statement — above footer */}
-      <div className="text-center px-6 sm:px-8 pb-6 pt-2">
-        <p className="text-[11px] sm:text-xs font-medium tracking-widest uppercase text-muted/80 mb-1">
-          Artists Building for Artists
-        </p>
-        <p className="text-[10px] sm:text-[11px] text-muted/50 leading-relaxed max-w-md mx-auto">
-          The world&apos;s first peer-reviewed watercolor encyclopedia, created exclusively by human artists. We safeguard authentic art philosophy through a unique, human-verified knowledge base that remains accessible to all, forever.
-        </p>
       </div>
 
       {/* Bottom footer — minimal */}

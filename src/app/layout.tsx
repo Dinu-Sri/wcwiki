@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | wcWIKI",
   },
   description:
-    "Search and discover watercolor artists, paintings, and articles. A community-driven encyclopedia for watercolor art worldwide.",
+    "The world's first peer-reviewed watercolor encyclopedia, created exclusively by human artists. Artists building for artists — safeguarding authentic art philosophy through a human-verified knowledge base, accessible to all, forever.",
   keywords: [
     "watercolor",
     "watercolour",

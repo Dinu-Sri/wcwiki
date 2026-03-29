@@ -10,9 +10,11 @@ export function Footer() {
             <div className="flex items-center gap-2 mb-3">
               <img src="/logo.webp" alt="wcWIKI" className="h-6 w-auto" />
             </div>
+            <p className="text-[11px] font-medium tracking-wide text-muted/80 mb-1">
+              Artists Building for Artists
+            </p>
             <p className="text-muted text-xs leading-relaxed max-w-xs">
-              A community-driven watercolor encyclopedia. Explore the beauty of
-              watercolor art — from classic masters to contemporary creators.
+              The world&apos;s first peer-reviewed watercolor encyclopedia, created exclusively by human artists. Safeguarding authentic art philosophy through a human-verified knowledge base, accessible to all, forever.
             </p>
           </div>
 

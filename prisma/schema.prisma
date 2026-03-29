@@ -85,6 +85,9 @@ model User {
   apiKeys              ApiKey[]
   editorApplications   EditorApplication[] @relation("ApplicationAuthor")
   applicationReviews   EditorApplication[] @relation("ApplicationReviewer")
+  suggestions          Suggestion[]        @relation("SuggestionAuthor")
+  claimedSuggestions   Suggestion[]        @relation("SuggestionClaimer")
+  notifications        Notification[]
 }
 
 enum UserRole {
@@ -448,4 +451,85 @@ enum TranslationStatus {
   IN_REVIEW
   APPROVED
   REJECTED
+}
+
+// ─── Suggestions ───────────────────────────────────────────────────────────
+
+model Suggestion {
+  id         String           @id @default(cuid())
+  type       SuggestionType
+  topic      String?          // For NEW_ARTICLE — the suggested topic
+  details    String?          @db.Text // Optional description
+  language   String?          // Preferred language for new article (e.g. "en", "zh")
+
+  // For translation requests — links to existing entity
+  entityType EntityType?
+  entityId   String?
+  targetLocale String?        // Which language to translate into
+
+  status     SuggestionStatus @default(OPEN)
+
+  requestedById String
+  requestedBy   User          @relation("SuggestionAuthor", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  claimedById   String?
+  claimedBy     User?         @relation("SuggestionClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt     DateTime?
+
+  // What was published (filled when status → PUBLISHED)
+  publishedEntityType EntityType?
+  publishedEntityId   String?
+  publishedAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notifications Notification[]
+
+  @@index([status])
+  @@index([requestedById])
+  @@index([claimedById])
+  @@index([type, status])
+}
+
+enum SuggestionType {
+  NEW_ARTICLE
+  TRANSLATE_ARTICLE
+  TRANSLATE_ARTIST
+}
+
+enum SuggestionStatus {
+  OPEN
+  CLAIMED
+  IN_PROGRESS
+  PUBLISHED
+  REJECTED
+}
+
+// ─── Notifications ─────────────────────────────────────────────────────────
+
+model Notification {
+  id      String           @id @default(cuid())
+  userId  String
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type    NotificationType
+  message String
+  link    String?          // URL to navigate to
+
+  read    Boolean          @default(false)
+
+  suggestionId String?
+  suggestion   Suggestion?  @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  SUGGESTION_PUBLISHED
+  SUGGESTION_CLAIMED
+  SUGGESTION_REJECTED
 }

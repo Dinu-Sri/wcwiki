@@ -3,6 +3,8 @@ import { SearchBox } from "@/components/search/SearchBox";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { SuggestButton } from "@/components/SuggestButton";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export function Header() {
   return (
@@ -36,6 +38,10 @@ export function Header() {
 
         {/* Language switcher — compact globe icon near profile */}
         <LanguageSwitcher compact />
+
+        {/* Suggest & Notifications */}
+        <SuggestButton />
+        <NotificationBell />
 
         {/* User menu */}
         <UserMenu />
