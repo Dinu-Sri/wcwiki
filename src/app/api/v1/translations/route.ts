@@ -34,10 +34,6 @@ export async function GET(req: NextRequest) {
       orderBy: { updatedAt: "desc" },
       skip: offset,
       take: limit,
-      include: {
-        translatedBy: { select: { id: true, name: true } },
-        reviewedBy: { select: { id: true, name: true } },
-      },
     }),
     db.translation.count({ where }),
   ]);

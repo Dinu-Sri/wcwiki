@@ -15,10 +15,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   const translation = await db.translation.findUnique({
     where: { id },
-    include: {
-      translatedBy: { select: { id: true, name: true } },
-      reviewedBy: { select: { id: true, name: true } },
-    },
   });
 
   if (!translation) {
