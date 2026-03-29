@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { SearchBox, SearchCategory } from "@/components/search/SearchBox";
 import { ArtistCard } from "@/components/cards/ArtistCard";
 import { PaintingCard } from "@/components/cards/PaintingCard";
 import { ArticleCard } from "@/components/cards/ArticleCard";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 interface SearchResults {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,47 +27,33 @@ interface CategoryResults {
 
 const TABS: { label: string; value: SearchCategory; icon: string }[] = [
   { label: "All", value: "all", icon: "M4 6h16M4 12h16M4 18h16" },
-  { label: "Articles", value: "articles", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
-  { label: "Paintings", value: "paintings", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
   { label: "Artists", value: "artists", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
+  { label: "Paintings", value: "paintings", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
+  { label: "Articles", value: "articles", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
 ];
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const locale = useLocale();
   const q = searchParams.get("q") || "";
   const cat = (searchParams.get("category") || "all") as SearchCategory;
-  const pageParam = parseInt(searchParams.get("page") || "1", 10);
-  const currentPage = Math.max(1, pageParam);
 
   const [category, setCategory] = useState<SearchCategory>(cat);
   const [results, setResults] = useState<SearchResults | null>(null);
   const [categoryResults, setCategoryResults] = useState<CategoryResults | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const LIMIT = 10;
-
-  // Build URL with params
-  const buildUrl = useCallback((params: { q?: string; category?: string; page?: number }) => {
-    const sp = new URLSearchParams();
-    if (params.q || q) sp.set("q", params.q || q);
-    if (params.category && params.category !== "all") sp.set("category", params.category);
-    if (params.page && params.page > 1) sp.set("page", String(params.page));
-    return `/search?${sp.toString()}`;
-  }, [q]);
+  const [offset, setOffset] = useState(0);
+  const LIMIT = 20;
 
   const fetchResults = useCallback(
-    async (searchQuery: string, searchCategory: SearchCategory, page: number) => {
+    async (searchQuery: string, searchCategory: SearchCategory, searchOffset: number) => {
       if (!searchQuery.trim()) return;
       setIsLoading(true);
       try {
-        const offset = (page - 1) * LIMIT;
         const params = new URLSearchParams({
           q: searchQuery,
           category: searchCategory,
           limit: String(LIMIT),
-          offset: String(offset),
-          locale,
+          offset: String(searchOffset),
         });
         const res = await fetch(`/api/search?${params}`);
         if (res.ok) {
@@ -88,26 +72,23 @@ export default function SearchPage() {
         setIsLoading(false);
       }
     },
-    [locale]
+    []
   );
 
   useEffect(() => {
-    fetchResults(q, category, currentPage);
-  }, [q, category, currentPage, fetchResults]);
-
-  // Sync category from URL
-  useEffect(() => {
-    setCategory(cat);
-  }, [cat]);
+    setOffset(0);
+    fetchResults(q, category, 0);
+  }, [q, category, fetchResults]);
 
   const handleTabChange = (tab: SearchCategory) => {
     setCategory(tab);
-    router.push(buildUrl({ category: tab, page: 1 }));
+    setOffset(0);
   };
 
-  const handlePageChange = (page: number) => {
-    router.push(buildUrl({ category, page }));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const loadMore = () => {
+    const newOffset = offset + LIMIT;
+    setOffset(newOffset);
+    fetchResults(q, category, newOffset);
   };
 
   // Count totals for tab badges
@@ -130,7 +111,6 @@ export default function SearchPage() {
             <div className="flex-1">
               <SearchBox initialQuery={q} initialCategory={category} />
             </div>
-            <LanguageSwitcher compact />
           </div>
         </div>
 
@@ -164,9 +144,7 @@ export default function SearchPage() {
             <p className="text-xs sm:text-sm text-muted">
               {isLoading
                 ? "Searching…"
-                : category !== "all" && allTotal > LIMIT
-                  ? `Page ${currentPage} of about ${allTotal} results for "${q}"`
-                  : `About ${allTotal} results for "${q}"`}
+                : `About ${allTotal} results for "${q}"`}
             </p>
           </div>
         )}
@@ -213,6 +191,7 @@ export default function SearchPage() {
                       slug={article.slug as string}
                       title={article.title as string}
                       excerpt={article.excerpt as string}
+                      _formatted={article._formatted as Record<string, string>}
                     />
                   ))}
                 </div>
@@ -296,6 +275,7 @@ export default function SearchPage() {
                       deathYear={artist.deathYear as number}
                       bio={artist.bio as string}
                       styles={artist.styles as string[]}
+                      _formatted={artist._formatted as Record<string, string>}
                     />
                   ))}
                 </div>
@@ -317,116 +297,20 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* Pagination — Google style */}
-            {allTotal > 0 && category !== "all" && (
-              <Pagination
-                currentPage={currentPage}
-                totalResults={allTotal}
-                perPage={LIMIT}
-                onPageChange={handlePageChange}
-              />
+            {/* Load more */}
+            {category !== "all" && categoryResults && categoryResults.hits.length >= LIMIT && (
+              <div className="text-center py-6">
+                <button
+                  onClick={loadMore}
+                  className="px-8 py-3 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-accent hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+                >
+                  Load more results
+                </button>
+              </div>
             )}
           </div>
         )}
       </div>
     </main>
-  );
-}
-
-// Google-style pagination component
-function Pagination({
-  currentPage,
-  totalResults,
-  perPage,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalResults: number;
-  perPage: number;
-  onPageChange: (page: number) => void;
-}) {
-  const totalPages = Math.ceil(totalResults / perPage);
-  if (totalPages <= 1) return null;
-
-  // Calculate visible page range (show max 10 pages centered on current)
-  const maxVisible = 10;
-  let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-  const end = Math.min(totalPages, start + maxVisible - 1);
-  if (end - start + 1 < maxVisible) {
-    start = Math.max(1, end - maxVisible + 1);
-  }
-
-  const pages: number[] = [];
-  for (let i = start; i <= end; i++) pages.push(i);
-
-  return (
-    <nav className="flex items-center justify-center gap-1 py-8" aria-label="Pagination">
-      {/* Previous */}
-      {currentPage > 1 && (
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          className="flex items-center gap-1 px-3 py-2 text-sm text-primary hover:text-primary-hover font-medium rounded-lg hover:bg-accent transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="hidden sm:inline">Previous</span>
-        </button>
-      )}
-
-      {/* Page numbers */}
-      <div className="flex items-center gap-0.5">
-        {start > 1 && (
-          <>
-            <button
-              onClick={() => onPageChange(1)}
-              className="w-9 h-9 flex items-center justify-center text-sm rounded-lg text-primary hover:bg-accent transition-colors"
-            >
-              1
-            </button>
-            {start > 2 && <span className="w-9 h-9 flex items-center justify-center text-muted text-sm">…</span>}
-          </>
-        )}
-
-        {pages.map((page) => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={`w-9 h-9 flex items-center justify-center text-sm rounded-lg transition-colors ${
-              page === currentPage
-                ? "bg-primary text-white font-bold shadow-sm"
-                : "text-primary hover:bg-accent"
-            }`}
-          >
-            {page}
-          </button>
-        ))}
-
-        {end < totalPages && (
-          <>
-            {end < totalPages - 1 && <span className="w-9 h-9 flex items-center justify-center text-muted text-sm">…</span>}
-            <button
-              onClick={() => onPageChange(totalPages)}
-              className="w-9 h-9 flex items-center justify-center text-sm rounded-lg text-primary hover:bg-accent transition-colors"
-            >
-              {totalPages}
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Next */}
-      {currentPage < totalPages && (
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          className="flex items-center gap-1 px-3 py-2 text-sm text-primary hover:text-primary-hover font-medium rounded-lg hover:bg-accent transition-colors"
-        >
-          <span className="hidden sm:inline">Next</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      )}
-    </nav>
   );
 }

@@ -11,13 +11,11 @@ import {
   generatePersonSchema,
   generateBreadcrumbSchema,
 } from "@/lib/schema";
-import { getTranslations } from "@/lib/translations";
-import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 interface Props {
-  params: Promise<{ locale: string; slug: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -73,9 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArtistPage({ params }: Props) {
-  const { locale, slug } = await params;
-  const session = await auth();
-  const canTranslate = session?.user && ["SUPER_ADMIN", "APPROVER", "EDITOR"].includes(session.user.role);
+  const { slug } = await params;
 
   const artist = await db.artist.findUnique({
     where: { slug },
@@ -87,11 +83,6 @@ export default async function ArtistPage({ params }: Props) {
   });
 
   if (!artist) notFound();
-
-  // Fetch approved translations for this locale
-  const tr = await getTranslations("ARTIST", artist.id, locale);
-  const displayName = tr.name || artist.name;
-  const displayBio = tr.bio || artist.bio;
 
   const socialLinks = (artist.socialLinks || {}) as Record<string, string>;
   const isVerified = !!artist.connectedUserId;
@@ -155,7 +146,7 @@ export default async function ArtistPage({ params }: Props) {
             Artists
           </Link>
           <span>›</span>
-          <span className="text-foreground">{displayName}</span>
+          <span className="text-foreground">{artist.name}</span>
         </nav>
 
         {/* Edit Actions */}
@@ -167,17 +158,6 @@ export default async function ArtistPage({ params }: Props) {
             Edit this page
           </Link>
           <EditHistoryButton entityType="ARTIST" entityId={artist.id} />
-          {canTranslate && (
-            <Link
-              href={`/translate/artist/${artist.slug}`}
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-              </svg>
-              Translate
-            </Link>
-          )}
         </div>
 
         {/* Hero */}
@@ -194,7 +174,7 @@ export default async function ArtistPage({ params }: Props) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-                {displayName}
+                {artist.name}
               </h1>
               {isVerified && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">
@@ -270,14 +250,14 @@ export default async function ArtistPage({ params }: Props) {
         </div>
 
         {/* Bio */}
-        {displayBio && (
+        {artist.bio && (
           <section className="mb-10">
             <h2 className="text-xl font-semibold text-foreground mb-3">
               Biography
             </h2>
             <div
               className="text-muted leading-relaxed prose prose-neutral max-w-none"
-              dangerouslySetInnerHTML={{ __html: displayBio }}
+              dangerouslySetInnerHTML={{ __html: artist.bio }}
             />
           </section>
         )}

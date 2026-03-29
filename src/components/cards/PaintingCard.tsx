@@ -7,6 +7,9 @@ interface PaintingCardProps {
   medium?: string | null;
   year?: number | null;
   images?: string[];
+  image?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _formatted?: Record<string, any>;
 }
 
 export function PaintingCard({
@@ -15,8 +18,11 @@ export function PaintingCard({
   artistName,
   year,
   images,
+  image,
+  _formatted,
 }: PaintingCardProps) {
-  const thumbnail = images && images.length > 0 ? images[0] : null;
+  const thumbnail = images && images.length > 0 ? images[0] : image || null;
+  const displayTitle = _formatted?.title || title;
 
   return (
     <Link
@@ -43,9 +49,7 @@ export function PaintingCard({
 
       {/* Caption */}
       <div className="px-2 py-2">
-        <h3 className="text-xs font-medium text-foreground truncate leading-snug">
-          {title}
-        </h3>
+        <h3 className="text-xs font-medium text-foreground truncate leading-snug" dangerouslySetInnerHTML={{ __html: displayTitle }} />
         <div className="text-[11px] text-muted truncate">
           {artistName}{year ? ` · ${year}` : ""}
         </div>

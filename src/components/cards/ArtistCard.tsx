@@ -8,6 +8,8 @@ interface ArtistCardProps {
   deathYear?: number | null;
   bio?: string | null;
   styles?: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _formatted?: Record<string, any>;
 }
 
 export function ArtistCard({
@@ -17,6 +19,7 @@ export function ArtistCard({
   birthYear,
   deathYear,
   bio,
+  _formatted,
 }: ArtistCardProps) {
   const lifespan =
     birthYear && deathYear
@@ -39,17 +42,15 @@ export function ArtistCard({
 
       {/* Title */}
       <h3 className="text-base sm:text-lg font-medium text-primary group-hover:underline leading-snug">
-        {name}
+        <span dangerouslySetInnerHTML={{ __html: _formatted?.name || name }} />
         {subtitle && (
           <span className="text-muted font-normal text-xs sm:text-sm ml-1.5 sm:ml-2">— {subtitle}</span>
         )}
       </h3>
 
       {/* Description */}
-      {bio && (
-        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted line-clamp-2 leading-relaxed">
-          {bio}
-        </p>
+      {(bio || _formatted?.bio) && (
+        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted line-clamp-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: _formatted?.bio || bio || '' }} />
       )}
     </Link>
   );
