@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireApiKey, ApiKeyUser } from "@/lib/api-auth";
 import { generateSlug } from "@/lib/slug";
-import { syncArticle } from "@/lib/search/sync";
+import { syncArticle, syncSuggestions } from "@/lib/search/sync";
 
 // GET /api/v1/articles — List articles
 export async function GET(req: NextRequest) {
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  try { await syncArticle(article.id); } catch {}
+  try { await syncArticle(article.id); await syncSuggestions(); } catch {}
 
   return NextResponse.json({ data: article }, { status: 201 });
 }

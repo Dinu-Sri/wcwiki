@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireApiKey, ApiKeyUser } from "@/lib/api-auth";
 import { generateSlug } from "@/lib/slug";
-import { syncArtist } from "@/lib/search/sync";
+import { syncArtist, syncSuggestions } from "@/lib/search/sync";
 
 // GET /api/v1/artists — List artists
 export async function GET(req: NextRequest) {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Sync to MeiliSearch
-  try { await syncArtist(artist.id); } catch {}
+  try { await syncArtist(artist.id); await syncSuggestions(); } catch {}
 
   return NextResponse.json({ data: artist }, { status: 201 });
 }

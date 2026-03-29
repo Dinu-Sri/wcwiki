@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireApiKey, ApiKeyUser } from "@/lib/api-auth";
 import { generateSlug } from "@/lib/slug";
-import { syncPainting } from "@/lib/search/sync";
+import { syncPainting, syncSuggestions } from "@/lib/search/sync";
 
 // GET /api/v1/paintings — List paintings
 export async function GET(req: NextRequest) {
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  try { await syncPainting(painting.id); } catch {}
+  try { await syncPainting(painting.id); await syncSuggestions(); } catch {}
 
   return NextResponse.json({ data: painting }, { status: 201 });
 }

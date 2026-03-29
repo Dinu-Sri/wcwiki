@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { syncArtist, syncPainting, syncArticle } from "@/lib/search/sync";
 import { NextRequest, NextResponse } from "next/server";
 
 // Submit an edit proposal
@@ -93,6 +94,25 @@ export async function POST(req: NextRequest) {
     }
 
     created.push(record);
+  }
+
+  // Sync to MeiliSearch after auto-approved edits
+  if (autoApprove && created.length > 0) {
+    try {
+      switch (entityType) {
+        case "ARTIST":
+          await syncArtist(entityId);
+          break;
+        case "PAINTING":
+          await syncPainting(entityId);
+          break;
+        case "ARTICLE":
+          await syncArticle(entityId);
+          break;
+      }
+    } catch (err) {
+      console.error(`Failed to sync ${entityType} ${entityId} to MeiliSearch:`, err);
+    }
   }
 
   return NextResponse.json(

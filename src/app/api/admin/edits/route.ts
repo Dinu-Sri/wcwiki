@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { syncArtist, syncPainting, syncArticle } from "@/lib/search/sync";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
@@ -81,6 +82,23 @@ export async function PATCH(req: NextRequest) {
           data: updateData,
         });
         break;
+    }
+
+    // Sync to MeiliSearch after approval
+    try {
+      switch (edit.entityType) {
+        case "ARTIST":
+          await syncArtist(edit.entityId);
+          break;
+        case "PAINTING":
+          await syncPainting(edit.entityId);
+          break;
+        case "ARTICLE":
+          await syncArticle(edit.entityId);
+          break;
+      }
+    } catch (err) {
+      console.error(`Failed to sync ${edit.entityType} ${edit.entityId} to MeiliSearch:`, err);
     }
   }
 
