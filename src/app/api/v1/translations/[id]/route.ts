@@ -73,5 +73,5 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   await db.translation.delete({ where: { id } });
 
-  return NextResponse.json({ data: { deleted: true } });
+  return NextResponse.json({ success: true });
 }
