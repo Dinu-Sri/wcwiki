@@ -380,9 +380,17 @@ GET /api/v1/upload?limit=20&offset=0&subfolder=paintings
 
 **Permission:** `read`
 
----
+### Delete Media
 
-## Translations
+```
+DELETE /api/v1/media/{id}
+```
+
+Deletes the media file from storage and removes the database record.
+
+**Permission:** `delete`
+
+---
 
 Manage translations for artists, paintings, and articles. Supports manual and machine (Google Translate) translation.
 
