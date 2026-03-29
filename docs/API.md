@@ -382,6 +382,150 @@ GET /api/v1/upload?limit=20&offset=0&subfolder=paintings
 
 ---
 
+## Translations
+
+Manage translations for artists, paintings, and articles. Supports manual and machine (Google Translate) translation.
+
+**Translation statuses:** `MACHINE`, `IN_REVIEW`, `APPROVED`, `REJECTED`
+
+**Translatable fields per entity type:**
+- **ARTIST:** `name`, `bio`
+- **PAINTING:** `title`, `description`
+- **ARTICLE:** `title`, `excerpt`, `body`
+
+### List Translations
+
+```
+GET /api/v1/translations?entityType=ARTICLE&locale=si&status=APPROVED&limit=20&offset=0
+```
+
+**Query Parameters:**
+- `entityType` — `ARTIST`, `PAINTING`, or `ARTICLE`
+- `entityId` — filter by specific entity ID
+- `locale` — language code (e.g., `si` for Sinhala)
+- `status` — `MACHINE`, `IN_REVIEW`, `APPROVED`, `REJECTED`
+- `limit` (int, max 100, default 20)
+- `offset` (int, default 0)
+
+**Permission:** `read`
+
+### Get Translation
+
+```
+GET /api/v1/translations/{id}
+```
+
+Returns a single translation record with translator and reviewer info.
+
+**Permission:** `read`
+
+### Create/Update Translations (Manual)
+
+```
+POST /api/v1/translations
+Content-Type: application/json
+
+{
+  "entityType": "ARTICLE",
+  "entityId": "clxyz123",
+  "locale": "si",
+  "translations": {
+    "title": "ජල වර්ණ පින්තාරු කිරීමේ ඉතිහාසය",
+    "excerpt": "පැරණි අත්පිටපත් සිට නවීන..."
+  }
+}
+```
+
+**Required fields:** `entityType`, `entityId`, `locale`, `translations`
+
+Translations are saved with status `IN_REVIEW` and need admin approval before they appear on the public site.
+
+Segment keys (`body_0`, `body_1`, ...) are supported for paragraph-level article body translations.
+
+**Permission:** `write`
+
+### Create Translations (Machine)
+
+```
+POST /api/v1/translations
+Content-Type: application/json
+
+{
+  "entityType": "ARTICLE",
+  "entityId": "clxyz123",
+  "locale": "si",
+  "useMachine": true
+}
+```
+
+Automatically translates all fields using Google Translate. Saved with status `MACHINE`.
+
+**Permission:** `write`
+
+### Update Translation
+
+```
+PATCH /api/v1/translations/{id}
+Content-Type: application/json
+
+{
+  "value": "Updated translation text...",
+  "status": "APPROVED"
+}
+```
+
+**Updatable fields:** `value`, `status`
+
+Setting status to `APPROVED` or `REJECTED` auto-sets `reviewedAt`.
+
+**Permission:** `write`
+
+### Delete Translation
+
+```
+DELETE /api/v1/translations/{id}
+```
+
+**Permission:** `delete`
+
+### Example: Machine translate + approve (Node.js)
+
+```javascript
+const API = 'http://your-server/api/v1';
+const KEY = 'wk_your_key';
+const headers = { 'Authorization': `Bearer ${KEY}`, 'Content-Type': 'application/json' };
+
+// 1. Machine translate an article to Sinhala
+const result = await (await fetch(`${API}/translations`, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    entityType: 'ARTICLE',
+    entityId: 'clxyz123',
+    locale: 'si',
+    useMachine: true,
+  }),
+})).json();
+console.log('Translated:', result.data);
+
+// 2. List machine translations for review
+const list = await (await fetch(
+  `${API}/translations?entityType=ARTICLE&entityId=clxyz123&locale=si&status=MACHINE`,
+  { headers }
+)).json();
+
+// 3. Approve a translation
+for (const t of list.data) {
+  await fetch(`${API}/translations/${t.id}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ status: 'APPROVED' }),
+  });
+}
+```
+
+---
+
 ## Rate Limits
 
 Currently no rate limits are enforced. Be respectful with usage.

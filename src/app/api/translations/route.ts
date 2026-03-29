@@ -13,6 +13,15 @@ const TRANSLATABLE_FIELDS: Record<string, string[]> = {
 // GET /api/translations?entityType=ARTICLE&entityId=xxx&locale=si
 // Fetch existing translations for an entity
 export async function GET(req: NextRequest) {
+  // Require EDITOR+ role
+  const session = await auth();
+  if (
+    !session?.user ||
+    !["SUPER_ADMIN", "APPROVER", "EDITOR"].includes(session.user.role)
+  ) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const entityType = searchParams.get("entityType") as EntityType | null;
   const entityId = searchParams.get("entityId");
@@ -49,12 +58,15 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { entityType, entityId, locale, translations, useMachine } = body as {
+  const { entityType, entityId, locale, translations, useMachine, singleField, singleFieldText, segments: useSegments } = body as {
     entityType: string;
     entityId: string;
     locale: string;
     translations?: Record<string, string>; // field → value (manual)
     useMachine?: boolean;
+    singleField?: string; // translate a single field/segment
+    singleFieldText?: string; // text for the single field
+    segments?: boolean; // split body into segments for machine translation
   };
 
   if (!entityType || !entityId || !locale) {
@@ -79,6 +91,43 @@ export async function POST(req: NextRequest) {
 
   // ── Machine translation path ──
   if (useMachine) {
+    // Single field/segment translation
+    if (singleField && singleFieldText) {
+      try {
+        const translated = await machineTranslate(singleFieldText, "en", locale);
+        await db.translation.upsert({
+          where: {
+            entityType_entityId_locale_field: {
+              entityType: entityType as EntityType,
+              entityId,
+              locale,
+              field: singleField,
+            },
+          },
+          update: {
+            value: translated,
+            status: "MACHINE",
+            machineSource: "google",
+            translatedById: null,
+            reviewedById: null,
+            reviewedAt: null,
+          },
+          create: {
+            entityType: entityType as EntityType,
+            entityId,
+            locale,
+            field: singleField,
+            value: translated,
+            status: "MACHINE",
+            machineSource: "google",
+          },
+        });
+        return NextResponse.json({ translations: { [singleField]: translated }, source: "machine" });
+      } catch {
+        return NextResponse.json({ error: "Translation failed" }, { status: 500 });
+      }
+    }
+
     // Fetch original content from DB
     const original = await fetchOriginalContent(entityType as EntityType, entityId);
     if (!original) {
@@ -87,6 +136,63 @@ export async function POST(req: NextRequest) {
 
     const results: Record<string, string> = {};
 
+    // If segments mode and entity is ARTICLE, split body into segments
+    if (useSegments && entityType === "ARTICLE" && original.body) {
+      const { splitBodyIntoSegments } = await import("@/lib/translation-segments");
+      const segs = splitBodyIntoSegments(original.body);
+
+      // Translate non-body fields first
+      for (const field of allowedFields.filter((f) => f !== "body")) {
+        const text = original[field];
+        if (!text || text.trim().length === 0) continue;
+        try {
+          const translated = await machineTranslate(text, "en", locale);
+          results[field] = translated;
+          await db.translation.upsert({
+            where: {
+              entityType_entityId_locale_field: {
+                entityType: entityType as EntityType,
+                entityId,
+                locale,
+                field,
+              },
+            },
+            update: { value: translated, status: "MACHINE", machineSource: "google", translatedById: null, reviewedById: null, reviewedAt: null },
+            create: { entityType: entityType as EntityType, entityId, locale, field, value: translated, status: "MACHINE", machineSource: "google" },
+          });
+        } catch (e) {
+          console.error(`Machine translate failed for ${field}:`, e);
+          results[field] = "[Translation failed]";
+        }
+      }
+
+      // Translate each body segment
+      for (const seg of segs) {
+        try {
+          const translated = await machineTranslate(seg.html, "en", locale);
+          results[seg.key] = translated;
+          await db.translation.upsert({
+            where: {
+              entityType_entityId_locale_field: {
+                entityType: entityType as EntityType,
+                entityId,
+                locale,
+                field: seg.key,
+              },
+            },
+            update: { value: translated, status: "MACHINE", machineSource: "google", translatedById: null, reviewedById: null, reviewedAt: null },
+            create: { entityType: entityType as EntityType, entityId, locale, field: seg.key, value: translated, status: "MACHINE", machineSource: "google" },
+          });
+        } catch (e) {
+          console.error(`Machine translate failed for ${seg.key}:`, e);
+          results[seg.key] = "[Translation failed]";
+        }
+      }
+
+      return NextResponse.json({ translations: results, source: "machine" });
+    }
+
+    // Standard (non-segment) machine translation
     for (const field of allowedFields) {
       const text = original[field];
       if (!text || text.trim().length === 0) continue;
@@ -143,7 +249,9 @@ export async function POST(req: NextRequest) {
   const saved: Record<string, string> = {};
 
   for (const [field, value] of Object.entries(translations)) {
-    if (!allowedFields.includes(field)) continue;
+    // Allow both standard fields and segment keys (body_0, body_1, etc.)
+    const isSegmentKey = /^body_\d+$/.test(field);
+    if (!allowedFields.includes(field) && !isSegmentKey) continue;
     if (typeof value !== "string") continue;
 
     await db.translation.upsert({

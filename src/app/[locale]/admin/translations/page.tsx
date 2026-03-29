@@ -148,6 +148,21 @@ export default function TranslationsPage() {
             <option key={s} value={s}>{s.replace("_", " ")}</option>
           ))}
         </select>
+
+        {/* Bulk Approve */}
+        {translations.some((t) => t.status === "MACHINE" || t.status === "IN_REVIEW") && (
+          <button
+            onClick={async () => {
+              const pending = translations.filter((t) => t.status === "MACHINE" || t.status === "IN_REVIEW");
+              for (const t of pending) {
+                await handleReview(t.id, "APPROVED");
+              }
+            }}
+            className="ml-auto px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
+          >
+            Approve All on Page ({translations.filter((t) => t.status === "MACHINE" || t.status === "IN_REVIEW").length})
+          </button>
+        )}
       </div>
 
       {/* Table */}

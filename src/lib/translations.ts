@@ -1,10 +1,12 @@
 import { db } from "@/lib/db";
 import { EntityType } from "@prisma/client";
+import { joinSegments } from "@/lib/translation-segments";
 
 /**
  * Fetch approved translations for an entity in a given locale.
  * Returns a map of field → translated value.
  * Only returns APPROVED translations.
+ * Automatically reassembles body segments (body_0, body_1, ...) into a single `body` field.
  */
 export async function getTranslations(
   entityType: EntityType,
@@ -23,9 +25,21 @@ export async function getTranslations(
   });
 
   const map: Record<string, string> = {};
+  const segmentMap: Record<string, string> = {};
+
   for (const t of translations) {
-    map[t.field] = t.value;
+    if (/^body_\d+$/.test(t.field)) {
+      segmentMap[t.field] = t.value;
+    } else {
+      map[t.field] = t.value;
+    }
   }
+
+  // Reassemble body segments into a single body field
+  if (Object.keys(segmentMap).length > 0 && !map.body) {
+    map.body = joinSegments(segmentMap);
+  }
+
   return map;
 }
 

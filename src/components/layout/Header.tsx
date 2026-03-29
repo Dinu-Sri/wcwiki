@@ -34,10 +34,8 @@ export function Header() {
           </Link>
         </nav>
 
-        {/* Language switcher — desktop only */}
-        <div className="hidden md:block">
-          <LanguageSwitcher />
-        </div>
+        {/* Language switcher — compact globe icon near profile */}
+        <LanguageSwitcher compact />
 
         {/* User menu */}
         <UserMenu />
