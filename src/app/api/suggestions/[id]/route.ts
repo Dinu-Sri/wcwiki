@@ -51,7 +51,21 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         },
       });
 
-      return NextResponse.json({ data: updated });
+      // Build redirect URL based on suggestion type
+      let redirectUrl = "/dashboard";
+      if (suggestion.type === "NEW_ARTICLE") {
+        redirectUrl = "/admin/content";
+      } else if (suggestion.entityType && suggestion.entityId) {
+        // For translation suggestions, look up the entity slug
+        const entitySlug = suggestion.entityId;
+        if (suggestion.type === "TRANSLATE_ARTICLE") {
+          redirectUrl = `/edit/article/${entitySlug}`;
+        } else if (suggestion.type === "TRANSLATE_ARTIST") {
+          redirectUrl = `/edit/artist/${entitySlug}`;
+        }
+      }
+
+      return NextResponse.json({ data: updated, redirectUrl });
     }
 
     case "in_progress": {

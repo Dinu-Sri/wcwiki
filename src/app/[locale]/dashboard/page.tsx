@@ -25,6 +25,8 @@ interface SuggestionItem {
   entityType: string | null;
   entityId: string | null;
   targetLocale: string | null;
+  details: string | null;
+  requestedBy?: { name: string | null } | null;
 }
 
 interface ApplicationStatus {
@@ -44,12 +46,14 @@ export default function DashboardPage() {
   const router = useRouter();
   const [edits, setEdits] = useState<EditItem[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
+  const [openSuggestions, setOpenSuggestions] = useState<SuggestionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<ApplicationStatus | null>(null);
   const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
   const [applyMessage, setApplyMessage] = useState("");
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState<string | null>(null);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -75,6 +79,13 @@ export default function DashboardPage() {
       if (suggestRes.ok) {
         const data = await suggestRes.json();
         setSuggestions(data.data || []);
+      }
+
+      // Fetch open suggestions for EDITOR+ users
+      const queueRes = await fetch("/api/suggestions?status=OPEN");
+      if (queueRes.ok) {
+        const data = await queueRes.json();
+        setOpenSuggestions(data.data || []);
       }
     } finally {
       setLoading(false);
@@ -142,6 +153,33 @@ export default function DashboardPage() {
         return "bg-yellow-50 text-yellow-700 border border-yellow-200";
     }
   };
+
+  const ROLE_LEVEL: Record<string, number> = { USER: 0, EDITOR: 1, APPROVER: 2, SUPER_ADMIN: 3 };
+  const userLevel = ROLE_LEVEL[session.user.role as string] || 0;
+
+  const handleClaim = async (id: string) => {
+    setClaiming(id);
+    try {
+      const res = await fetch(`/api/suggestions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "claim" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.redirectUrl) {
+          router.push(data.redirectUrl);
+          return;
+        }
+        fetchDashboard();
+      }
+    } finally {
+      setClaiming(null);
+    }
+  };
+
+  const typeLabel = (t: string) =>
+    t === "NEW_ARTICLE" ? "New Article" : t === "TRANSLATE_ARTICLE" ? "Translate Article" : "Translate Artist";
 
   return (
     <>
@@ -325,6 +363,61 @@ export default function DashboardPage() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Suggestion Queue — EDITOR+ can see and claim open suggestions */}
+          {userLevel >= 1 && openSuggestions.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-foreground mb-1">
+                Suggestion Queue
+              </h2>
+              <p className="text-xs text-muted mb-3">
+                Open suggestions from users. Claim one to start working on it.
+              </p>
+              <div className="bg-surface border border-border rounded-xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-muted">
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Topic / Entity</th>
+                      <th className="px-4 py-3">Requested By</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {openSuggestions.map((s) => (
+                      <tr key={s.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-3 text-xs">{typeLabel(s.type)}</td>
+                        <td className="px-4 py-3">
+                          <div className="text-foreground text-sm">
+                            {s.topic || `${s.entityType?.toLowerCase()} \u2192 ${s.targetLocale}`}
+                          </div>
+                          {s.details && (
+                            <div className="text-xs text-muted mt-0.5 line-clamp-1">{s.details}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-muted text-xs">
+                          {s.requestedBy?.name || "Unknown"}
+                        </td>
+                        <td className="px-4 py-3 text-muted text-xs">
+                          {new Date(s.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleClaim(s.id)}
+                            disabled={claiming === s.id}
+                            className="px-3 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                          >
+                            {claiming === s.id ? "Claiming…" : "Claim & Edit"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

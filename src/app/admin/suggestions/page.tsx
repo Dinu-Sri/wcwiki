@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 interface Suggestion {
   id: string;
@@ -17,6 +18,7 @@ interface Suggestion {
 }
 
 export default function AdminSuggestionsPage() {
+  const router = useRouter();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
@@ -49,7 +51,14 @@ export default function AdminSuggestionsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
-      if (res.ok) fetchSuggestions();
+      if (res.ok) {
+        const data = await res.json();
+        if (action === "claim" && data.redirectUrl) {
+          router.push(data.redirectUrl);
+          return;
+        }
+        fetchSuggestions();
+      }
     } finally {
       setActing(null);
     }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
 
 type SuggestionTab = "NEW_ARTICLE" | "TRANSLATE_ARTICLE" | "TRANSLATE_ARTIST";
@@ -97,8 +98,8 @@ export function SuggestButton() {
         </svg>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="relative bg-surface border border-border rounded-2xl shadow-xl w-full max-w-md animate-fade-in-up">
             <div className="flex items-center justify-between p-4 border-b border-border">
@@ -198,7 +199,8 @@ export function SuggestButton() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
