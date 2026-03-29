@@ -8,11 +8,6 @@ interface ArtistCardProps {
   deathYear?: number | null;
   bio?: string | null;
   styles?: string[];
-  _formatted?: {
-    name?: string;
-    nationality?: string;
-    bio?: string;
-  };
 }
 
 export function ArtistCard({
@@ -22,7 +17,6 @@ export function ArtistCard({
   birthYear,
   deathYear,
   bio,
-  _formatted,
 }: ArtistCardProps) {
   const lifespan =
     birthYear && deathYear
@@ -45,30 +39,16 @@ export function ArtistCard({
 
       {/* Title */}
       <h3 className="text-base sm:text-lg font-medium text-primary group-hover:underline leading-snug">
-        {_formatted?.name ? (
-          <span
-            dangerouslySetInnerHTML={{ __html: _formatted.name }}
-            className="[&_mark]:bg-warm/20 [&_mark]:rounded-sm"
-          />
-        ) : (
-          name
-        )}
+        {name}
         {subtitle && (
           <span className="text-muted font-normal text-xs sm:text-sm ml-1.5 sm:ml-2">— {subtitle}</span>
         )}
       </h3>
 
       {/* Description */}
-      {(bio || _formatted?.bio) && (
+      {bio && (
         <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted line-clamp-2 leading-relaxed">
-          {_formatted?.bio ? (
-            <span
-              dangerouslySetInnerHTML={{ __html: _formatted.bio }}
-              className="[&_mark]:bg-warm/20 [&_mark]:rounded-sm"
-            />
-          ) : (
-            bio
-          )}
+          {bio}
         </p>
       )}
     </Link>

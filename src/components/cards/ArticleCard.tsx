@@ -4,17 +4,12 @@ interface ArticleCardProps {
   slug: string;
   title: string;
   excerpt?: string | null;
-  _formatted?: {
-    title?: string;
-    excerpt?: string;
-  };
 }
 
 export function ArticleCard({
   slug,
   title,
   excerpt,
-  _formatted,
 }: ArticleCardProps) {
   return (
     <Link
@@ -28,27 +23,13 @@ export function ArticleCard({
 
       {/* Title */}
       <h3 className="text-base sm:text-lg font-medium text-primary group-hover:underline leading-snug">
-        {_formatted?.title ? (
-          <span
-            dangerouslySetInnerHTML={{ __html: _formatted.title }}
-            className="[&_mark]:bg-warm/20 [&_mark]:rounded-sm"
-          />
-        ) : (
-          title
-        )}
+        {title}
       </h3>
 
       {/* Excerpt */}
-      {(excerpt || _formatted?.excerpt) && (
+      {excerpt && (
         <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted line-clamp-2 leading-relaxed">
-          {_formatted?.excerpt ? (
-            <span
-              dangerouslySetInnerHTML={{ __html: _formatted.excerpt }}
-              className="[&_mark]:bg-warm/20 [&_mark]:rounded-sm"
-            />
-          ) : (
-            excerpt
-          )}
+          {excerpt}
         </p>
       )}
     </Link>

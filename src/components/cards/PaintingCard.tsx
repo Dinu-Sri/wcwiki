@@ -7,10 +7,6 @@ interface PaintingCardProps {
   medium?: string | null;
   year?: number | null;
   images?: string[];
-  _formatted?: {
-    title?: string;
-    description?: string;
-  };
 }
 
 export function PaintingCard({
@@ -19,7 +15,6 @@ export function PaintingCard({
   artistName,
   year,
   images,
-  _formatted,
 }: PaintingCardProps) {
   const thumbnail = images && images.length > 0 ? images[0] : null;
 
@@ -49,14 +44,7 @@ export function PaintingCard({
       {/* Caption */}
       <div className="px-2 py-2">
         <h3 className="text-xs font-medium text-foreground truncate leading-snug">
-          {_formatted?.title ? (
-            <span
-              dangerouslySetInnerHTML={{ __html: _formatted.title }}
-              className="[&_mark]:bg-warm/20 [&_mark]:rounded-sm"
-            />
-          ) : (
-            title
-          )}
+          {title}
         </h3>
         <div className="text-[11px] text-muted truncate">
           {artistName}{year ? ` · ${year}` : ""}
