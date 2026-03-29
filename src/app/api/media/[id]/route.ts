@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { deleteUpload } from "@/lib/storage";
+import { deleteUpload, replaceUpload } from "@/lib/storage";
 
 // GET /api/media/[id] — Single media item with usage info
 export async function GET(
@@ -115,4 +115,73 @@ export async function DELETE(
   await db.media.delete({ where: { id } });
 
   return NextResponse.json({ success: true });
+}
+
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+// PUT /api/media/[id] — Replace file with a new optimized version (keeps same URL)
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (
+    !session?.user ||
+    !["APPROVER", "SUPER_ADMIN"].includes(session.user.role as string)
+  ) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const media = await db.media.findUnique({ where: { id } });
+  if (!media) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const formData = await req.formData();
+  const file = formData.get("file") as File | null;
+  if (!file) {
+    return NextResponse.json({ error: "No file provided" }, { status: 400 });
+  }
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return NextResponse.json(
+      { error: "File type not allowed. Use JPEG, PNG, WebP, GIF, or AVIF." },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json(
+      { error: "File too large. Maximum size is 10MB." },
+      { status: 400 }
+    );
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const result = await replaceUpload(media.url, buffer);
+
+  const updated = await db.media.update({
+    where: { id },
+    data: {
+      width: result.width,
+      height: result.height,
+      size: result.size,
+      format: result.format,
+    },
+  });
+
+  return NextResponse.json({
+    ...updated,
+    width: result.width,
+    height: result.height,
+    size: result.size,
+  });
 }

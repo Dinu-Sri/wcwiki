@@ -27,8 +27,12 @@ export default function AdminMediaPage() {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [totalStorageSize, setTotalStorageSize] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [sortBy, setSortBy] = useState("date");
+  const [sortDir, setSortDir] = useState("desc");
   const fileRef = useRef<HTMLInputElement>(null);
+  const replaceRef = useRef<HTMLInputElement>(null);
 
   // Detail panel state
   const [selected, setSelected] = useState<MediaDetail | null>(null);
@@ -37,10 +41,11 @@ export default function AdminMediaPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [replacing, setReplacing] = useState(false);
 
   const fetchMedia = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: "24" });
+    const params = new URLSearchParams({ page: String(page), limit: "24", sort: sortBy, dir: sortDir });
     if (search.trim()) params.set("search", search.trim());
     try {
       const res = await fetch(`/api/media?${params}`);
@@ -48,11 +53,12 @@ export default function AdminMediaPage() {
       setItems(data.items || []);
       setPages(data.pages || 1);
       setTotal(data.total || 0);
+      setTotalStorageSize(data.totalStorageSize || 0);
     } catch {
       // silently fail
     }
     setLoading(false);
-  }, [page, search]);
+  }, [page, search, sortBy, sortDir]);
 
   useEffect(() => {
     fetchMedia();
@@ -134,6 +140,36 @@ export default function AdminMediaPage() {
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selected) return;
+    setReplacing(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch(`/api/media/${selected.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelected({ ...selected, width: data.width, height: data.height, size: data.size });
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === selected.id
+              ? { ...i, width: data.width, height: data.height, size: data.size }
+              : i
+          )
+        );
+        await fetchMedia();
+      }
+    } catch {
+      // silently fail
+    }
+    setReplacing(false);
+    if (replaceRef.current) replaceRef.current.value = "";
+  };
+
   const formatSize = (bytes: number | null) => {
     if (!bytes) return "—";
     if (bytes < 1024) return `${bytes} B`;
@@ -148,9 +184,28 @@ export default function AdminMediaPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Media Library</h1>
-            <p className="text-sm text-muted mt-1">{total} file{total !== 1 ? "s" : ""}</p>
+            <p className="text-sm text-muted mt-1">
+              {total} file{total !== 1 ? "s" : ""} · {formatSize(totalStorageSize)} total
+            </p>
           </div>
           <div className="flex items-center gap-3">
+            <select
+              value={`${sortBy}-${sortDir}`}
+              onChange={(e) => {
+                const [s, d] = e.target.value.split("-");
+                setSortBy(s);
+                setSortDir(d);
+                setPage(1);
+              }}
+              className="bg-surface border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="date-desc">Newest first</option>
+              <option value="date-asc">Oldest first</option>
+              <option value="size-desc">Largest first</option>
+              <option value="size-asc">Smallest first</option>
+              <option value="name-asc">Name A–Z</option>
+              <option value="name-desc">Name Z–A</option>
+            </select>
             <input
               type="text"
               value={search}
@@ -333,6 +388,21 @@ export default function AdminMediaPage() {
                     Copy
                   </button>
                 </div>
+              </div>
+
+              {/* Replace image */}
+              <div className="mb-3">
+                <button
+                  onClick={() => replaceRef.current?.click()}
+                  disabled={replacing}
+                  className="w-full px-3 py-2 text-xs text-foreground border border-border rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+                >
+                  {replacing ? "Replacing..." : "Replace with Smaller Image"}
+                </button>
+                <input ref={replaceRef} type="file" accept="image/*" className="hidden" onChange={handleReplace} />
+                <p className="text-[10px] text-muted mt-1">
+                  Upload a replacement. Same URL is kept, all references stay valid.
+                </p>
               </div>
 
               {/* Delete */}

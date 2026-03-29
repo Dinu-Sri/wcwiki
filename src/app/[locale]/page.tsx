@@ -29,9 +29,9 @@ export default function Home() {
   const formatCount = (n: number) => n.toLocaleString();
 
   return (
-    <main className="flex-1 flex flex-col min-h-screen watercolor-wash relative">
+    <main className="flex flex-col h-screen overflow-hidden watercolor-wash relative">
       {/* Top bar — right-aligned auth */}
-      <div className="w-full flex items-center justify-end gap-1 px-4 sm:px-6 py-3 animate-fade-in-up">
+      <div className="w-full flex items-center justify-end gap-1 px-4 sm:px-6 py-2 animate-fade-in-up">
         <LanguageSwitcher compact />
         <SuggestButton />
         <NotificationBell />
@@ -58,20 +58,20 @@ export default function Home() {
 
         {/* Stats — always visible, compact on mobile */}
         <div className="mt-4 sm:mt-8 flex items-center gap-4 sm:gap-6 text-center animate-fade-in-up relative z-0" style={{ animationDelay: "200ms" }}>
-          <div>
+          <Link href="/paintings" className="hover:opacity-70 transition-opacity">
             <div className="text-sm sm:text-lg font-semibold text-foreground">{formatCount(stats.paintings)}</div>
             <div className="text-[10px] sm:text-[11px] text-muted">Paintings</div>
-          </div>
+          </Link>
           <div className="w-px h-4 sm:h-6 bg-border"></div>
-          <div>
+          <Link href="/articles" className="hover:opacity-70 transition-opacity">
             <div className="text-sm sm:text-lg font-semibold text-foreground">{formatCount(stats.articles)}</div>
             <div className="text-[10px] sm:text-[11px] text-muted">Articles</div>
-          </div>
+          </Link>
           <div className="w-px h-4 sm:h-6 bg-border"></div>
-          <div>
+          <Link href="/artists" className="hover:opacity-70 transition-opacity">
             <div className="text-sm sm:text-lg font-semibold text-foreground">{formatCount(stats.artists)}</div>
             <div className="text-[10px] sm:text-[11px] text-muted">Artists</div>
-          </div>
+          </Link>
         </div>
 
         {/* Category Tabs — hidden on mobile */}
@@ -95,19 +95,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Vision statement — above footer */}
-      <div className="text-center px-6 sm:px-8 pb-6 pt-2">
-        <p className="text-[11px] sm:text-xs font-medium tracking-widest uppercase text-muted/80 mb-1">
-          Artists Building for Artists
-        </p>
-        <p className="text-[10px] sm:text-[11px] text-muted/50 leading-relaxed max-w-md mx-auto">
-          The world&apos;s first peer-reviewed watercolor encyclopedia, created exclusively by human artists. We safeguard authentic art philosophy through a unique, human-verified knowledge base that remains accessible to all, forever.
-        </p>
-      </div>
-
       {/* Bottom footer — minimal */}
       <footer className="border-t border-border bg-surface/50">
-        <div className="px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-muted/70">
+        <div className="px-4 sm:px-8 py-2 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted/70">
           <p>© {new Date().getFullYear()} wcWIKI.com</p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
