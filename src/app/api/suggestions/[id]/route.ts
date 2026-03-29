@@ -8,6 +8,35 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+// GET /api/suggestions/[id] — Get suggestion details
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const suggestion = await db.suggestion.findUnique({
+    where: { id },
+    include: {
+      requestedBy: { select: { id: true, name: true, image: true } },
+      claimedBy: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!suggestion) {
+    return NextResponse.json({ error: "Suggestion not found" }, { status: 404 });
+  }
+
+  // Only the requester, claimer or EDITOR+ can view
+  const level = ROLE_LEVEL[session.user.role as string] || 0;
+  if (suggestion.requestedById !== session.user.id && suggestion.claimedById !== session.user.id && level < 1) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  return NextResponse.json({ data: suggestion });
+}
+
 // PATCH /api/suggestions/[id] — Update suggestion status
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const session = await auth();
@@ -54,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       // Build redirect URL based on suggestion type
       let redirectUrl = "/dashboard";
       if (suggestion.type === "NEW_ARTICLE") {
-        redirectUrl = "/admin/content";
+        redirectUrl = `/admin/content/new-article?suggestion=${id}`;
       } else if (suggestion.entityType && suggestion.entityId) {
         // For translation suggestions, look up the entity slug
         const entitySlug = suggestion.entityId;

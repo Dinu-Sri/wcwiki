@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { ContentTables } from "@/components/admin/ContentTables";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,15 @@ export default async function AdminContentPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-6">Content</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-foreground">Content</h1>
+        <Link
+          href="/admin/content/new-article"
+          className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          + New Article
+        </Link>
+      </div>
       <ContentTables
         artists={JSON.parse(JSON.stringify(artists))}
         paintings={JSON.parse(JSON.stringify(paintings))}

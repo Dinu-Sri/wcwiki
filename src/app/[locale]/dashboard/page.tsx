@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -44,6 +44,8 @@ interface ProfileCompleteness {
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+  const localePrefix = pathname.match(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)/)?.[0] || "";
   const [edits, setEdits] = useState<EditItem[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [openSuggestions, setOpenSuggestions] = useState<SuggestionItem[]>([]);
@@ -168,7 +170,7 @@ export default function DashboardPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.redirectUrl) {
-          router.push(data.redirectUrl);
+          router.push(`${localePrefix}${data.redirectUrl}`);
           return;
         }
         fetchDashboard();
