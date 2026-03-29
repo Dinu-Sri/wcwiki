@@ -12,6 +12,7 @@ interface Suggestion {
   entityType: string | null;
   entityId: string | null;
   targetLocale: string | null;
+  publishedEntityId: string | null;
   createdAt: string;
   requestedBy: { name: string | null; image: string | null } | null;
   claimedBy: { name: string | null; image: string | null } | null;
@@ -141,6 +142,11 @@ export default function AdminSuggestionsPage() {
                     <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium border ${statusColor(s.status)}`}>
                       {s.status}
                     </span>
+                    {s.status === "PUBLISHED" && !s.publishedEntityId && (
+                      <span className="block text-[10px] text-amber-600 mt-0.5 font-medium">
+                        ⚠ No article created
+                      </span>
+                    )}
                     {s.claimedBy && (
                       <span className="block text-[10px] text-muted mt-0.5">
                         by {s.claimedBy.name}
@@ -181,13 +187,23 @@ export default function AdminSuggestionsPage() {
                               Start
                             </button>
                           )}
-                          {s.type === "NEW_ARTICLE" && !s.entityId ? (
+                          {s.type === "NEW_ARTICLE" && !s.publishedEntityId ? (
                             <button
                               onClick={() => router.push(`${localePrefix}/edit/article/new?suggestion=${s.id}`)}
                               className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
                             >
                               Write Article
                             </button>
+                          ) : s.type === "NEW_ARTICLE" && s.publishedEntityId ? (
+                            <>
+                              <button
+                                onClick={() => performAction(s.id, "approve_article")}
+                                disabled={acting === s.id}
+                                className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50"
+                              >
+                                Approve & Publish
+                              </button>
+                            </>
                           ) : (
                             <button
                               onClick={() => performAction(s.id, "publish")}
@@ -205,6 +221,14 @@ export default function AdminSuggestionsPage() {
                             Unclaim
                           </button>
                         </>
+                      )}
+                      {s.status === "PUBLISHED" && !s.publishedEntityId && s.type === "NEW_ARTICLE" && (
+                        <button
+                          onClick={() => router.push(`${localePrefix}/edit/article/new?suggestion=${s.id}`)}
+                          className="px-2 py-1 text-xs bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200"
+                        >
+                          Write Article (Missing)
+                        </button>
                       )}
                     </div>
                   </td>

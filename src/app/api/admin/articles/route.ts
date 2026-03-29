@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       body: articleBody,
       excerpt: excerpt || null,
       tags: Array.isArray(tags) ? tags : [],
-      references: references || "[]",
+      references: references ? (typeof references === "string" ? JSON.parse(references) : references) : [],
       authorId: session.user.id,
       status: "APPROVED",
       language: "en",

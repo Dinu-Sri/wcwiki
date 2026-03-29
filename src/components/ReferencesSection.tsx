@@ -12,13 +12,19 @@ interface Props {
 }
 
 export function ReferencesSection({ references }: Props) {
-  if (!references || references.length === 0) return null;
+  // Handle references stored as JSON string instead of array
+  const refs: Reference[] = Array.isArray(references)
+    ? references
+    : typeof references === "string"
+      ? (() => { try { return JSON.parse(references); } catch { return []; } })()
+      : [];
+  if (!refs || refs.length === 0) return null;
 
   return (
     <section className="mt-10 pt-8 border-t border-border">
       <h2 className="text-xl font-semibold text-foreground mb-4">References</h2>
       <ol className="list-decimal list-inside space-y-2">
-        {references.map((ref, idx) => (
+        {refs.map((ref, idx) => (
           <li key={idx} className="text-sm text-muted leading-relaxed">
             {ref.author && <span>{ref.author}. </span>}
             {ref.url ? (

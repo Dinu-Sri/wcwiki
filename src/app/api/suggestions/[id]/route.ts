@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { syncArticle } from "@/lib/search/sync";
 
 const ROLE_LEVEL: Record<string, number> = { USER: 0, EDITOR: 1, APPROVER: 2, SUPER_ADMIN: 3 };
 
@@ -143,6 +144,52 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
           type: "SUGGESTION_PUBLISHED",
           message: `Your suggestion "${suggestion.topic || "translation request"}" has been published!`,
           link,
+          suggestionId: id,
+        },
+      });
+
+      return NextResponse.json({ data: updated });
+    }
+
+    case "approve_article": {
+      // APPROVER+ only: approve the linked PENDING article and mark suggestion as PUBLISHED
+      if (level < 2) return NextResponse.json({ error: "Approver access required" }, { status: 403 });
+      if (!suggestion.publishedEntityId) {
+        return NextResponse.json({ error: "No article linked to this suggestion" }, { status: 400 });
+      }
+
+      // Approve the article
+      const article = await db.article.update({
+        where: { id: suggestion.publishedEntityId },
+        data: {
+          status: "APPROVED",
+          publishedAt: new Date(),
+        },
+      });
+
+      // Sync to MeiliSearch
+      try {
+        await syncArticle(article.id);
+      } catch (err) {
+        console.error("Failed to sync article to MeiliSearch:", err);
+      }
+
+      // Mark suggestion as PUBLISHED
+      const updated = await db.suggestion.update({
+        where: { id },
+        data: {
+          status: "PUBLISHED",
+          publishedAt: new Date(),
+        },
+      });
+
+      // Notify requester
+      await db.notification.create({
+        data: {
+          userId: suggestion.requestedById,
+          type: "SUGGESTION_PUBLISHED",
+          message: `Your suggestion "${suggestion.topic || "translation request"}" has been published!`,
+          link: `/articles/${article.slug}`,
           suggestionId: id,
         },
       });
