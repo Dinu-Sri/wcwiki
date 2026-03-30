@@ -27,13 +27,40 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ArtistsPage() {
+export default async function ArtistsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+
   const artists = await db.artist.findMany({
     orderBy: { name: "asc" },
     include: {
       _count: { select: { paintings: true } },
     },
   });
+
+  // Overlay translations for non-English locales
+  if (locale && locale !== "en" && artists.length > 0) {
+    const translations = await db.translation.findMany({
+      where: {
+        entityType: "ARTIST",
+        entityId: { in: artists.map((a) => a.id) },
+        locale,
+        field: { in: ["name", "bio"] },
+        status: "APPROVED",
+      },
+    });
+    const byEntity = new Map<string, Record<string, string>>();
+    for (const t of translations) {
+      if (!byEntity.has(t.entityId)) byEntity.set(t.entityId, {});
+      byEntity.get(t.entityId)![t.field] = t.value;
+    }
+    for (const artist of artists) {
+      const overrides = byEntity.get(artist.id);
+      if (overrides) {
+        if (overrides.name) (artist as Record<string, unknown>).name = overrides.name;
+        if (overrides.bio) (artist as Record<string, unknown>).bio = overrides.bio;
+      }
+    }
+  }
 
   const itemListLd = generateItemListSchema(
     artists.map((a) => ({

@@ -27,11 +27,38 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function PaintingsPage() {
+export default async function PaintingsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+
   const paintings = await db.painting.findMany({
     orderBy: { title: "asc" },
     include: { artist: true },
   });
+
+  // Overlay translations for non-English locales
+  if (locale && locale !== "en" && paintings.length > 0) {
+    const translations = await db.translation.findMany({
+      where: {
+        entityType: "PAINTING",
+        entityId: { in: paintings.map((p) => p.id) },
+        locale,
+        field: { in: ["title", "description"] },
+        status: "APPROVED",
+      },
+    });
+    const byEntity = new Map<string, Record<string, string>>();
+    for (const t of translations) {
+      if (!byEntity.has(t.entityId)) byEntity.set(t.entityId, {});
+      byEntity.get(t.entityId)![t.field] = t.value;
+    }
+    for (const painting of paintings) {
+      const overrides = byEntity.get(painting.id);
+      if (overrides) {
+        if (overrides.title) (painting as Record<string, unknown>).title = overrides.title;
+        if (overrides.description) (painting as Record<string, unknown>).description = overrides.description;
+      }
+    }
+  }
 
   const itemListLd = generateItemListSchema(
     paintings.map((p) => ({

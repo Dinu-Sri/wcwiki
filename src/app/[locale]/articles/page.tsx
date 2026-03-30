@@ -27,12 +27,39 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ArticlesPage() {
+export default async function ArticlesPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+
   const articles = await db.article.findMany({
     where: { status: "APPROVED" },
     orderBy: { publishedAt: "desc" },
     include: { author: true },
   });
+
+  // Overlay translations for non-English locales
+  if (locale && locale !== "en" && articles.length > 0) {
+    const translations = await db.translation.findMany({
+      where: {
+        entityType: "ARTICLE",
+        entityId: { in: articles.map((a) => a.id) },
+        locale,
+        field: { in: ["title", "excerpt"] },
+        status: "APPROVED",
+      },
+    });
+    const byEntity = new Map<string, Record<string, string>>();
+    for (const t of translations) {
+      if (!byEntity.has(t.entityId)) byEntity.set(t.entityId, {});
+      byEntity.get(t.entityId)![t.field] = t.value;
+    }
+    for (const article of articles) {
+      const overrides = byEntity.get(article.id);
+      if (overrides) {
+        if (overrides.title) (article as Record<string, unknown>).title = overrides.title;
+        if (overrides.excerpt) (article as Record<string, unknown>).excerpt = overrides.excerpt;
+      }
+    }
+  }
 
   const itemListLd = generateItemListSchema(
     articles.map((a) => ({

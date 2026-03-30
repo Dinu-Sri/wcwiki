@@ -41,11 +41,15 @@ async function overlayTranslations(
     byEntity.get(t.entityId)![t.field] = t.value;
   }
 
-  // Overlay onto hits
+  // Overlay onto hits (including _formatted for search highlights)
   return hits.map((hit) => {
     const overrides = byEntity.get(hit.id as string);
     if (!overrides) return hit;
-    return { ...hit, ...overrides };
+    const updated = { ...hit, ...overrides };
+    if (hit._formatted) {
+      updated._formatted = { ...hit._formatted, ...overrides };
+    }
+    return updated;
   });
 }
 
