@@ -24,6 +24,8 @@ services:
         condition: service_healthy
       meilisearch:
         condition: service_started
+    networks:
+      - wcwiki-net
 
   # ── PostgreSQL ────────────────────────────────────────
   postgres:
@@ -41,6 +43,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - wcwiki-net
 
   # ── Meilisearch ───────────────────────────────────────
   meilisearch:
@@ -52,8 +56,27 @@ services:
       MEILI_ENV: production
     volumes:
       - meilidata:/meili_data
+    networks:
+      - wcwiki-net
+
+  # ── Cloudflare Tunnel ─────────────────────────────────
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: wcwiki-tunnel
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - wcwiki-net
 
 volumes:
   pgdata:
   meilidata:
   uploads:
+
+networks:
+  wcwiki-net:
+    driver: bridge

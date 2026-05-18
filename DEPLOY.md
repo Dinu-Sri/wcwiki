@@ -233,6 +233,60 @@ git checkout <commit-hash>    # Revert to it
 
 ---
 
+## Cloudflare Tunnel Setup (wcwiki.org)
+
+The app is served publicly through a Cloudflare Tunnel — no open inbound ports needed on the VPS. The tunnel container (`wcwiki-tunnel`) runs inside the stack and connects outbound to Cloudflare.
+
+### Cloudflare Zero Trust — One-time configuration
+
+1. Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com/) → **Networks** → **Tunnels**
+2. Create a new tunnel (or open the existing one)
+3. Copy the tunnel token
+4. Go to the tunnel's **Public Hostnames** tab and add:
+   - **Subdomain**: *(leave blank for root)*
+   - **Domain**: `wcwiki.org`
+   - **Type**: `HTTP`
+   - **URL**: `app:3000`
+5. Optionally add `www.wcwiki.org` → `HTTP` → `app:3000` as a second hostname
+6. In Cloudflare **SSL/TLS** settings for `wcwiki.org`, set encryption mode to **Full**
+
+### Portainer — Add environment variables
+
+In the Portainer stack editor, add these two variables:
+
+| Variable | Value |
+|---|---|
+| `CF_TUNNEL_TOKEN` | *(token from Cloudflare tunnel creation)* |
+| `NEXTAUTH_URL` | `https://wcwiki.org` |
+
+### Portainer — Deploy / Redeploy
+
+1. Push latest code to GitHub (includes the tunnel service in `docker-compose.prod.yml`)
+2. On VPS: `cd /opt/wcwiki && git pull origin main`
+3. In Portainer: go to the **wcwiki** stack → **Update the stack**
+4. Enable **Re-pull image and redeploy** → click **Update**
+5. A new `wcwiki-tunnel` container will appear alongside `wcwiki-app`, `wcwiki-postgres`, `wcwiki-meilisearch`
+
+### Validation
+
+```bash
+# Check tunnel connected successfully
+docker logs wcwiki-tunnel
+
+# Test domain resolves through tunnel
+curl -I https://wcwiki.org
+```
+
+Expected tunnel log output: `Registered tunnel connection` or `Connection established`.
+
+### Notes
+
+- The `port 3001:3000` mapping on the app container is kept for direct VPS access during debugging
+- With the tunnel active you can optionally firewall port 3001 from public access
+- `app:3000` is the internal Docker network address — the tunnel reaches the app without going through the host
+
+---
+
 ## Rules
 
 - **Never push untested code to GitHub** — local dev first, always
