@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   if (!article) return { title: "Article Not Found" };
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
   const title = article.metaTitle || article.title;
   const description =
     article.metaDescription ||
@@ -103,7 +103,7 @@ export default async function ArticlePage({ params }: Props) {
         });
 
   // JSON-LD structured data
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
   const jsonLd = generateArticleSchema(article, baseUrl, {
     name: "wcWIKI",
     logoUrl: null,
@@ -246,7 +246,7 @@ export default async function ArticlePage({ params }: Props) {
                   className="group block px-4 py-3 rounded-xl hover:bg-card hover:shadow-sm transition-all"
                 >
                   <div className="text-xs text-primary mb-0.5 truncate">
-                    wcwiki.com › articles › {ra.slug}
+                    wcwiki.org › articles › {ra.slug}
                   </div>
                   <h3 className="text-lg font-medium text-primary group-hover:underline leading-snug">
                     {ra.title}

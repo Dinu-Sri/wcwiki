@@ -10,7 +10,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
 
 export const metadata: Metadata = {
   title: "Watercolor Art Articles",
@@ -111,7 +111,7 @@ export default async function ArticlesPage({ params }: { params: Promise<{ local
               className="group block px-4 py-4 rounded-xl hover:bg-card hover:shadow-sm transition-all duration-200"
             >
               <div className="text-xs text-primary mb-0.5 truncate">
-                wcwiki.com › articles › {article.slug}
+                wcwiki.org › articles › {article.slug}
               </div>
               <h2 className="text-lg font-medium text-primary group-hover:underline leading-snug">
                 {article.title}

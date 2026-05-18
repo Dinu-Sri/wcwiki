@@ -17,10 +17,10 @@ async function main() {
 
   // ─── Create Admin User ─────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
-    where: { email: "admin@wcwiki.com" },
+    where: { email: "admin@wcwiki.org" },
     update: {},
     create: {
-      email: "admin@wcwiki.com",
+      email: "admin@wcwiki.org",
       name: "wcWIKI Admin",
       role: "SUPER_ADMIN",
     },

@@ -155,16 +155,16 @@ networks:
 |----------|---------|-------|
 | `DB_PASSWORD` | `strong-random-password` | PostgreSQL password |
 | `MEILI_MASTER_KEY` | `strong-random-key` | Meilisearch API key |
-| `NEXTAUTH_URL` | `https://wcwiki.com` | Public URL |
+| `NEXTAUTH_URL` | `https://wcwiki.org` | Public URL |
 | `NEXTAUTH_SECRET` | `openssl rand -base64 32` | Auth encryption key |
 | `GOOGLE_CLIENT_ID` | from Google Console | OAuth |
 | `GOOGLE_CLIENT_SECRET` | from Google Console | OAuth |
-| `NEXT_PUBLIC_BASE_URL` | `https://wcwiki.com` | Public URL for SEO |
+| `NEXT_PUBLIC_BASE_URL` | `https://wcwiki.org` | Public URL for SEO |
 | `R2_ACCOUNT_ID` | from Cloudflare | Image storage |
 | `R2_ACCESS_KEY_ID` | from Cloudflare | Image storage |
 | `R2_SECRET_ACCESS_KEY` | from Cloudflare | Image storage |
 | `R2_BUCKET_NAME` | `wcwiki-images` | Image storage |
-| `R2_PUBLIC_URL` | `https://images.wcwiki.com` | Public image CDN |
+| `R2_PUBLIC_URL` | `https://images.wcwiki.org` | Public image CDN |
 
 ---
 

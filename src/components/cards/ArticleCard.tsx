@@ -23,7 +23,7 @@ export function ArticleCard({
     >
       {/* URL-style breadcrumb */}
       <div className="text-[11px] sm:text-xs text-primary mb-0.5 truncate">
-        wcwiki.com › articles › {slug}
+        wcwiki.org › articles › {slug}
       </div>
 
       {/* Title */}

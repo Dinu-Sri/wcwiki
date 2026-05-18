@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import SearchResults from "./SearchResults";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
 
 export async function generateMetadata({
   searchParams,

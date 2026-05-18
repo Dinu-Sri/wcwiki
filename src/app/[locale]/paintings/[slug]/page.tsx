@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   if (!painting) return { title: "Painting Not Found" };
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
   const title = painting.metaTitle || `${painting.title} by ${painting.artist.name}`;
   const description =
     painting.metaDescription ||
@@ -113,7 +113,7 @@ export default async function PaintingPage({ params }: Props) {
   ].filter(Boolean) as { label: string; value: string }[];
 
   // JSON-LD structured data
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
   const jsonLd = generateVisualArtworkSchema(painting, baseUrl, "wcWIKI");
   const breadcrumbLd = generateBreadcrumbSchema(baseUrl, [
     { name: "Home", url: "/" },

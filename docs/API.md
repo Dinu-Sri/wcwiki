@@ -1,6 +1,6 @@
 # wcWIKI Content API v1
 
-Base URL: `https://wcwiki.com/api/v1`
+Base URL: `https://wcwiki.org/api/v1`
 
 ## Authentication
 

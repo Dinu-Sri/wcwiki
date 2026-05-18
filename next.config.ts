@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "images.wcwiki.com",
+        hostname: "images.wcwiki.org",
       },
     ],
   },

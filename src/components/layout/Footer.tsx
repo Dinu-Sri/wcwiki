@@ -67,7 +67,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-5 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted/60">
-          <p>© {new Date().getFullYear()} wcWIKI.com — All rights reserved.</p>
+          <p>© {new Date().getFullYear()} wcwiki.org — All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-foreground transition-colors">
               Privacy Policy

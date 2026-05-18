@@ -10,7 +10,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
 
 export const metadata: Metadata = {
   title: "Watercolor Artists Directory",

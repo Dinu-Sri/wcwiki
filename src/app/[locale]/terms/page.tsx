@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
-  description: "Terms of Use for wcWIKI.com — rules and guidelines for using the watercolor art encyclopedia.",
+  description: "Terms of Use for wcwiki.org — rules and guidelines for using the watercolor art encyclopedia.",
 };
 
 export default function TermsOfUsePage() {
@@ -26,14 +26,14 @@ export default function TermsOfUsePage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">1. Acceptance of Terms</h2>
             <p>
-              By accessing and using wcWIKI.com (the &quot;Site&quot;), you agree to be bound by these Terms of Use. If you do not agree to these terms, please do not use the Site. We reserve the right to modify these terms at any time, and your continued use of the Site constitutes acceptance of any changes.
+              By accessing and using wcwiki.org (the &quot;Site&quot;), you agree to be bound by these Terms of Use. If you do not agree to these terms, please do not use the Site. We reserve the right to modify these terms at any time, and your continued use of the Site constitutes acceptance of any changes.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">2. Description of Service</h2>
             <p>
-              wcWIKI.com is a community-driven encyclopedia dedicated to watercolor art. The Site provides a searchable database of watercolor artists, paintings, and articles. Users can browse content, create accounts, and contribute edits and articles subject to editorial review.
+              wcwiki.org is a community-driven encyclopedia dedicated to watercolor art. The Site provides a searchable database of watercolor artists, paintings, and articles. Users can browse content, create accounts, and contribute edits and articles subject to editorial review.
             </p>
           </section>
 
@@ -53,7 +53,7 @@ export default function TermsOfUsePage() {
             <h3 className="text-base font-medium text-foreground mt-3 mb-1">User Contributions</h3>
             <p>By submitting content (edits, articles, or other materials) to the Site, you:</p>
             <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Grant wcWIKI.com a non-exclusive, royalty-free, worldwide license to use, display, and distribute your contributions on the Site.</li>
+              <li>Grant wcwiki.org a non-exclusive, royalty-free, worldwide license to use, display, and distribute your contributions on the Site.</li>
               <li>Represent that your contributions are original or that you have the right to submit them.</li>
               <li>Agree that your contributions may be edited, modified, or removed at the discretion of our editorial team.</li>
             </ul>
@@ -82,7 +82,7 @@ export default function TermsOfUsePage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">6. Intellectual Property</h2>
             <p>
-              The Site&apos;s design, logos, trademarks, and original content (excluding user contributions and third-party artworks) are the property of wcWIKI.com and are protected by intellectual property laws. You may not reproduce, distribute, or create derivative works from our proprietary content without written permission.
+              The Site&apos;s design, logos, trademarks, and original content (excluding user contributions and third-party artworks) are the property of wcwiki.org and are protected by intellectual property laws. You may not reproduce, distribute, or create derivative works from our proprietary content without written permission.
             </p>
           </section>
 
@@ -117,7 +117,7 @@ export default function TermsOfUsePage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">10. Limitation of Liability</h2>
             <p>
-              To the fullest extent permitted by law, wcWIKI.com and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Site, including but not limited to loss of data, profits, or business opportunities.
+              To the fullest extent permitted by law, wcwiki.org and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Site, including but not limited to loss of data, profits, or business opportunities.
             </p>
           </section>
 
@@ -134,8 +134,8 @@ export default function TermsOfUsePage() {
               If you have any questions about these Terms of Use, please contact us at:
             </p>
             <p className="mt-2 font-medium text-foreground">
-              wcWIKI.com<br />
-              Email: contact@wcwiki.com
+              wcwiki.org<br />
+              Email: contact@wcwiki.org
             </p>
           </section>
         </div>

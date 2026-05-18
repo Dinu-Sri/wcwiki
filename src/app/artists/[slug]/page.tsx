@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const artist = await db.artist.findUnique({ where: { slug } });
   if (!artist) return { title: "Artist Not Found" };
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
 
   const lifespan =
     artist.birthYear && artist.deathYear
@@ -110,7 +110,7 @@ export default async function ArtistPage({ params }: Props) {
   });
 
   // JSON-LD structured data
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
   const jsonLd = generatePersonSchema(
     { ...artist, socialLinks: socialLinks as Record<string, string> },
     baseUrl

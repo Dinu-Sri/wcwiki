@@ -29,7 +29,7 @@ interface SiteSettings {
 const defaultSettings: SiteSettings = {
   siteName: "wcWIKI",
   siteDescription: null,
-  siteUrl: "https://wcwiki.com",
+  siteUrl: "https://wcwiki.org",
   logoUrl: null,
   faviconUrl: null,
   foundedYear: 2025,
@@ -197,7 +197,7 @@ export default function AdminSeoPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Field label="Site Name" value={settings.siteName} onChange={(v) => update("siteName", v)} />
-              <Field label="Site URL" value={settings.siteUrl} onChange={(v) => update("siteUrl", v)} placeholder="https://wcwiki.com" />
+              <Field label="Site URL" value={settings.siteUrl} onChange={(v) => update("siteUrl", v)} placeholder="https://wcwiki.org" />
               <Field label="Logo URL" value={settings.logoUrl || ""} onChange={(v) => update("logoUrl", v || null)} placeholder="https://..." />
               <Field label="Favicon URL" value={settings.faviconUrl || ""} onChange={(v) => update("faviconUrl", v || null)} placeholder="https://..." />
               <Field label="Founded Year" value={settings.foundedYear ? String(settings.foundedYear) : ""} onChange={(v) => update("foundedYear", v ? parseInt(v, 10) : null)} type="number" />

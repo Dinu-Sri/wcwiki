@@ -7,7 +7,7 @@ async function seed() {
   let user = await prisma.user.findFirst();
   if (!user) {
     user = await prisma.user.create({
-      data: { name: "wcWIKI Team", email: "team@wcwiki.com", role: "ADMIN" },
+      data: { name: "wcWIKI Team", email: "team@wcwiki.org", role: "ADMIN" },
     });
     console.log("Created system user");
   }

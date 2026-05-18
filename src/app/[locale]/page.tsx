@@ -106,7 +106,7 @@ export default function Home() {
       </div>
       <footer className="border-t border-border bg-surface/50">
         <div className="px-4 sm:px-8 py-2 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted/70">
-          <p>© {new Date().getFullYear()} wcWIKI.com</p>
+          <p>© {new Date().getFullYear()} wcwiki.org</p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Use</Link>

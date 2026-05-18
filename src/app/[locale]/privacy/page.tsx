@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Privacy Policy for wcWIKI.com — how we collect, use, and protect your data.",
+  description: "Privacy Policy for wcwiki.org — how we collect, use, and protect your data.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">1. Introduction</h2>
             <p>
-              Welcome to wcWIKI.com (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website wcWIKI.com (the &quot;Site&quot;) and use our services.
+              Welcome to wcwiki.org (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website wcwiki.org (the &quot;Site&quot;) and use our services.
             </p>
           </section>
 
@@ -131,8 +131,8 @@ export default function PrivacyPolicyPage() {
               If you have any questions about this Privacy Policy, please contact us at:
             </p>
             <p className="mt-2 font-medium text-foreground">
-              wcWIKI.com<br />
-              Email: contact@wcwiki.com
+              wcwiki.org<br />
+              Email: contact@wcwiki.org
             </p>
           </section>
         </div>

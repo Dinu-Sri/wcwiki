@@ -300,7 +300,7 @@ const defaultSettings: SiteSettingsForSchema = {
   siteName: "wcWIKI",
   siteDescription:
     "Search and discover watercolor artists, paintings, and articles. A community-driven encyclopedia for watercolor art worldwide.",
-  siteUrl: process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com",
+  siteUrl: process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org",
   foundedYear: 2025,
 };
 

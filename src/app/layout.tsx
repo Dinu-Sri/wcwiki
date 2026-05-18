@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     "wiki",
   ],
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.com"
+    process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org"
   ),
   icons: {
     icon: "/favicon.webp",

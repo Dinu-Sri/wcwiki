@@ -24,8 +24,8 @@ export default function ContactPage() {
               <div className="space-y-3">
                 <div>
                   <p className="text-xs text-muted uppercase tracking-wider mb-1">Email</p>
-                  <a href="mailto:contact@wcwiki.com" className="text-primary hover:underline">
-                    contact@wcwiki.com
+                  <a href="mailto:contact@wcwiki.org" className="text-primary hover:underline">
+                    contact@wcwiki.org
                   </a>
                 </div>
                 <div>
