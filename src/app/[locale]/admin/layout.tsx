@@ -9,11 +9,12 @@ export default async function AdminLayout({
 }) {
   const session = await auth();
 
-  if (
-    !session?.user ||
-    (session.user.role !== "SUPER_ADMIN" && session.user.role !== "APPROVER")
-  ) {
+  if (!session?.user) {
     redirect("/auth/login");
+  }
+
+  if (session.user.role !== "SUPER_ADMIN" && session.user.role !== "APPROVER") {
+    redirect("/dashboard?error=forbidden");
   }
 
   return (

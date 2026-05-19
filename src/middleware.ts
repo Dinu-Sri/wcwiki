@@ -22,6 +22,7 @@ export async function middleware(req: NextRequest) {
   const pathWithoutLocale = pathname.replace(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)/, "") || "/";
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const localePrefix = pathname.match(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)(?=\/|$)/)?.[0] || "";
 
   // Build login redirect with callbackUrl
   const loginRedirect = () => {
@@ -30,20 +31,29 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   };
 
+  const dashboardRedirect = () => {
+    const dashboardUrl = new URL(`${localePrefix}/dashboard`, req.url);
+    dashboardUrl.searchParams.set("error", "forbidden");
+    return NextResponse.redirect(dashboardUrl);
+  };
+
   // /admin — only SUPER_ADMIN and APPROVER
   if (pathWithoutLocale.startsWith("/admin")) {
-    if (!token || (token.role !== "SUPER_ADMIN" && token.role !== "APPROVER")) {
+    if (!token) {
       return loginRedirect();
+    }
+    if (token.role !== "SUPER_ADMIN" && token.role !== "APPROVER") {
+      return dashboardRedirect();
     }
   }
 
   // /edit — only EDITOR+
   if (pathWithoutLocale.startsWith("/edit")) {
-    if (
-      !token ||
-      !["EDITOR", "APPROVER", "SUPER_ADMIN"].includes(token.role as string)
-    ) {
+    if (!token) {
       return loginRedirect();
+    }
+    if (!["EDITOR", "APPROVER", "SUPER_ADMIN"].includes(token.role as string)) {
+      return dashboardRedirect();
     }
   }
 
