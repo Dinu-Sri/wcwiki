@@ -159,6 +159,7 @@ networks:
 | `NEXTAUTH_SECRET` | `openssl rand -base64 32` | Auth encryption key |
 | `GOOGLE_CLIENT_ID` | from Google Console | OAuth |
 | `GOOGLE_CLIENT_SECRET` | from Google Console | OAuth |
+| Google OAuth redirect URI | `https://wcwiki.org/api/auth/callback/google` | Add in Google Cloud Console |
 | `NEXT_PUBLIC_BASE_URL` | `https://wcwiki.org` | Public URL for SEO |
 | `R2_ACCOUNT_ID` | from Cloudflare | Image storage |
 | `R2_ACCESS_KEY_ID` | from Cloudflare | Image storage |
