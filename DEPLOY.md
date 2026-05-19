@@ -248,7 +248,7 @@ The app is served publicly through a Cloudflare Tunnel — no open inbound ports
    - **Domain**: `wcwiki.org`
    - **Type**: `HTTP`
    - **URL**: `app:3000`
-5. Optionally add `www.wcwiki.org` → `HTTP` → `app:3000` as a second hostname
+5. Do not add `www.wcwiki.org` if you want the site to stay apex-only with no redirect hop
 6. In Cloudflare **SSL/TLS** settings for `wcwiki.org`, set encryption mode to **Full**
 
 ### Portainer — Add environment variables

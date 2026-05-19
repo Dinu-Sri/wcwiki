@@ -9,14 +9,6 @@ const intlMiddleware = createMiddleware(routing);
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Canonicalize the public host to the apex domain.
-  if (req.nextUrl.hostname === "www.wcwiki.org") {
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.hostname = "wcwiki.org";
-    redirectUrl.protocol = "https:";
-    return NextResponse.redirect(redirectUrl, 301);
-  }
-
   // Skip i18n routing for API routes and static files
   if (
     pathname.startsWith("/api/") ||
