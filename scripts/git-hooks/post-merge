@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+set -eu
+
+if [ "${WCWIKI_SKIP_AUTO_REBUILD:-}" = "1" ]; then
+  echo "Skipping wcWIKI auto rebuild because WCWIKI_SKIP_AUTO_REBUILD=1."
+  exit 0
+fi
+
+REPO_DIR="$(git rev-parse --show-toplevel)"
+"$REPO_DIR/scripts/deploy-after-pull.sh"
