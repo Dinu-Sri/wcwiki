@@ -5,6 +5,7 @@ import createMiddleware from "next-intl/middleware";
 import { routing } from "@/i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -21,7 +22,7 @@ export async function middleware(req: NextRequest) {
   // Strip locale prefix for auth checks
   const pathWithoutLocale = pathname.replace(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)/, "") || "/";
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req, secret: authSecret });
   const localePrefix = pathname.match(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)(?=\/|$)/)?.[0] || "";
 
   // Build login redirect with callbackUrl

@@ -12,6 +12,8 @@ services:
       - DATABASE_URL=postgresql://wcwiki:${POSTGRES_PASSWORD}@postgres:5432/wcwiki?schema=public
       - MEILISEARCH_HOST=http://meilisearch:7700
       - MEILISEARCH_API_KEY=${MEILI_MASTER_KEY}
+      - AUTH_URL=${NEXTAUTH_URL}
+      - AUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
