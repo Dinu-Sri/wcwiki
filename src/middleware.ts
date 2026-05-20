@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "@/i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
-const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -17,52 +15,6 @@ export async function middleware(req: NextRequest) {
     pathname.includes(".")
   ) {
     return NextResponse.next();
-  }
-
-  // Strip locale prefix for auth checks
-  const pathWithoutLocale = pathname.replace(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)/, "") || "/";
-
-  const token = await getToken({ req, secret: authSecret });
-  const localePrefix = pathname.match(/^\/(en|zh|ja|ko|es|fr|ru|tr|ta|si)(?=\/|$)/)?.[0] || "";
-
-  // Build login redirect with callbackUrl
-  const loginRedirect = () => {
-    const loginUrl = new URL("/auth/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`);
-    return NextResponse.redirect(loginUrl);
-  };
-
-  const dashboardRedirect = () => {
-    const dashboardUrl = new URL(`${localePrefix}/dashboard`, req.url);
-    dashboardUrl.searchParams.set("error", "forbidden");
-    return NextResponse.redirect(dashboardUrl);
-  };
-
-  // /admin — only SUPER_ADMIN and APPROVER
-  if (pathWithoutLocale.startsWith("/admin")) {
-    if (!token) {
-      return loginRedirect();
-    }
-    if (token.role !== "SUPER_ADMIN" && token.role !== "APPROVER") {
-      return dashboardRedirect();
-    }
-  }
-
-  // /edit — only EDITOR+
-  if (pathWithoutLocale.startsWith("/edit")) {
-    if (!token) {
-      return loginRedirect();
-    }
-    if (!["EDITOR", "APPROVER", "SUPER_ADMIN"].includes(token.role as string)) {
-      return dashboardRedirect();
-    }
-  }
-
-  // /dashboard — any authenticated user
-  if (pathWithoutLocale.startsWith("/dashboard")) {
-    if (!token) {
-      return loginRedirect();
-    }
   }
 
   // Apply i18n middleware
