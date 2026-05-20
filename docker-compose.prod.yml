@@ -1,9 +1,7 @@
 services:
   # ── Next.js App ───────────────────────────────────────
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/dinu-sri/wcwiki:latest
     container_name: wcwiki-app
     restart: unless-stopped
     ports:
