@@ -11,5 +11,8 @@ node scripts/sync-meilisearch.js || echo "Meilisearch sync skipped (will retry o
 echo "Starting daily aggregation scheduler..."
 node scripts/daily-aggregate.js &
 
+echo "Starting backup scheduler (daily at 03:10 UTC)..."
+node scripts/backup-scheduler.js &
+
 echo "Starting server..."
 exec node server.js
