@@ -18,9 +18,12 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - NODE_ENV=production
       - UPLOAD_DIR=/app/uploads
+      - BACKUP_DIR=/opt/backups/wcwiki
+      - BACKUP_RETENTION_DAYS=14
       - CRON_SECRET=${CRON_SECRET}
     volumes:
       - uploads:/app/uploads
+      - backups:/opt/backups/wcwiki
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,6 +81,7 @@ volumes:
   pgdata:
   meilidata:
   uploads:
+  backups:
 
 networks:
   wcwiki-net:

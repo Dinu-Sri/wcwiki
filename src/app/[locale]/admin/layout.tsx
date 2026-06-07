@@ -100,6 +100,12 @@ export default async function AdminLayout({
               >
                 API Keys
               </Link>
+              <Link
+                href="/admin/backups"
+                className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
+              >
+                Backups
+              </Link>
             </>
           )}
         </nav>
