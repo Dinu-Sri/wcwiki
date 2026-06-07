@@ -24,6 +24,21 @@ services:
     volumes:
       - meilidata:/meili_data
 
+  # ── Staging PostgreSQL (for testing migrations before production) ──────────
+  postgres-staging:
+    image: postgres:16-alpine
+    container_name: wcwiki-postgres-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wcwiki
+      POSTGRES_PASSWORD: wcwiki
+      POSTGRES_DB: wcwiki_staging
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-staging:/var/lib/postgresql/data
+
 volumes:
   pgdata:
   meilidata:
+  pgdata-staging:

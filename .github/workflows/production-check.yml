@@ -1,0 +1,68 @@
+name: Production Check
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+
+  build:
+    name: Build
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build
+
+  docker-compose-validate:
+    name: Docker Compose Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose.yml
+        run: docker compose -f docker-compose.yml config --quiet
+      - name: Validate docker-compose.prod.yml
+        run: docker compose -f docker-compose.prod.yml config --quiet
+
+  secret-scan:
+    name: Secret Leak Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for hardcoded localhost production URLs
+        run: |
+          ! grep -rn "localhost:3000" src/ --include="*.ts" --include="*.tsx" || \
+            (echo "ERROR: Hardcoded localhost:3000 found in source. Use environment variables." && exit 1)
+      - name: Check for hardcoded database URLs with credentials
+        run: |
+          ! grep -rn "DATABASE_URL.*@localhost" src/ --include="*.ts" --include="*.tsx" || \
+            (echo "ERROR: Hardcoded DATABASE_URL found. Use process.env.DATABASE_URL." && exit 1)
+      - name: Check for committed .env files (excluding .env.example)
+        run: |
+          ENV_FILES=$(find . -name ".env*" ! -name ".env.example" 2>/dev/null)
+          if [ -n "$ENV_FILES" ]; then
+            echo "ERROR: .env files staged for commit:"
+            echo "$ENV_FILES"
+            exit 1
+          fi

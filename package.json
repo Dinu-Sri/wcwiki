@@ -11,6 +11,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "db:staging-push": "cross-env DATABASE_URL=postgresql://wcwiki:wcwiki@localhost:5433/wcwiki_staging?schema=public npx prisma db push",
+    "db:staging-migrate": "cross-env DATABASE_URL=postgresql://wcwiki:wcwiki@localhost:5433/wcwiki_staging?schema=public npx prisma migrate dev",
     "search:reindex": "tsx src/scripts/reindex.ts"
   },
   "dependencies": {
@@ -41,6 +43,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "cross-env": "^10.1.0",
     "eslint": "^8",
     "eslint-config-next": "^15.3.4",
     "prisma": "^5.22.0",
