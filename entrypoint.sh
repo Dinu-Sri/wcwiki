@@ -4,7 +4,16 @@ set -e
 echo "Running database migrations..."
 if ! npx prisma migrate deploy; then
   echo "Migration deploy failed. Attempting one-time baseline for existing production schema..."
-  npx prisma migrate resolve --applied 20260607000000_initial_schema
+  echo "Available migrations:"
+  ls -la prisma/migrations
+  INITIAL_MIGRATION="$(find prisma/migrations -mindepth 1 -maxdepth 1 -type d | sort | head -n 1)"
+  INITIAL_MIGRATION="$(basename "$INITIAL_MIGRATION")"
+  if [ -z "$INITIAL_MIGRATION" ]; then
+    echo "No migration directory found in prisma/migrations. Cannot baseline."
+    exit 1
+  fi
+  echo "Marking migration as applied: $INITIAL_MIGRATION"
+  npx prisma migrate resolve --applied "$INITIAL_MIGRATION"
   npx prisma migrate deploy
 fi
 

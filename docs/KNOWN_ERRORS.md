@@ -208,8 +208,8 @@ when `prisma migrate deploy` runs.
 existed, so tables are present but `_prisma_migrations` has no record of the initial
 schema migration.
 
-**Fix/Workaround**: `entrypoint.sh` now resolves the known initial migration
-`20260607000000_initial_schema` as applied when the first deploy fails, then retries
+**Fix/Workaround**: `entrypoint.sh` now discovers the first migration directory in
+`prisma/migrations`, resolves it as applied when the first deploy fails, then retries
 `prisma migrate deploy`. This is non-destructive and only writes migration history.
 
 **Manual Fix**:
