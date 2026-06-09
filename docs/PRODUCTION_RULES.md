@@ -30,11 +30,12 @@ const searchHost = process.env.MEILISEARCH_HOST;
 Any change to `prisma/schema.prisma` requires:
 1. The migration command documented in commit message (`DB:` field)
 2. Entry in `docs/TASK_LOG.md` with rollback notes
-3. Manual `prisma db push` or `prisma migrate dev` tested locally first
+3. `prisma migrate dev --name <name>` tested locally first, with generated SQL reviewed
 
-**Warning**: `entrypoint.sh` runs `prisma db push --accept-data-loss` on every container start.
-This means destructive schema changes (dropping columns/tables) WILL cause data loss in production
-if not carefully planned. Always backup the database before risky schema changes.
+**Current production note**: `entrypoint.sh` runs `prisma migrate deploy` first.
+Because the existing production DB predates Prisma migration history, startup currently
+falls back to `prisma db push --skip-generate` if deploy fails. This fallback must
+never use `--accept-data-loss`. Always backup the database before risky schema changes.
 
 ---
 

@@ -18,6 +18,7 @@
 
 | Date | Task | Files Changed | Env Vars | DB Migration | Redeploy | Rollback |
 |------|------|--------------|----------|-------------|----------|----------|
+| 2026-06-09 | Document temporary Prisma startup fallback and future migration-history repair plan | AGENTS.md, docs/DEPLOYMENT_WORKFLOW.md, docs/PRODUCTION_RULES.md, docs/KNOWN_ERRORS.md, ai/AI_CONTEXT.generated.md | None | None | No | Revert documentation commit |
 | 2026-06-09 | Restore production startup with non-destructive Prisma db push fallback | entrypoint.sh, docs/KNOWN_ERRORS.md | None | Falls back to prisma db push --skip-generate if migrate deploy fails | Yes | Revert commit after production DB migration history is repaired |
 | 2026-06-09 | Make Prisma baseline fallback discover migration directory dynamically | entrypoint.sh, docs/KNOWN_ERRORS.md | None | Marks first packaged migration as applied if needed | Yes | Revert commit after production DB is baselined |
 | 2026-06-09 | Add Prisma production baseline fallback for P3005 | entrypoint.sh, docs/KNOWN_ERRORS.md | None | Marks existing initial migration as applied if needed | Yes | Revert commit after production DB is baselined |

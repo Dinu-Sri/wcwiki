@@ -32,7 +32,7 @@ deployed at wcwiki.org. This is a PRODUCTION system, not local-only.
 
 - [ ] New/changed environment variables?
 - [ ] npm ci needed?
-- [ ] prisma db push / migration needed?
+- [ ] Prisma migration needed? Use `prisma migrate dev --name <name>` for schema changes; local `db push` only for throwaway dev DBs.
 - [ ] Docker container rebuild needed?
 - [ ] Portainer stack redeploy needed?
 - [ ] Meilisearch reindex needed?

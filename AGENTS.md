@@ -75,7 +75,7 @@ must be designed for the live production environment at **wcwiki.org**.
 ### Docker Image
 - **Registry**: `ghcr.io/dinu-sri/wcwiki:latest`
 - **Build**: Multi-stage (deps → builder → runner)
-- **Entrypoint**: `entrypoint.sh` → `prisma db push` → Meilisearch sync → daily cron → `node server.js`
+- **Entrypoint**: `entrypoint.sh` → `prisma migrate deploy` → fallback `prisma db push --skip-generate` if production is not baselined → Meilisearch sync → daily cron → `node server.js`
 - **User**: `nextjs:nodejs` (1001:1001, non-root)
 
 ---
@@ -168,7 +168,7 @@ For EVERY code change you propose, answer these questions explicitly:
 ### Must-Answer Questions
 - [ ] **Environment Variables**: Does this need new or changed env vars?
 - [ ] **Dependencies**: Does `package.json` change? Run `npm ci` on deploy?
-- [ ] **Database Migration**: Does `schema.prisma` change? Run `prisma db push` or `prisma migrate dev`?
+- [ ] **Database Migration**: Does `schema.prisma` change? Run `prisma migrate dev --name <name>` and review the generated SQL. Use local `db push` only for throwaway development databases.
 - [ ] **Container Rebuild**: Does the Docker image need rebuilding? (`docker compose build app`)
 - [ ] **Portainer Redeploy**: Does the Portainer stack need updating? ("Update the stack" → "Re-pull and redeploy")
 - [ ] **Cache Clear**: Does Next.js build cache, Meilisearch index, or browser cache need clearing?
@@ -253,7 +253,7 @@ When stack, deployment, environment variables, known errors, or architecture cha
 - **VPS path**: `/opt/wcwiki`
 - **Git branch**: `master` (not `main`)
 - **Image registry**: `ghcr.io/dinu-sri/wcwiki:latest`
-- **DB migrations**: Not automatic — `entrypoint.sh` runs `prisma migrate deploy` on every container start (safe, non-destructive, uses migration history from `prisma/migrations/`)
+- **DB migrations**: `entrypoint.sh` runs `prisma migrate deploy` on every container start. Because the live DB predates migration history, startup currently falls back to `prisma db push --skip-generate` if deploy fails. This fallback is non-destructive (no `--accept-data-loss`) and should remain documented until production migration history is repaired in a maintenance window.
 - **First migration**: `prisma/migrations/20260607000000_initial_schema/` — full DDL snapshot of all 19 models
 - **Schema changes**: Run `npx prisma migrate dev --name <name>` to generate a new migration; review the generated SQL; test on staging DB (`docker compose up postgres-staging` + `npm run db:staging-migrate`); then commit and deploy
 - **Search sync**: Auto-runs on container start via `sync-meilisearch.js`

@@ -223,6 +223,10 @@ docker restart wcwiki-app
 **Prevention**: Keep future schema changes as Prisma migrations and avoid returning
 to untracked `db push` changes in production.
 
+**Decision (2026-06-09)**: Keep the non-destructive startup fallback temporarily so
+production stays online. Repair migration history later in a maintenance window, then
+remove the fallback from `entrypoint.sh`.
+
 ---
 
 *Last updated: 2026-06-07*

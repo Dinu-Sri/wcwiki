@@ -30,7 +30,7 @@ Local development → GitHub → Portainer (VPS). All deployment is done via Doc
 ```bash
 git add .
 git commit -m "feat: description of changes"
-git push origin main
+git push origin master
 ```
 
 - The GitHub repo is already connected and accessible from the VPS
@@ -48,7 +48,7 @@ git push origin main
 #### Updating to a new version:
 1. SSH into VPS or use Portainer's console
 2. Navigate to the project directory: `cd /opt/wcwiki`
-3. Pull latest code: `git pull origin main`
+3. Pull latest code: `git pull origin master`
 4. Rebuild the app image: `docker compose -f docker-compose.prod.yml build app`
 5. In Portainer: go to the stack → click **Update the stack** → **Pull and redeploy**
 6. Alternatively from CLI: `docker compose -f docker-compose.prod.yml up -d --build app`
@@ -193,8 +193,8 @@ cd wcwiki
 # 2. Deploy via Portainer (paste stack) or CLI:
 docker compose -f docker-compose.prod.yml up -d
 
-# 3. Run database migration
-docker exec wcwiki-app npx prisma db push
+# 3. Run database migrations
+docker exec wcwiki-app npx prisma migrate deploy
 
 # 4. Seed initial data
 docker exec wcwiki-app npm run db:seed
@@ -211,11 +211,11 @@ When pushing a new version:
 
 1. **Local**: Test thoroughly — `npm run dev`, verify all features work
 2. **Local**: Run `npm run build` to catch build errors
-3. **Push**: `git add . && git commit -m "v0.x.x: description" && git push origin main`
-4. **VPS**: `cd /opt/wcwiki && git pull origin main`
+3. **Push**: `git add . && git commit -m "v0.x.x: description" && git push origin master`
+4. **VPS**: `cd /opt/wcwiki && git pull origin master`
 5. **Portainer**: Go to stack → **Update the stack** → enable **Re-pull image and redeploy**
 6. **Verify**: Check the live site, test search, verify pages load
-7. **If DB schema changed**: `docker exec wcwiki-app npx prisma db push`
+7. **If DB schema changed**: create/review a Prisma migration locally, then deploy with `docker exec wcwiki-app npx prisma migrate deploy`
 8. **If search indexes changed**: Hit `/api/admin/reindex` or run reindex command
 
 ---
@@ -263,7 +263,7 @@ In the Portainer stack editor, add these two variables:
 ### Portainer — Deploy / Redeploy
 
 1. Push latest code to GitHub (includes the tunnel service in `docker-compose.prod.yml`)
-2. On VPS: `cd /opt/wcwiki && git pull origin main`
+2. On VPS: `cd /opt/wcwiki && git pull origin master`
 3. In Portainer: go to the **wcwiki** stack → **Update the stack**
 4. Enable **Re-pull image and redeploy** → click **Update**
 5. A new `wcwiki-tunnel` container will appear alongside `wcwiki-app`, `wcwiki-postgres`, `wcwiki-meilisearch`
@@ -292,6 +292,6 @@ Expected tunnel log output: `Registered tunnel connection` or `Connection establ
 
 - **Never push untested code to GitHub** — local dev first, always
 - **Never edit code directly on the VPS** — all changes go through local → GitHub → VPS
-- **Database migrations are manual** — run `prisma db push` after schema changes
+- **Database migrations use Prisma migrations** — run `prisma migrate dev --name <name>` locally, review SQL, then deploy with `prisma migrate deploy`. Production startup currently has a temporary non-destructive `db push --skip-generate` fallback until migration history is repaired.
 - **Environment secrets live in Portainer** — never commit `.env` files with real credentials
 - **.env.local is for local dev only** — safe to have dev-only values

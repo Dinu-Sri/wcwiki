@@ -21,6 +21,12 @@ next-intl 4.8 + Cloudflare R2 + Cloudflare Tunnel + Docker/Portainer
 Local → `git push origin master` → GitHub Actions → GHCR image →
 VPS `git pull` → Portainer redeploy → wcwiki.org
 
+Startup DB behavior: `entrypoint.sh` runs `prisma migrate deploy` first. The live
+production DB predates Prisma migration history, so startup temporarily falls back
+to non-destructive `prisma db push --skip-generate` if deploy fails. Do not add
+`--accept-data-loss`. Remove this fallback only after production migration history
+is repaired in a maintenance window.
+
 ## 10 Hard Rules
 
 1. Environment variables only — no hardcoded values

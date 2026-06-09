@@ -104,6 +104,22 @@ curl -I https://wcwiki.org
 - `https://wcwiki.org/api/search?q=test` — Search API
 - `https://wcwiki.org/en/artists/jmw-turner` — Known content page
 
+### Prisma Startup Behavior
+
+The app container runs `prisma migrate deploy` first. The current production database
+was created before migration history was baselined, so `entrypoint.sh` includes a
+temporary non-destructive fallback:
+
+```bash
+npx prisma db push --skip-generate
+```
+
+This fallback does not use `--accept-data-loss`. If Prisma detects a destructive
+change, it should refuse rather than dropping production data.
+
+Long-term target: repair production migration history in a maintenance window, then
+remove the fallback and return to `prisma migrate deploy` only.
+
 ---
 
 ## Rollback Procedure
@@ -128,10 +144,12 @@ docker compose -f docker-compose.prod.yml up -d app
 
 ### Database Rollback
 - Prisma does not support automatic down migrations
-- If `prisma db push` changed the schema and something broke:
-  1. Revert the `schema.prisma` change
-  2. Push the reverted schema: `prisma db push`
-  3. Note: `--accept-data-loss` may drop columns — always backup first
+- If a migration changed the schema and something broke:
+  1. Stop writes if possible and take a fresh backup
+  2. Revert the code/schema change
+  3. Create and review a forward-fix migration, or restore from backup if the failure is data-destructive
+  4. Redeploy only after the rollback/fix path is explicit
+- Never use `--accept-data-loss` in production.
 
 ---
 
@@ -179,9 +197,11 @@ docker start wcwiki-app
 
 ### Schema Change (Prisma)
 1. Edit `prisma/schema.prisma`
-2. Test locally: `npx prisma db push`
-3. Commit with `DB: prisma db push --accept-data-loss` in message
-4. Deploy — entrypoint.sh runs `prisma db push` automatically
+2. Create a migration: `npx prisma migrate dev --name <name>`
+3. Review the generated SQL in `prisma/migrations/`
+4. Test against staging before production when possible
+5. Commit with `DB: npx prisma migrate dev --name <name>; production: migrate deploy`
+6. Deploy. `entrypoint.sh` runs `prisma migrate deploy`, with a temporary non-destructive `db push --skip-generate` fallback only while production migration history is not repaired.
 
 ### New Environment Variable
 1. Add to `.env.example` with placeholder
