@@ -18,7 +18,17 @@ interface SiteSettingsForSchema {
 
 // ─── Organization Schema (Knowledge Panel) ─────────────────────────────
 
+function getCanonicalBaseUrl() {
+  return process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
+}
+
+function toAbsoluteUrl(url: string | null | undefined, baseUrl: string) {
+  if (!url) return undefined;
+  return url.startsWith("http") ? url : `${baseUrl}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 export function generateOrganizationSchema(settings: SiteSettingsForSchema) {
+  const siteUrl = getCanonicalBaseUrl();
   const sameAs = [
     settings.socialFacebook,
     settings.socialInstagram,
@@ -32,11 +42,11 @@ export function generateOrganizationSchema(settings: SiteSettingsForSchema) {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: settings.siteName,
-    url: settings.siteUrl,
+    url: siteUrl,
     ...(settings.logoUrl && {
       logo: {
         "@type": "ImageObject",
-        url: settings.logoUrl,
+        url: toAbsoluteUrl(settings.logoUrl, siteUrl),
       },
     }),
     ...(settings.siteDescription && {
@@ -58,11 +68,12 @@ export function generateOrganizationSchema(settings: SiteSettingsForSchema) {
 // ─── WebSite Schema with SearchAction (Sitelinks Search Box) ───────────
 
 export function generateWebSiteSchema(settings: SiteSettingsForSchema) {
+  const siteUrl = getCanonicalBaseUrl();
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: settings.siteName,
-    url: settings.siteUrl,
+    url: siteUrl,
     ...(settings.siteDescription && {
       description: settings.siteDescription,
     }),
@@ -70,7 +81,7 @@ export function generateWebSiteSchema(settings: SiteSettingsForSchema) {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${settings.siteUrl}/search?q={search_term_string}`,
+        urlTemplate: `${siteUrl}/search?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },
@@ -144,7 +155,7 @@ export function generatePersonSchema(
     ...(artist.birthYear && { birthDate: String(artist.birthYear) }),
     ...(artist.deathYear && { deathDate: String(artist.deathYear) }),
     ...(artist.bio && { description: artist.bio }),
-    ...(artist.image && { image: artist.image }),
+    ...(artist.image && { image: toAbsoluteUrl(artist.image, baseUrl) }),
     jobTitle: "Watercolor Artist",
     ...(artist.styles.length > 0 && { knowsAbout: artist.styles }),
     ...(sameAs.length > 0 && { sameAs }),
@@ -190,8 +201,8 @@ export function generateVisualArtworkSchema(
     artform: "Painting",
     ...(painting.year && { dateCreated: String(painting.year) }),
     ...(painting.images.length > 0 && {
-      image: painting.images[0],
-      thumbnailUrl: painting.images[0],
+      image: toAbsoluteUrl(painting.images[0], baseUrl),
+      thumbnailUrl: toAbsoluteUrl(painting.images[0], baseUrl),
     }),
     ...(painting.width &&
       painting.height && {
@@ -256,11 +267,11 @@ export function generateArticleSchema(
       ...(publisher.logoUrl && {
         logo: {
           "@type": "ImageObject",
-          url: publisher.logoUrl,
+          url: toAbsoluteUrl(publisher.logoUrl, baseUrl),
         },
       }),
     },
-    ...(article.coverImage && { image: article.coverImage }),
+    ...(article.coverImage && { image: toAbsoluteUrl(article.coverImage, baseUrl) }),
     wordCount,
     inLanguage: "en",
   };
@@ -289,7 +300,7 @@ export function generateItemListSchema(
       position: index + 1,
       url: item.url.startsWith("http") ? item.url : `${baseUrl}${item.url}`,
       name: item.name,
-      ...(item.image && { image: item.image }),
+      ...(item.image && { image: toAbsoluteUrl(item.image, baseUrl) }),
     })),
   };
 }
@@ -300,7 +311,7 @@ const defaultSettings: SiteSettingsForSchema = {
   siteName: "wcWIKI",
   siteDescription:
     "Search and discover watercolor artists, paintings, and articles. A community-driven encyclopedia for watercolor art worldwide.",
-  siteUrl: process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org",
+  siteUrl: getCanonicalBaseUrl(),
   foundedYear: 2025,
 };
 
@@ -310,7 +321,7 @@ export async function getSiteSettings(): Promise<SiteSettingsForSchema & Record<
     const settings = await db.siteSettings.findUnique({
       where: { id: "default" },
     });
-    if (settings) return settings;
+    if (settings) return { ...settings, siteUrl: getCanonicalBaseUrl() };
   } catch {
     // DB not available or table not yet created
   }

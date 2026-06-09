@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 
 const locales = ["en", "zh", "ja", "ko", "es", "fr", "ru", "tr", "ta", "si"] as const;
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
 
@@ -58,13 +61,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.4,
-    },
-    {
-      url: `${baseUrl}/search`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.6,
-      alternates: buildAlternates("/search"),
     },
     {
       url: `${baseUrl}/privacy`,

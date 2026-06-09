@@ -18,6 +18,7 @@
 
 | Date | Task | Files Changed | Env Vars | DB Migration | Redeploy | Rollback |
 |------|------|--------------|----------|-------------|----------|----------|
+| 2026-06-09 | Fix SEO sitemap and schema canonical URLs | src/app/sitemap.ts, src/app/robots.ts, src/lib/schema.ts | None | None | Yes | Revert SEO sitemap/schema commit |
 | 2026-06-07 | Phase 0 stability: safe migrations, backups, staging DB | entrypoint.sh, prisma/migrations/20260607000000_initial_schema/, scripts/backup-db.sh, docker-compose.yml, package.json | None | Initial migration generated | Yes (entrypoint.sh changed) | Revert commit, restore original entrypoint.sh |
 | 2026-06-06 | Complete system overview doc for research AI agents | docs/SYSTEM_OVERVIEW.md | None | None | No | Revert commit |
 | 2026-06-06 | AI agent memory system setup | AGENTS.md, .github/copilot-instructions.md, docs/*, .gitignore, .env.example, README.md, .github/workflows/production-check.yml | None (docs only) | None | No | Revert commit |
