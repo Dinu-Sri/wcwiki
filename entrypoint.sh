@@ -2,8 +2,11 @@
 set -e
 
 echo "Running database migrations..."
-npx prisma migrate deploy 2>/dev/null || \
-  node node_modules/prisma/build/index.js migrate deploy
+if ! npx prisma migrate deploy; then
+  echo "Migration deploy failed. Attempting one-time baseline for existing production schema..."
+  npx prisma migrate resolve --applied 20260607000000_initial_schema
+  npx prisma migrate deploy
+fi
 
 echo "Syncing data to Meilisearch..."
 node scripts/sync-meilisearch.js || echo "Meilisearch sync skipped (will retry on next restart)"

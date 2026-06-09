@@ -18,6 +18,7 @@
 
 | Date | Task | Files Changed | Env Vars | DB Migration | Redeploy | Rollback |
 |------|------|--------------|----------|-------------|----------|----------|
+| 2026-06-09 | Add Prisma production baseline fallback for P3005 | entrypoint.sh, docs/KNOWN_ERRORS.md | None | Marks existing initial migration as applied if needed | Yes | Revert commit after production DB is baselined |
 | 2026-06-09 | Fix SEO sitemap and schema canonical URLs | src/app/sitemap.ts, src/app/robots.ts, src/lib/schema.ts | None | None | Yes | Revert SEO sitemap/schema commit |
 | 2026-06-07 | Phase 0 stability: safe migrations, backups, staging DB | entrypoint.sh, prisma/migrations/20260607000000_initial_schema/, scripts/backup-db.sh, docker-compose.yml, package.json | None | Initial migration generated | Yes (entrypoint.sh changed) | Revert commit, restore original entrypoint.sh |
 | 2026-06-06 | Complete system overview doc for research AI agents | docs/SYSTEM_OVERVIEW.md | None | None | No | Revert commit |

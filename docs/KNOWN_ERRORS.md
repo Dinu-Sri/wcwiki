@@ -197,4 +197,30 @@ on staging DB first (`npm run db:staging-migrate`).
 
 ---
 
+## 11. Prisma P3005 on Existing Production Database
+
+**Status**: RESOLVED (startup baseline fallback added 2026-06-09)
+
+**Symptom**: App container restart loops with `Error: P3005 The database schema is not empty`
+when `prisma migrate deploy` runs.
+
+**Root Cause**: The production database was created before Prisma migration history
+existed, so tables are present but `_prisma_migrations` has no record of the initial
+schema migration.
+
+**Fix/Workaround**: `entrypoint.sh` now resolves the known initial migration
+`20260607000000_initial_schema` as applied when the first deploy fails, then retries
+`prisma migrate deploy`. This is non-destructive and only writes migration history.
+
+**Manual Fix**:
+```bash
+docker exec wcwiki-app npx prisma migrate resolve --applied 20260607000000_initial_schema
+docker restart wcwiki-app
+```
+
+**Prevention**: Keep future schema changes as Prisma migrations and avoid returning
+to untracked `db push` changes in production.
+
+---
+
 *Last updated: 2026-06-07*
