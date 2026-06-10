@@ -66,7 +66,7 @@ export default async function AdminLayout({
             href="/admin/references"
             className="block px-3 py-2 rounded-lg text-foreground hover:bg-accent transition-colors"
           >
-            References
+            Painting Reference
           </Link>
           <Link
             href="/admin/applications"

@@ -304,7 +304,7 @@ export default function DashboardPage() {
                 href="/painting-references/upload"
                 className="px-4 py-2 text-sm bg-surface border border-border rounded-xl hover:bg-accent transition-colors"
               >
-                Donate References
+                Donate Painting Reference
               </Link>
               {["APPROVER", "SUPER_ADMIN"].includes(
                 session.user.role as string

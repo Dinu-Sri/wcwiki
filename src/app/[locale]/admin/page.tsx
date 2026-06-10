@@ -25,7 +25,7 @@ export default async function AdminDashboard() {
     { label: "Paintings", value: paintingCount },
     { label: "Articles", value: articleCount },
     { label: "Pending Edits", value: pendingEdits, href: "/admin/edits" },
-    { label: "Pending References", value: pendingReferences, href: "/admin/references" },
+    { label: "Pending Painting References", value: pendingReferences, href: "/admin/references" },
   ];
 
   return (

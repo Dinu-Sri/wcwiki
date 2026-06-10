@@ -57,7 +57,7 @@ export function MobileNav() {
                 onClick={() => setOpen(false)}
                 className="block px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-accent transition-colors"
               >
-                Painting References
+                Painting Reference
               </Link>
               <div className="px-3 py-2.5 border-t border-border/60 mt-1 pt-2">
                 <LanguageSwitcher />

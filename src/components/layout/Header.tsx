@@ -35,7 +35,7 @@ export function Header() {
             Articles
           </Link>
           <Link href="/painting-references" className="px-3 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-accent transition-all">
-            References
+            Painting Reference
           </Link>
         </nav>
 
