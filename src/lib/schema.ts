@@ -307,6 +307,87 @@ export function generateItemListSchema(
 
 // ─── Helper: Get SiteSettings with fallback defaults ───────────────────
 
+// --- Painting Reference Schema ----------------------------------------------
+
+interface PaintingReferenceForSchema {
+  title: string;
+  slug: string;
+  description?: string | null;
+  previewUrl: string;
+  thumbnailUrl: string;
+  width?: number | null;
+  height?: number | null;
+  tags: string[];
+  attributionName?: string | null;
+  attributionUrl?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  category?: {
+    name: string;
+  } | null;
+}
+
+export function generatePaintingReferenceImageSchema(
+  reference: PaintingReferenceForSchema,
+  baseUrl: string
+) {
+  const pageUrl = `${baseUrl}/painting-references/${reference.slug}`;
+  const creatorName = reference.attributionName || "wcWIKI contributor";
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ImageObject",
+    name: reference.title,
+    url: pageUrl,
+    contentUrl: toAbsoluteUrl(reference.previewUrl, baseUrl),
+    thumbnailUrl: toAbsoluteUrl(reference.thumbnailUrl, baseUrl),
+    license: "https://creativecommons.org/licenses/by/4.0/",
+    acquireLicensePage: pageUrl,
+    creditText: `Reference photo by ${creatorName} via wcWIKI.org - CC BY 4.0`,
+    creator: {
+      "@type": "Person",
+      name: creatorName,
+      ...(reference.attributionUrl && { url: reference.attributionUrl }),
+    },
+    copyrightNotice: `Copyright ${creatorName}. Licensed under CC BY 4.0.`,
+    datePublished: reference.createdAt.toISOString(),
+    dateModified: reference.updatedAt.toISOString(),
+    ...(reference.description && { description: reference.description }),
+    ...(reference.width && { width: reference.width }),
+    ...(reference.height && { height: reference.height }),
+    ...(reference.tags.length > 0 && { keywords: reference.tags.join(", ") }),
+    ...(reference.category && { about: reference.category.name }),
+    isPartOf: {
+      "@type": "CollectionPage",
+      name: "Painting References",
+      url: `${baseUrl}/painting-references`,
+    },
+  };
+}
+
+export function generateCollectionPageSchema({
+  name,
+  description,
+  url,
+  baseUrl,
+  items,
+}: {
+  name: string;
+  description: string;
+  url: string;
+  baseUrl: string;
+  items: ItemListEntry[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    url,
+    mainEntity: generateItemListSchema(items, baseUrl, name),
+  };
+}
+
 const defaultSettings: SiteSettingsForSchema = {
   siteName: "wcWIKI",
   siteDescription:

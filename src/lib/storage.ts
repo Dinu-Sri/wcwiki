@@ -5,6 +5,8 @@ import sharp from "sharp";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 const MAX_WIDTH = 1920;
 const QUALITY = 75;
+const REFERENCE_PREVIEW_WIDTH = 1600;
+const REFERENCE_THUMB_WIDTH = 520;
 
 export interface UploadResult {
   url: string;
@@ -12,6 +14,17 @@ export interface UploadResult {
   height: number;
   size: number;
   format: string;
+}
+
+export interface ReferenceUploadResult {
+  preview: UploadResult;
+  thumbnail: UploadResult;
+}
+
+function getSafeBaseName(filename: string) {
+  return filename
+    .replace(/[^a-zA-Z0-9.-]/g, "_")
+    .replace(/\.[^.]+$/, "");
 }
 
 /**
@@ -29,9 +42,7 @@ export async function uploadImage(
 
   // Generate safe filename
   const timestamp = Date.now();
-  const safeName = filename
-    .replace(/[^a-zA-Z0-9.-]/g, "_")
-    .replace(/\.[^.]+$/, "");
+  const safeName = getSafeBaseName(filename);
   const outputName = `${safeName}_${timestamp}.webp`;
   const outputPath = path.join(dir, outputName);
 
@@ -57,6 +68,69 @@ export async function uploadImage(
     height: processed.info.height,
     size: processed.info.size,
     format: "webp",
+  };
+}
+
+/**
+ * Save a painting reference as an optimized preview plus a smaller thumbnail.
+ * The original file is not persisted in the MVP to keep local storage usage low.
+ */
+export async function uploadReferenceImage(
+  buffer: Buffer,
+  filename: string
+): Promise<ReferenceUploadResult> {
+  const timestamp = Date.now();
+  const safeName = getSafeBaseName(filename);
+  const previewDir = path.join(UPLOAD_DIR, "references");
+  const thumbDir = path.join(UPLOAD_DIR, "references", "thumbs");
+  await fs.mkdir(previewDir, { recursive: true });
+  await fs.mkdir(thumbDir, { recursive: true });
+
+  const previewName = `${safeName}_${timestamp}.webp`;
+  const thumbName = `${safeName}_${timestamp}_thumb.webp`;
+  const previewPath = path.join(previewDir, previewName);
+  const thumbPath = path.join(thumbDir, thumbName);
+
+  const preview = await sharp(buffer)
+    .rotate()
+    .resize({
+      width: REFERENCE_PREVIEW_WIDTH,
+      height: REFERENCE_PREVIEW_WIDTH,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 78, effort: 6, smartSubsample: true })
+    .toBuffer({ resolveWithObject: true });
+
+  const thumbnail = await sharp(buffer)
+    .rotate()
+    .resize({
+      width: REFERENCE_THUMB_WIDTH,
+      height: REFERENCE_THUMB_WIDTH,
+      fit: "cover",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 70, effort: 6, smartSubsample: true })
+    .toBuffer({ resolveWithObject: true });
+
+  await fs.writeFile(previewPath, preview.data);
+  await fs.writeFile(thumbPath, thumbnail.data);
+
+  return {
+    preview: {
+      url: `/uploads/references/${previewName}`,
+      width: preview.info.width,
+      height: preview.info.height,
+      size: preview.info.size,
+      format: "webp",
+    },
+    thumbnail: {
+      url: `/uploads/references/thumbs/${thumbName}`,
+      width: thumbnail.info.width,
+      height: thumbnail.info.height,
+      size: thumbnail.info.size,
+      format: "webp",
+    },
   };
 }
 

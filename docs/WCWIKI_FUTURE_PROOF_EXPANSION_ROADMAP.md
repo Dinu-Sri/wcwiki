@@ -125,6 +125,7 @@ Each page should contain at least three retention hooks:
 | Phase | Priority | Name | Main Purpose | Retention Value | AI-Resistance Value |
 |---|---:|---|---|---|---|
 | Phase 0 | Critical | Stability and Data Safety | Fix production risks before adding major features | Protect existing user/content trust | Prevent data loss and stale search |
+| Phase 1A | Very High | Painting References Library | Community-donated reference photos for watercolor artists | Repeat browsing, saves, contributor recognition | Original visual source library with attribution backlinks |
 | Phase 1 | Critical | Watercolor Knowledge Taxonomy | Add core entity types: pigments, papers, brands, brushes, techniques | Gives users more browsing depth | Builds structured data AI cannot easily reproduce |
 | Phase 2 | Very High | Visual Evidence Lab | Standardized swatches, paper tests, brand comparisons | Visual browsing, repeated visits | Original experimental evidence |
 | Phase 3 | Very High | Review and Rating System | Reviews for papers, pigments, brands, brushes, books, courses | User-generated content loop | Human experience + social proof |
@@ -254,6 +255,269 @@ Deferred to be implemented alongside Phase 1 (new entity types need test coverag
 **Retention benefit**:
 
 - Stable contribution systems keep editors and users engaged.
+
+---
+
+## 3A. Phase 1A — Painting References Library
+
+### 3A.1 Purpose
+
+Many watercolor artists search for painting references before they paint. wcWIKI can
+become a trusted place to find approved, properly licensed, watercolor-friendly
+reference photos while also giving contributors visible credit and reputation.
+
+This phase should use the keyword phrase **Painting References** in navigation,
+headings, metadata, and URLs because it matches natural artist search behavior.
+
+### 3A.2 Product positioning
+
+**Public name**: Painting References
+
+**Core promise**:
+
+> Free painting reference photos for watercolor artists, contributed by the wcWIKI
+> community, approved for quality, and usable for creating artwork with attribution.
+
+### 3A.3 License decision
+
+Use **Creative Commons Attribution 4.0 International (CC BY 4.0)** for the MVP.
+
+Why:
+
+- It is a standard, globally recognizable license.
+- It allows commercial use and adaptations, so artists can sell paintings made from
+  the reference.
+- It requires attribution, supporting wcWIKI backlinks and contributor credit.
+- It avoids the ambiguity of NonCommercial licenses for artists who sell work.
+
+Tradeoff:
+
+- CC BY 4.0 also permits broader reuse of the photo itself, including redistribution
+  and commercial reuse, as long as attribution is provided.
+- If wcWIKI later needs stronger restrictions against photo redistribution, a custom
+  license or separate contributor agreement would be required. Do not mix that into
+  the MVP unless legal review is available.
+
+Required attribution format:
+
+```text
+Reference photo by [Contributor Name] via wcWIKI.org/painting-references/[slug] — CC BY 4.0
+```
+
+### 3A.4 MVP scope
+
+Build first:
+
+- Public `/painting-references` visual grid.
+- Public `/painting-references/[slug]` detail page.
+- Registered-user upload flow, maximum 10 images per batch.
+- Required contributor rights confirmation.
+- Local optimized storage:
+  - thumbnail image
+  - public preview image
+  - original/high-resolution source retained separately when practical
+- Admin approval queue.
+- Approved/pending/rejected statuses.
+- Contributor stats:
+  - submitted count
+  - approved count
+  - total saves/downloads later
+- Basic categories and tags.
+- Search/filter by category, orientation, tags, color/mood, newest/popular.
+- Save-to-account placeholder or minimal saved references list.
+- SEO:
+  - `ImageObject` schema on detail pages
+  - `CollectionPage`/`ItemList` schema on browse/category pages
+  - sitemap inclusion
+  - descriptive category pages
+  - copy-attribution button
+
+Defer:
+
+- Contests/challenges.
+- Advanced badges.
+- AI/visual similarity.
+- Paid/high-resolution download logic.
+- OneDrive/R2 migration UI.
+- "Painted from this reference" galleries.
+
+### 3A.5 UX entry points
+
+Homepage:
+
+- Add a compact visual link below the search stats:
+  - "Painting References"
+  - subtitle: "Find approved photos to paint from"
+- Keep it secondary to the main search, but visible in the first viewport.
+
+Header:
+
+- Add `References` or `Painting References` as a top-level navigation item after
+  Articles on desktop.
+- Mobile menu should include the same item.
+
+Search:
+
+- Add references as a searchable content type after the MVP index is in Meilisearch.
+- Empty-state suggestions can include:
+  - "Try painting references for clouds"
+  - "Browse flower painting references"
+
+Dashboard:
+
+- Add "My Reference Uploads" for contributors.
+- Later add "Saved References" under My Studio.
+
+Admin:
+
+- Add "Reference Approvals" under admin content/moderation.
+
+### 3A.6 Public browse UX
+
+The `/painting-references` page should be visual-first:
+
+- Masonry or dense responsive image grid.
+- Sticky filter/sort bar:
+  - category
+  - orientation
+  - color/mood
+  - newest/popular
+  - search keyword
+- Quick chips:
+  - Landscapes
+  - Flowers
+  - Skies
+  - Water
+  - Architecture
+  - Animals
+  - Still Life
+- Cards should show:
+  - image
+  - short title
+  - contributor name
+  - category
+  - save count later
+
+Detail page should show:
+
+- Large optimized preview.
+- Title and concise description.
+- Contributor credit.
+- License badge: CC BY 4.0.
+- Copy attribution button.
+- Save button.
+- Download/view high-resolution option when available.
+- Category/tags.
+- Related painting references.
+- Optional "Painted from this?" CTA later.
+
+### 3A.7 Upload UX
+
+Registered user flow:
+
+1. Click "Donate Painting References".
+2. Drag/drop or select up to 10 images.
+3. Client shows preview thumbnails and file-size warnings.
+4. User confirms:
+   - I own these photos or have permission to share them.
+   - I agree to publish approved images under CC BY 4.0.
+   - I understand attribution is required.
+5. User fills shared metadata once:
+   - category
+   - location/country optional
+   - tags
+6. User can refine per-image title/description.
+7. Submit.
+8. Dashboard shows pending status.
+
+Approval flow:
+
+- Admin/Approver sees a visual queue.
+- Can edit title/category/tags.
+- Can approve/reject with reason.
+- Approved images become public and searchable.
+- Contributor receives notification.
+
+### 3A.8 Storage strategy
+
+MVP:
+
+- Use existing local upload volume.
+- Enforce max 10 images per batch.
+- Enforce max upload size, initially 10MB per image.
+- Strip EXIF metadata by default, especially GPS.
+- Generate:
+  - `thumb` around 400px long edge
+  - `preview` around 1600px long edge
+  - `large` or original-retained asset only if storage allows
+
+Scale path:
+
+- Move reference assets to Cloudflare R2 using the existing R2-compatible storage
+  direction.
+- R2 is preferred over OneDrive for public serving because it is object storage with
+  web/CDN-friendly access and free egress.
+- OneDrive can be used as a manual cold backup/archive, not as the primary public
+  image delivery layer.
+
+### 3A.9 SEO and semantic strategy
+
+Use `painting references` consistently in:
+
+- page title
+- H1
+- URL
+- meta description
+- navigation label
+- category intro text
+
+Recommended URLs:
+
+```text
+/painting-references
+/painting-references/[slug]
+/painting-references/category/[slug]
+/painting-references/upload
+```
+
+Structured data:
+
+- Detail pages: `ImageObject`
+  - `name`
+  - `description`
+  - `contentUrl`
+  - `thumbnailUrl`
+  - `creator`
+  - `creditText`
+  - `license`
+  - `acquireLicensePage`
+  - `width`
+  - `height`
+  - `uploadDate`
+  - `contentLocation` where available
+- Listing/category pages: `CollectionPage` + `ItemList`
+- Breadcrumbs on all pages.
+
+SEO pages to create later:
+
+- `/painting-references/category/clouds`
+- `/painting-references/category/flowers`
+- `/painting-references/category/water-reflections`
+- `/painting-references/category/sri-lanka-landscapes`
+
+### 3A.10 Retention metrics
+
+Track:
+
+- reference uploads per week
+- approval rate
+- saves per reference
+- downloads per reference
+- copy-attribution clicks
+- contributor repeat upload rate
+- search-to-reference click rate
+- reference detail page dwell time
+- painting-reference pages indexed in Google
 
 ---
 

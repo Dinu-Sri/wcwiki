@@ -34,6 +34,9 @@ export function Header() {
           <Link href="/articles" className="px-3 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-accent transition-all">
             Articles
           </Link>
+          <Link href="/painting-references" className="px-3 py-1.5 rounded-lg text-muted hover:text-foreground hover:bg-accent transition-all">
+            References
+          </Link>
         </nav>
 
         {/* Language switcher — compact globe icon near profile */}

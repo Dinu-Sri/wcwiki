@@ -18,6 +18,7 @@
 
 | Date | Task | Files Changed | Env Vars | DB Migration | Redeploy | Rollback |
 |------|------|--------------|----------|-------------|----------|----------|
+| 2026-06-10 | Add Painting References library MVP with submission, approval, saves, SEO, and sitemap hooks | prisma/schema.prisma, prisma/migrations/20260610090000_painting_references/, src/app/[locale]/painting-references/*, src/app/api/painting-references/*, src/app/api/admin/painting-references/*, src/components/references/*, src/app/sitemap.ts, src/app/llms.txt/route.ts, layout/dashboard/nav files | None | New migration 20260610090000_painting_references; production startup may still use documented non-destructive db push fallback until migration history is repaired | Yes | Revert this commit; if tables were created, remove PaintingReference/ReferenceCategory/ReferenceSave data after backup |
 | 2026-06-09 | Document temporary Prisma startup fallback and future migration-history repair plan | AGENTS.md, docs/DEPLOYMENT_WORKFLOW.md, docs/PRODUCTION_RULES.md, docs/KNOWN_ERRORS.md, ai/AI_CONTEXT.generated.md | None | None | No | Revert documentation commit |
 | 2026-06-09 | Restore production startup with non-destructive Prisma db push fallback | entrypoint.sh, docs/KNOWN_ERRORS.md | None | Falls back to prisma db push --skip-generate if migrate deploy fails | Yes | Revert commit after production DB migration history is repaired |
 | 2026-06-09 | Make Prisma baseline fallback discover migration directory dynamically | entrypoint.sh, docs/KNOWN_ERRORS.md | None | Marks first packaged migration as applied if needed | Yes | Revert commit after production DB is baselined |
@@ -40,4 +41,4 @@
 
 ---
 
-*Last updated: 2026-06-06*
+*Last updated: 2026-06-10*

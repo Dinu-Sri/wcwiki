@@ -3,13 +3,14 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const [userCount, artistCount, paintingCount, articleCount, pendingEdits] =
+  const [userCount, artistCount, paintingCount, articleCount, pendingEdits, pendingReferences] =
     await Promise.all([
       db.user.count(),
       db.artist.count(),
       db.painting.count(),
       db.article.count(),
       db.editHistory.count({ where: { status: "PENDING" } }),
+      db.paintingReference.count({ where: { status: "PENDING" } }),
     ]);
 
   const recentUsers = await db.user.findMany({
@@ -24,6 +25,7 @@ export default async function AdminDashboard() {
     { label: "Paintings", value: paintingCount },
     { label: "Articles", value: articleCount },
     { label: "Pending Edits", value: pendingEdits, href: "/admin/edits" },
+    { label: "Pending References", value: pendingReferences, href: "/admin/references" },
   ];
 
   return (
@@ -31,7 +33,7 @@ export default async function AdminDashboard() {
       <h1 className="text-2xl font-bold text-foreground mb-6">Dashboard</h1>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
         {stats.map((stat) => {
           const inner = (
             <div

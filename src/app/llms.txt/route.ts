@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://wcwiki.org";
 
-  const [artists, paintings, articles] = await Promise.all([
+  const [artists, paintings, articles, references] = await Promise.all([
     db.artist.findMany({
       select: { slug: true, name: true, nationality: true, birthYear: true, deathYear: true },
       orderBy: { name: "asc" },
@@ -18,6 +18,11 @@ export async function GET() {
     db.article.findMany({
       where: { status: "APPROVED" },
       select: { slug: true, title: true },
+      orderBy: { title: "asc" },
+    }),
+    db.paintingReference.findMany({
+      where: { status: "APPROVED" },
+      select: { slug: true, title: true, category: { select: { name: true } }, tags: true },
       orderBy: { title: "asc" },
     }),
   ]);
@@ -36,6 +41,7 @@ export async function GET() {
     `- Artists index: ${baseUrl}/artists`,
     `- Paintings index: ${baseUrl}/paintings`,
     `- Articles index: ${baseUrl}/articles`,
+    `- Painting references index: ${baseUrl}/painting-references`,
     `- Search: ${baseUrl}/search`,
     `- About: ${baseUrl}/about`,
     ``,
@@ -62,6 +68,14 @@ export async function GET() {
     `## Articles (${articles.length} total)`,
     ``,
     ...articles.map((a) => `- [${a.title}](${baseUrl}/articles/${a.slug})`),
+    ``,
+    `## Painting References (${references.length} total)`,
+    ``,
+    ...references.map((r) => {
+      const category = r.category?.name ? `, ${r.category.name}` : "";
+      const tags = r.tags.length > 0 ? `, tags: ${r.tags.join(", ")}` : "";
+      return `- [${r.title}${category}${tags}](${baseUrl}/painting-references/${r.slug})`;
+    }),
     ``,
     `## Languages`,
     ``,

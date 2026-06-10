@@ -65,11 +65,11 @@ model User {
   socialLinks Json? // { instagram, youtube, x, facebook, pinterest, behance }
 
   // Profile fields
-  country            String?
-  specializations    String[] @default([])
-  mediaInterests     String[] @default([])
+  country             String?
+  specializations     String[] @default([])
+  mediaInterests      String[] @default([])
   watercolorStartYear Int?
-  portfolioImages    String[] @default([])
+  portfolioImages     String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,6 +88,9 @@ model User {
   suggestions          Suggestion[]        @relation("SuggestionAuthor")
   claimedSuggestions   Suggestion[]        @relation("SuggestionClaimer")
   notifications        Notification[]
+  referenceSubmissions PaintingReference[] @relation("ReferenceSubmittedBy")
+  referenceReviews     PaintingReference[] @relation("ReferenceReviewedBy")
+  referenceSaves       ReferenceSave[]
 }
 
 enum UserRole {
@@ -111,11 +114,11 @@ model Artist {
   image       String?
   website     String?
   socialLinks Json? // { instagram, youtube, x, facebook, pinterest, behance }
-  references  Json? @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
+  references  Json?    @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
 
   // SEO overrides
   metaTitle       String?
-  metaDescription String?  @db.Text
+  metaDescription String? @db.Text
   ogImage         String?
 
   connectedUserId String? @unique
@@ -152,7 +155,7 @@ model Painting {
 
   // SEO overrides
   metaTitle       String?
-  metaDescription String?  @db.Text
+  metaDescription String? @db.Text
   ogImage         String?
 
   createdAt DateTime @default(now())
@@ -166,22 +169,22 @@ model Painting {
 // ─── Article ───────────────────────────────────────────────────────────────
 
 model Article {
-  id       String        @id @default(cuid())
-  title    String
-  slug     String        @unique
-  body     String        @db.Text // Rich text HTML
-  coverImage String?      // Cover/featured image URL
-  authorId String
-  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  status   ArticleStatus @default(DRAFT)
-  language String        @default("en")
-  tags     String[]      @default([])
-  excerpt  String?       @db.Text // Short summary for cards/SEO
-  references Json?       @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
+  id         String        @id @default(cuid())
+  title      String
+  slug       String        @unique
+  body       String        @db.Text // Rich text HTML
+  coverImage String? // Cover/featured image URL
+  authorId   String
+  author     User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  status     ArticleStatus @default(DRAFT)
+  language   String        @default("en")
+  tags       String[]      @default([])
+  excerpt    String?       @db.Text // Short summary for cards/SEO
+  references Json?         @default("[]") // Array of {title, url?, author?, publishedDate?, accessDate?, note?}
 
   // SEO overrides
   metaTitle       String?
-  metaDescription String?  @db.Text
+  metaDescription String? @db.Text
   ogImage         String?
 
   publishedAt DateTime?
@@ -195,6 +198,91 @@ model Article {
 
 enum ArticleStatus {
   DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// --- Painting References ----------------------------------------------------
+
+model ReferenceCategory {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+  imageUrl    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  references PaintingReference[]
+
+  @@index([name])
+}
+
+model PaintingReference {
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique
+  description String? @db.Text
+
+  categoryId String?
+  category   ReferenceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  tags            String[] @default([])
+  previewUrl      String
+  thumbnailUrl    String
+  fullImageUrl    String?
+  width           Int?
+  height          Int?
+  size            Int?
+  format          String?
+  license         String   @default("CC_BY_4_0")
+  attributionName String?
+  attributionUrl  String?
+
+  status          ReferenceStatus @default(PENDING)
+  rejectionReason String?         @db.Text
+
+  submittedById String
+  submittedBy   User   @relation("ReferenceSubmittedBy", fields: [submittedById], references: [id], onDelete: Cascade)
+
+  reviewedById String?
+  reviewedBy   User?     @relation("ReferenceReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+
+  viewCount     Int @default(0)
+  downloadCount Int @default(0)
+  saveCount     Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  saves ReferenceSave[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([submittedById])
+  @@index([createdAt])
+  @@index([status, createdAt])
+}
+
+model ReferenceSave {
+  id          String @id @default(cuid())
+  userId      String
+  referenceId String
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reference PaintingReference @relation(fields: [referenceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, referenceId])
+  @@index([userId])
+  @@index([referenceId])
+}
+
+enum ReferenceStatus {
   PENDING
   APPROVED
   REJECTED
@@ -253,11 +341,11 @@ model EditHistory {
   newValue   String?    @db.Text
   status     EditStatus @default(PENDING)
 
-  userId     String
-  user       User       @relation("EditAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation("EditAuthor", fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedById String?
-  reviewedBy   User?      @relation("EditReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedBy   User?     @relation("EditReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   reviewedAt   DateTime?
 
   createdAt DateTime @default(now())
@@ -308,8 +396,8 @@ model ApiKey {
   name        String // Human-readable key name
   keyHash     String // bcrypt hash of the full API key
   keyPrefix   String // First 8 chars for identification (e.g., "wk_abc12...")
-  permissions String[] @default(["read"]) // "read", "write", "delete"
-  enabled     Boolean  @default(true)
+  permissions String[]  @default(["read"]) // "read", "write", "delete"
+  enabled     Boolean   @default(true)
   expiresAt   DateTime?
   lastUsedAt  DateTime?
 
@@ -326,10 +414,10 @@ model ApiKey {
 // ─── Search Analytics ──────────────────────────────────────────────────────
 
 model SearchQuery {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   query     String
-  category  String   @default("all") // all, artists, paintings, articles
-  results   Int      @default(0) // number of results returned
+  category  String  @default("all") // all, artists, paintings, articles
+  results   Int     @default(0) // number of results returned
   country   String?
   userAgent String?
   sessionId String? // anonymous session tracking
@@ -344,14 +432,14 @@ model SearchQuery {
 }
 
 model SearchAggregate {
-  id       String @id @default(cuid())
+  id       String   @id @default(cuid())
   query    String
   period   String // "hourly" or "daily"
   periodAt DateTime // start of the period
-  count    Int    @default(0)
-  results  Int    @default(0) // average results
+  count    Int      @default(0)
+  results  Int      @default(0) // average results
   country  String?
-  category String @default("all")
+  category String   @default("all")
 
   @@unique([query, period, periodAt, country, category])
   @@index([periodAt])
@@ -387,7 +475,7 @@ enum ApplicationStatus {
 // ─── Site Settings (SEO Dashboard) ─────────────────────────────────────────
 
 model SiteSettings {
-  id    String @id @default("default")
+  id String @id @default("default")
 
   // Site identity
   siteName        String  @default("wcWIKI")
@@ -415,8 +503,8 @@ model SiteSettings {
   yandexVerification     String?
 
   // SEO defaults
-  defaultOgImage    String?  // Fallback OG image when none specified
-  robotsCustomRules String?  @db.Text // Additional robots.txt rules (JSON)
+  defaultOgImage    String? // Fallback OG image when none specified
+  robotsCustomRules String? @db.Text // Additional robots.txt rules (JSON)
 
   updatedAt DateTime @updatedAt
 }
@@ -427,15 +515,15 @@ model Translation {
   id         String            @id @default(cuid())
   entityType EntityType
   entityId   String
-  locale     String            // "si", "ta", "ja", etc.
-  field      String            // "bio", "title", "description", "body", "excerpt", "name"
+  locale     String // "si", "ta", "ja", etc.
+  field      String // "bio", "title", "description", "body", "excerpt", "name"
   value      String            @db.Text
   status     TranslationStatus @default(MACHINE)
 
-  translatedById String?       // userId of human translator (null = machine)
-  reviewedById   String?       // userId of reviewer
+  translatedById String? // userId of human translator (null = machine)
+  reviewedById   String? // userId of reviewer
   reviewedAt     DateTime?
-  machineSource  String?       // "google" | "deepl" | "openai"
+  machineSource  String? // "google" | "deepl" | "openai"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -456,25 +544,25 @@ enum TranslationStatus {
 // ─── Suggestions ───────────────────────────────────────────────────────────
 
 model Suggestion {
-  id         String           @id @default(cuid())
-  type       SuggestionType
-  topic      String?          // For NEW_ARTICLE — the suggested topic
-  details    String?          @db.Text // Optional description
-  language   String?          // Preferred language for new article (e.g. "en", "zh")
+  id       String         @id @default(cuid())
+  type     SuggestionType
+  topic    String? // For NEW_ARTICLE — the suggested topic
+  details  String?        @db.Text // Optional description
+  language String? // Preferred language for new article (e.g. "en", "zh")
 
   // For translation requests — links to existing entity
-  entityType EntityType?
-  entityId   String?
-  targetLocale String?        // Which language to translate into
+  entityType   EntityType?
+  entityId     String?
+  targetLocale String? // Which language to translate into
 
-  status     SuggestionStatus @default(OPEN)
+  status SuggestionStatus @default(OPEN)
 
   requestedById String
-  requestedBy   User          @relation("SuggestionAuthor", fields: [requestedById], references: [id], onDelete: Cascade)
+  requestedBy   User   @relation("SuggestionAuthor", fields: [requestedById], references: [id], onDelete: Cascade)
 
-  claimedById   String?
-  claimedBy     User?         @relation("SuggestionClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
-  claimedAt     DateTime?
+  claimedById String?
+  claimedBy   User?     @relation("SuggestionClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt   DateTime?
 
   // What was published (filled when status → PUBLISHED)
   publishedEntityType EntityType?
@@ -509,18 +597,18 @@ enum SuggestionStatus {
 // ─── Notifications ─────────────────────────────────────────────────────────
 
 model Notification {
-  id      String           @id @default(cuid())
-  userId  String
-  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   type    NotificationType
   message String
-  link    String?          // URL to navigate to
+  link    String? // URL to navigate to
 
-  read    Boolean          @default(false)
+  read Boolean @default(false)
 
   suggestionId String?
-  suggestion   Suggestion?  @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
+  suggestion   Suggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
 

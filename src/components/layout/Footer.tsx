@@ -40,6 +40,12 @@ export function Footer() {
                   Articles
                 </Link>
               </li>
+              <li>
+                <Link href="/painting-references" className="hover:text-primary transition-colors inline-flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-warm"></span>
+                  Painting References
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -50,6 +56,11 @@ export function Footer() {
               <li>
                 <Link href="/dashboard" className="hover:text-primary transition-colors">
                   Contribute
+                </Link>
+              </li>
+              <li>
+                <Link href="/painting-references/upload" className="hover:text-primary transition-colors">
+                  Donate References
                 </Link>
               </li>
               <li>

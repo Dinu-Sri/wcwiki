@@ -29,6 +29,17 @@ interface SuggestionItem {
   requestedBy?: { name: string | null } | null;
 }
 
+interface ReferenceItem {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  thumbnailUrl: string;
+  rejectionReason: string | null;
+  createdAt: string;
+  category?: { name: string | null } | null;
+}
+
 interface ApplicationStatus {
   id: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -49,6 +60,7 @@ export default function DashboardPage() {
   const [edits, setEdits] = useState<EditItem[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [openSuggestions, setOpenSuggestions] = useState<SuggestionItem[]>([]);
+  const [references, setReferences] = useState<ReferenceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<ApplicationStatus | null>(null);
   const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
@@ -59,11 +71,12 @@ export default function DashboardPage() {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const [editsRes, appRes, profileRes, suggestRes] = await Promise.all([
+      const [editsRes, appRes, profileRes, suggestRes, referencesRes] = await Promise.all([
         fetch("/api/my-edits"),
         fetch("/api/editor-application"),
         fetch("/api/profile"),
         fetch("/api/suggestions?mine=true"),
+        fetch("/api/painting-references?mine=true"),
       ]);
 
       if (editsRes.ok) {
@@ -81,6 +94,10 @@ export default function DashboardPage() {
       if (suggestRes.ok) {
         const data = await suggestRes.json();
         setSuggestions(data.data || []);
+      }
+      if (referencesRes.ok) {
+        const data = await referencesRes.json();
+        setReferences(data.data || []);
       }
 
       // Fetch open suggestions for EDITOR+ users
@@ -283,6 +300,12 @@ export default function DashboardPage() {
               >
                 Browse Articles
               </Link>
+              <Link
+                href="/painting-references/upload"
+                className="px-4 py-2 text-sm bg-surface border border-border rounded-xl hover:bg-accent transition-colors"
+              >
+                Donate References
+              </Link>
               {["APPROVER", "SUPER_ADMIN"].includes(
                 session.user.role as string
               ) && (
@@ -414,6 +437,80 @@ export default function DashboardPage() {
                           >
                             {claiming === s.id ? "Claiming…" : "Claim & Edit"}
                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* My Painting References */}
+          {references.length > 0 && (
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-foreground">
+                  My Painting References
+                </h2>
+                <Link
+                  href="/painting-references/upload"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Donate more
+                </Link>
+              </div>
+              <div className="bg-surface border border-border rounded-xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-muted">
+                      <th className="px-4 py-3">Reference</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {references.slice(0, 10).map((reference) => (
+                      <tr key={reference.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={reference.thumbnailUrl}
+                              alt=""
+                              className="h-10 w-12 rounded-lg object-cover"
+                            />
+                            <div>
+                              {reference.status === "APPROVED" ? (
+                                <Link
+                                  href={`/painting-references/${reference.slug}`}
+                                  className="font-medium text-primary hover:underline"
+                                >
+                                  {reference.title}
+                                </Link>
+                              ) : (
+                                <div className="font-medium text-foreground">
+                                  {reference.title}
+                                </div>
+                              )}
+                              {reference.rejectionReason && (
+                                <div className="mt-0.5 line-clamp-1 text-xs text-red-600">
+                                  {reference.rejectionReason}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-muted">
+                          {reference.category?.name || "-"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${statusBadge(reference.status)}`}>
+                            {reference.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted">
+                          {new Date(reference.createdAt).toLocaleDateString()}
                         </td>
                       </tr>
                     ))}

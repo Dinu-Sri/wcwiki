@@ -3,14 +3,15 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    const [artists, paintings, articles] = await Promise.all([
+    const [artists, paintings, articles, references] = await Promise.all([
       db.artist.count(),
       db.painting.count(),
       db.article.count({ where: { status: "APPROVED" } }),
+      db.paintingReference.count({ where: { status: "APPROVED" } }),
     ]);
 
-    return NextResponse.json({ artists, paintings, articles });
+    return NextResponse.json({ artists, paintings, articles, references });
   } catch {
-    return NextResponse.json({ artists: 0, paintings: 0, articles: 0 });
+    return NextResponse.json({ artists: 0, paintings: 0, articles: 0, references: 0 });
   }
 }

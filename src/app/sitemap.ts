@@ -51,6 +51,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: buildAlternates("/articles"),
     },
     {
+      url: `${baseUrl}/painting-references`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+      alternates: buildAlternates("/painting-references"),
+    },
+    {
       url: `${baseUrl}/about`,
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -114,7 +121,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     alternates: buildAlternates(`/articles/${article.slug}`),
   }));
 
-  return [...staticPages, ...artistPages, ...paintingPages, ...articlePages];
+  // Approved painting reference pages
+  const references = await db.paintingReference.findMany({
+    where: { status: "APPROVED" },
+    select: { slug: true, updatedAt: true },
+  });
+  const referencePages: MetadataRoute.Sitemap = references.map((reference) => ({
+    url: `${baseUrl}/painting-references/${reference.slug}`,
+    lastModified: reference.updatedAt,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+    alternates: buildAlternates(`/painting-references/${reference.slug}`),
+  }));
+
+  return [...staticPages, ...artistPages, ...paintingPages, ...articlePages, ...referencePages];
   } catch {
     // DB not available at build time — return static pages only
     return staticPages;

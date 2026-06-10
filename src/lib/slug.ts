@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
  */
 export async function generateSlug(
   text: string,
-  model: "artist" | "painting" | "article"
+  model: "artist" | "painting" | "article" | "paintingReference" | "referenceCategory"
 ): Promise<string> {
   const base = text
     .toLowerCase()
@@ -28,8 +28,12 @@ export async function generateSlug(
       exists = await db.artist.findUnique({ where: { slug: candidate } });
     } else if (model === "painting") {
       exists = await db.painting.findUnique({ where: { slug: candidate } });
-    } else {
+    } else if (model === "article") {
       exists = await db.article.findUnique({ where: { slug: candidate } });
+    } else if (model === "paintingReference") {
+      exists = await db.paintingReference.findUnique({ where: { slug: candidate } });
+    } else {
+      exists = await db.referenceCategory.findUnique({ where: { slug: candidate } });
     }
 
     if (!exists) return candidate;
