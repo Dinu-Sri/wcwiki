@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { auth } from "@/lib/auth";
+import { logAppEvent } from "@/lib/app-logger";
 import { REFERENCE_CATEGORIES, REFERENCE_COUNTRIES } from "@/lib/reference-taxonomy";
 
 export const runtime = "nodejs";
@@ -184,10 +185,12 @@ async function requestOpenAIMetadata({
   apiKey,
   optimized,
   schema,
+  userId,
 }: {
   apiKey: string;
   optimized: Buffer;
   schema: Record<string, unknown>;
+  userId: string;
 }) {
   let lastError: OpenAIProviderError | null = null;
 
@@ -236,6 +239,18 @@ async function requestOpenAIMetadata({
     const providerError = parseProviderError(response.status, body);
     lastError = providerError;
     console.error(`OpenAI metadata suggestion failed with ${model}:`, providerError);
+    await logAppEvent({
+      level: "error",
+      source: "openai.metadata",
+      message: "OpenAI metadata suggestion provider request failed",
+      userId,
+      metadata: {
+        model,
+        status: providerError.status,
+        code: providerError.code,
+        message: providerError.message,
+      },
+    });
 
     if (!shouldTryFallback(providerError)) {
       break;
@@ -253,6 +268,12 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
+    await logAppEvent({
+      level: "warn",
+      source: "openai.metadata",
+      message: "OpenAI metadata suggestion requested without OPENAI_API_KEY",
+      userId: session.user.id,
+    });
     return NextResponse.json(
       { error: "AI suggestions are not configured yet." },
       { status: 503 }
@@ -321,10 +342,22 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    const { model, payload } = await requestOpenAIMetadata({ apiKey, optimized, schema });
+    const { model, payload } = await requestOpenAIMetadata({
+      apiKey,
+      optimized,
+      schema,
+      userId: session.user.id,
+    });
     const outputText = extractOpenAIText(payload);
     if (!outputText) {
       console.error("OpenAI metadata suggestion returned no output text:", payload);
+      await logAppEvent({
+        level: "error",
+        source: "openai.metadata",
+        message: "OpenAI metadata suggestion returned no output text",
+        userId: session.user.id,
+        metadata: { model, payload },
+      });
       return NextResponse.json(
         { error: "AI returned an empty response. Please try again." },
         { status: 502 }
@@ -338,6 +371,13 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Painting reference AI suggestion failed:", error);
     const message = error instanceof Error ? error.message : "AI suggestion failed.";
+    await logAppEvent({
+      level: "error",
+      source: "openai.metadata",
+      message,
+      userId: session.user.id,
+      metadata: { error },
+    });
     return NextResponse.json(
       { error: `AI suggestion failed: ${message}` },
       { status: 500 }

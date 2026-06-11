@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomInt } from "crypto";
 import { auth } from "@/lib/auth";
+import { logAppEvent } from "@/lib/app-logger";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/slug";
 import { uploadReferenceImage } from "@/lib/storage";
@@ -266,6 +267,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (error) {
     console.error("Painting reference upload failed:", error);
+    await logAppEvent({
+      level: "error",
+      source: "painting-references.upload",
+      message: "Painting reference upload failed",
+      userId: session.user.id,
+      metadata: { error },
+    });
     return NextResponse.json({ error: "Upload failed." }, { status: 500 });
   }
 }

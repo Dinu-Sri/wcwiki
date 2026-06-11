@@ -116,6 +116,11 @@ All of these must be set in production (Portainer stack env vars) and defined in
 | `OPENAI_VISION_MODEL` | `gpt-5.4-mini` | Optional model override for painting reference metadata suggestions |
 | `OPENAI_METADATA_DAILY_LIMIT` | `10` | Optional per-user daily limit for painting reference AI suggestions |
 
+### App Diagnostics
+| Variable | Example | Purpose |
+|----------|---------|---------|
+| `APP_LOG_DIR` | `/app/uploads/logs` | Optional JSONL application log directory. Defaults to `./uploads/logs`. SUPER_ADMIN users can read recent entries through `/api/admin/logs`. |
+
 ### Cloudflare R2 (Image Storage)
 | Variable | Example | Purpose |
 |----------|---------|---------|

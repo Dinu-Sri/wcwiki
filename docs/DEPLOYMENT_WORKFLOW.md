@@ -215,6 +215,19 @@ docker start wcwiki-app
 - `OPENAI_METADATA_DAILY_LIMIT` is optional and defaults to 10 suggestions per user per day.
 - The feature is click-triggered only; it resizes the first selected image and sends a low-detail vision request for title, description, category, country, city, and tags.
 - If the key is missing, uploads still work and the AI button returns a configuration message.
+- Provider failures are logged to the app JSONL log. SUPER_ADMIN users can inspect recent AI failures at:
+
+```text
+GET /api/admin/logs?source=openai.metadata&limit=50
+```
+
+The default log directory is `./uploads/logs`; set `APP_LOG_DIR` in production only if a different persisted path is needed.
+
+### Application Logs API
+- `GET /api/admin/logs?limit=100` returns recent app JSONL logs for SUPER_ADMIN users.
+- Optional filters: `source=openai.metadata`, `source=painting-references.upload`, `level=error`.
+- The endpoint redacts common secrets and hashes user IDs before storing log entries.
+- This is for application-level errors. Container startup failures should still be checked with Portainer or `docker logs wcwiki-app`.
 
 ### New Dependency
 1. `npm install <package>`
