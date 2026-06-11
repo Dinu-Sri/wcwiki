@@ -10,6 +10,16 @@ const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
+type ReferenceUploadMetadata = {
+  titleBase: string;
+  description: string | null;
+  tags: string[];
+  categoryName: string;
+  country: string | null;
+  city: string | null;
+  takenAt: Date | null;
+};
+
 function cleanText(value: FormDataEntryValue | null, maxLength = 500) {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, maxLength);
@@ -49,6 +59,13 @@ function parseDate(value: string) {
   if (!value) return null;
   const date = new Date(`${value}T00:00:00.000Z`);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function cleanIndexedText(formData: FormData, name: string, index: number, maxLength = 500) {
+  return (
+    cleanText(formData.get(`${name}_${index}`), maxLength) ||
+    cleanText(formData.get(name), maxLength)
+  );
 }
 
 async function generateReferenceShortCode() {
@@ -170,51 +187,64 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const titleBase = cleanText(formData.get("title"), 100);
-    const description = cleanText(formData.get("description"), 1200) || null;
-    const tags = parseTags(cleanText(formData.get("tags"), 400));
-    const categoryName = cleanText(formData.get("category"), 80);
-    if (!REFERENCE_CATEGORIES.includes(categoryName as typeof REFERENCE_CATEGORIES[number])) {
-      return NextResponse.json({ error: "Choose a valid category." }, { status: 400 });
-    }
-    const country = cleanText(formData.get("country"), 80);
-    if (country && !REFERENCE_COUNTRIES.includes(country as typeof REFERENCE_COUNTRIES[number])) {
-      return NextResponse.json({ error: "Choose a valid country." }, { status: 400 });
-    }
-    const city = cleanText(formData.get("city"), 120) || null;
-    const takenAt = parseDate(cleanText(formData.get("takenAt"), 20));
-    const category = await resolveCategory(categoryName);
     const attributionName =
       cleanText(formData.get("attributionName"), 120) ||
       session.user.name ||
       session.user.email ||
       "wcWIKI contributor";
     const attributionUrl = normalizeUrl(cleanText(formData.get("attributionUrl"), 300));
+    const fileMetadata: ReferenceUploadMetadata[] = [];
+    for (const [index, file] of files.entries()) {
+      const categoryName = cleanIndexedText(formData, "category", index, 80);
+      if (!REFERENCE_CATEGORIES.includes(categoryName as typeof REFERENCE_CATEGORIES[number])) {
+        return NextResponse.json(
+          { error: `Choose a valid category for ${file.name}.` },
+          { status: 400 }
+        );
+      }
+
+      const country = cleanIndexedText(formData, "country", index, 80);
+      if (country && !REFERENCE_COUNTRIES.includes(country as typeof REFERENCE_COUNTRIES[number])) {
+        return NextResponse.json(
+          { error: `Choose a valid country for ${file.name}.` },
+          { status: 400 }
+        );
+      }
+
+      fileMetadata.push({
+        titleBase: cleanIndexedText(formData, "title", index, 100),
+        description: cleanIndexedText(formData, "description", index, 1200) || null,
+        tags: parseTags(cleanIndexedText(formData, "tags", index, 400)),
+        categoryName,
+        country: country || null,
+        city: cleanIndexedText(formData, "city", index, 120) || null,
+        takenAt: parseDate(cleanIndexedText(formData, "takenAt", index, 20)),
+      });
+    }
 
     const created = [];
 
     for (const [index, file] of files.entries()) {
+      const metadata = fileMetadata[index];
       const buffer = Buffer.from(await file.arrayBuffer());
       const uploaded = await uploadReferenceImage(buffer, file.name);
       const fallbackTitle = titleFromFilename(file.name);
-      const title =
-        files.length === 1
-          ? titleBase || fallbackTitle
-          : `${titleBase || fallbackTitle} ${index + 1}`;
+      const title = metadata.titleBase || fallbackTitle;
       const slug = await generateSlug(title, "paintingReference");
       const shortCode = await generateReferenceShortCode();
+      const category = await resolveCategory(metadata.categoryName);
 
       const reference = await db.paintingReference.create({
         data: {
           title,
           slug,
           shortCode,
-          description,
+          description: metadata.description,
           categoryId: category?.id || null,
-          tags,
-          country: country || null,
-          city,
-          takenAt,
+          tags: metadata.tags,
+          country: metadata.country,
+          city: metadata.city,
+          takenAt: metadata.takenAt,
           previewUrl: uploaded.preview.url,
           thumbnailUrl: uploaded.thumbnail.url,
           width: uploaded.preview.width,

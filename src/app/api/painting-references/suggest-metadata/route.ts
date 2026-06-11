@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const DEFAULT_MODEL = "gpt-5.4-mini";
+const FALLBACK_MODELS = ["gpt-4.1-mini", "gpt-4o-mini"];
 const DEFAULT_DAILY_LIMIT = 10;
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
 const MAX_CACHE_ITEMS = 250;
@@ -25,6 +26,12 @@ type MetadataSuggestion = {
 type CachedSuggestion = {
   createdAt: number;
   data: MetadataSuggestion;
+};
+
+type OpenAIProviderError = {
+  status: number;
+  message: string;
+  code?: string;
 };
 
 const suggestionCache = new Map<string, CachedSuggestion>();
@@ -84,6 +91,43 @@ function reserveSuggestionUse(userId: string) {
   return true;
 }
 
+function getModelCandidates() {
+  const configured = process.env.OPENAI_VISION_MODEL || DEFAULT_MODEL;
+  return [configured, ...FALLBACK_MODELS].filter(
+    (model, index, arr) => model && arr.indexOf(model) === index
+  );
+}
+
+function parseProviderError(status: number, body: string): OpenAIProviderError {
+  try {
+    const parsed = JSON.parse(body) as {
+      error?: { message?: string; code?: string; type?: string };
+    };
+    return {
+      status,
+      message: parsed.error?.message || "OpenAI request failed.",
+      code: parsed.error?.code || parsed.error?.type,
+    };
+  } catch {
+    return {
+      status,
+      message: body.slice(0, 240) || "OpenAI request failed.",
+    };
+  }
+}
+
+function shouldTryFallback(error: OpenAIProviderError) {
+  const message = error.message.toLowerCase();
+  const code = (error.code || "").toLowerCase();
+  return (
+    error.status === 400 ||
+    error.status === 404 ||
+    code.includes("model") ||
+    message.includes("model") ||
+    message.includes("unsupported")
+  );
+}
+
 function extractOpenAIText(payload: unknown) {
   if (!payload || typeof payload !== "object") return "";
   const maybePayload = payload as {
@@ -134,6 +178,71 @@ function buildPrompt() {
     `Choose one country from this exact list or return an empty string: ${REFERENCE_COUNTRIES.join(", ")}.`,
     "Use natural title case for the title. Keep tags lower-case, search-friendly, and useful for watercolor artists.",
   ].join("\n");
+}
+
+async function requestOpenAIMetadata({
+  apiKey,
+  optimized,
+  schema,
+}: {
+  apiKey: string;
+  optimized: Buffer;
+  schema: Record<string, unknown>;
+}) {
+  let lastError: OpenAIProviderError | null = null;
+
+  for (const model of getModelCandidates()) {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        input: [
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: buildPrompt() },
+              {
+                type: "input_image",
+                image_url: `data:image/webp;base64,${optimized.toString("base64")}`,
+                detail: "low",
+              },
+            ],
+          },
+        ],
+        max_output_tokens: 700,
+        text: {
+          format: {
+            type: "json_schema",
+            name: "painting_reference_metadata",
+            strict: true,
+            schema,
+          },
+        },
+      }),
+    });
+
+    if (response.ok) {
+      return {
+        model,
+        payload: await response.json(),
+      };
+    }
+
+    const body = await response.text();
+    const providerError = parseProviderError(response.status, body);
+    lastError = providerError;
+    console.error(`OpenAI metadata suggestion failed with ${model}:`, providerError);
+
+    if (!shouldTryFallback(providerError)) {
+      break;
+    }
+  }
+
+  throw new Error(lastError?.message || "OpenAI request failed.");
 }
 
 export async function POST(req: NextRequest) {
@@ -212,58 +321,25 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_VISION_MODEL || DEFAULT_MODEL,
-        input: [
-          {
-            role: "user",
-            content: [
-              { type: "input_text", text: buildPrompt() },
-              {
-                type: "input_image",
-                image_url: `data:image/webp;base64,${optimized.toString("base64")}`,
-                detail: "low",
-              },
-            ],
-          },
-        ],
-        max_output_tokens: 700,
-        text: {
-          format: {
-            type: "json_schema",
-            name: "painting_reference_metadata",
-            strict: true,
-            schema,
-          },
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error("OpenAI metadata suggestion failed:", body);
+    const { model, payload } = await requestOpenAIMetadata({ apiKey, optimized, schema });
+    const outputText = extractOpenAIText(payload);
+    if (!outputText) {
+      console.error("OpenAI metadata suggestion returned no output text:", payload);
       return NextResponse.json(
-        { error: "AI suggestion failed. Please try again later." },
+        { error: "AI returned an empty response. Please try again." },
         { status: 502 }
       );
     }
 
-    const payload = await response.json();
-    const outputText = extractOpenAIText(payload);
     const suggestion = sanitizeSuggestion(JSON.parse(outputText));
     suggestionCache.set(hash, { createdAt: Date.now(), data: suggestion });
 
-    return NextResponse.json({ data: suggestion, cached: false });
+    return NextResponse.json({ data: suggestion, cached: false, model });
   } catch (error) {
     console.error("Painting reference AI suggestion failed:", error);
+    const message = error instanceof Error ? error.message : "AI suggestion failed.";
     return NextResponse.json(
-      { error: "AI suggestion failed. Please try again later." },
+      { error: `AI suggestion failed: ${message}` },
       { status: 500 }
     );
   }

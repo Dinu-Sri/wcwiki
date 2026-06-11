@@ -1,13 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-
-interface PreviewFile {
-  name: string;
-  size: number;
-  url: string;
-}
 
 interface MetadataSuggestion {
   title?: string;
@@ -16,6 +10,38 @@ interface MetadataSuggestion {
   country?: string;
   city?: string;
   tags?: string[];
+}
+
+type UploadField = "title" | "description" | "category" | "country" | "city" | "takenAt" | "tags";
+
+interface UploadItem {
+  id: string;
+  file: File;
+  previewUrl: string;
+  title: string;
+  description: string;
+  category: string;
+  country: string;
+  city: string;
+  takenAt: string;
+  tags: string;
+  suggesting: boolean;
+}
+
+function createUploadItem(file: File): UploadItem {
+  return {
+    id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+    file,
+    previewUrl: URL.createObjectURL(file),
+    title: "",
+    description: "",
+    category: "",
+    country: "",
+    city: "",
+    takenAt: "",
+    tags: "",
+    suggesting: false,
+  };
 }
 
 export function PaintingReferenceUploadForm({
@@ -27,59 +53,76 @@ export function PaintingReferenceUploadForm({
   countries: string[];
   defaultAttributionName: string;
 }) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<PreviewFile[]>([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [country, setCountry] = useState("");
-  const [city, setCity] = useState("");
-  const [takenAt, setTakenAt] = useState("");
-  const [tags, setTags] = useState("");
+  const [items, setItems] = useState<UploadItem[]>([]);
   const [attributionName, setAttributionName] = useState(defaultAttributionName);
   const [attributionUrl, setAttributionUrl] = useState("");
   const [ownershipConfirmed, setOwnershipConfirmed] = useState(false);
   const [licenseConfirmed, setLicenseConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [suggesting, setSuggesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successCount, setSuccessCount] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const itemsRef = useRef<UploadItem[]>([]);
 
   useEffect(() => {
-    const next = files.map((file) => ({
-      name: file.name,
-      size: file.size,
-      url: URL.createObjectURL(file),
-    }));
-    setPreviews(next);
-    return () => next.forEach((file) => URL.revokeObjectURL(file.url));
-  }, [files]);
+    itemsRef.current = items;
+  }, [items]);
+
+  useEffect(() => {
+    return () => {
+      itemsRef.current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    };
+  }, []);
 
   function updateFiles(selected: FileList | null) {
     const next = Array.from(selected || []);
+    const limited = next.slice(0, 10);
+
     if (next.length > 10) {
       setError("Upload a maximum of 10 images at a time.");
-      setFiles(next.slice(0, 10));
-      return;
+    } else {
+      setError(null);
     }
-    setError(null);
-    setFiles(next);
+
+    setItems((previous) => {
+      previous.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+      return limited.map(createUploadItem);
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
-  async function suggestMetadata() {
+  function removeItem(id: string) {
+    setItems((previous) => {
+      const removed = previous.find((item) => item.id === id);
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      return previous.filter((item) => item.id !== id);
+    });
+  }
+
+  function updateItem(id: string, field: UploadField, value: string) {
+    setItems((previous) =>
+      previous.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  }
+
+  async function suggestMetadata(id: string) {
     setError(null);
     setSuccessCount(null);
 
-    const file = files[0];
-    if (!file) {
+    const item = items.find((entry) => entry.id === id);
+    if (!item) {
       setError("Select an image before asking for AI suggestions.");
       return;
     }
 
-    setSuggesting(true);
+    setItems((previous) =>
+      previous.map((entry) => (entry.id === id ? { ...entry, suggesting: true } : entry))
+    );
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", item.file);
 
       const response = await fetch("/api/painting-references/suggest-metadata", {
         method: "POST",
@@ -93,22 +136,35 @@ export function PaintingReferenceUploadForm({
       }
 
       const suggestion = (payload.data || {}) as MetadataSuggestion;
-      if (suggestion.title) setTitle(suggestion.title);
-      if (suggestion.description) setDescription(suggestion.description);
-      if (suggestion.category && categories.includes(suggestion.category)) {
-        setCategory(suggestion.category);
-      }
-      if (suggestion.country && countries.includes(suggestion.country)) {
-        setCountry(suggestion.country);
-      }
-      if (suggestion.city) setCity(suggestion.city);
-      if (Array.isArray(suggestion.tags) && suggestion.tags.length > 0) {
-        setTags(suggestion.tags.join(", "));
-      }
+      setItems((previous) =>
+        previous.map((entry) => {
+          if (entry.id !== id) return entry;
+          return {
+            ...entry,
+            title: suggestion.title || entry.title,
+            description: suggestion.description || entry.description,
+            category:
+              suggestion.category && categories.includes(suggestion.category)
+                ? suggestion.category
+                : entry.category,
+            country:
+              suggestion.country && countries.includes(suggestion.country)
+                ? suggestion.country
+                : entry.country,
+            city: suggestion.city || entry.city,
+            tags:
+              Array.isArray(suggestion.tags) && suggestion.tags.length > 0
+                ? suggestion.tags.join(", ")
+                : entry.tags,
+          };
+        })
+      );
     } catch {
       setError("AI suggestion failed. Please try again.");
     } finally {
-      setSuggesting(false);
+      setItems((previous) =>
+        previous.map((entry) => (entry.id === id ? { ...entry, suggesting: false } : entry))
+      );
     }
   }
 
@@ -117,12 +173,13 @@ export function PaintingReferenceUploadForm({
     setError(null);
     setSuccessCount(null);
 
-    if (files.length === 0) {
+    if (items.length === 0) {
       setError("Select at least one image.");
       return;
     }
-    if (!category) {
-      setError("Choose a category for these painting references.");
+    const missingCategoryIndex = items.findIndex((item) => !item.category);
+    if (missingCategoryIndex !== -1) {
+      setError(`Choose a category for image ${missingCategoryIndex + 1}.`);
       return;
     }
     if (!ownershipConfirmed || !licenseConfirmed) {
@@ -133,14 +190,16 @@ export function PaintingReferenceUploadForm({
     setSubmitting(true);
     try {
       const formData = new FormData();
-      files.forEach((file) => formData.append("files", file));
-      formData.append("title", title);
-      formData.append("description", description);
-      formData.append("category", category);
-      formData.append("country", country);
-      formData.append("city", city);
-      formData.append("takenAt", takenAt);
-      formData.append("tags", tags);
+      items.forEach((item, index) => {
+        formData.append("files", item.file);
+        formData.append(`title_${index}`, item.title);
+        formData.append(`description_${index}`, item.description);
+        formData.append(`category_${index}`, item.category);
+        formData.append(`country_${index}`, item.country);
+        formData.append(`city_${index}`, item.city);
+        formData.append(`takenAt_${index}`, item.takenAt);
+        formData.append(`tags_${index}`, item.tags);
+      });
       formData.append("attributionName", attributionName);
       formData.append("attributionUrl", attributionUrl);
       formData.append("ownershipConfirmed", String(ownershipConfirmed));
@@ -157,15 +216,11 @@ export function PaintingReferenceUploadForm({
         return;
       }
 
-      setSuccessCount(Array.isArray(data.data) ? data.data.length : files.length);
-      setFiles([]);
-      setTitle("");
-      setDescription("");
-      setCategory("");
-      setCountry("");
-      setCity("");
-      setTakenAt("");
-      setTags("");
+      setSuccessCount(Array.isArray(data.data) ? data.data.length : items.length);
+      setItems((previous) => {
+        previous.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+        return [];
+      });
       setOwnershipConfirmed(false);
       setLicenseConfirmed(false);
     } catch {
@@ -197,6 +252,7 @@ export function PaintingReferenceUploadForm({
           Images
         </label>
         <input
+          ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp,image/avif"
           multiple
@@ -208,150 +264,160 @@ export function PaintingReferenceUploadForm({
         </p>
       </div>
 
-      {previews.length > 0 && (
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {previews.map((file) => (
-              <div key={file.url} className="overflow-hidden rounded-xl border border-border bg-card">
-                <div className="aspect-square bg-accent">
-                  <img src={file.url} alt="" className="h-full w-full object-cover" />
+      {items.length > 0 && (
+        <div className="space-y-5">
+          {items.map((item, index) => (
+            <section key={item.id} className="rounded-xl border border-border bg-card p-4">
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row">
+                <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-lg border border-border bg-accent">
+                  <img src={item.previewUrl} alt="" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-lg leading-none text-red-600 shadow-sm hover:bg-red-50"
+                    aria-label={`Remove image ${index + 1}`}
+                  >
+                    x
+                  </button>
                 </div>
-                <div className="px-2 py-2">
-                  <p className="truncate text-xs font-medium text-foreground">{file.name}</p>
-                  <p className="text-[10px] text-muted">{(file.size / 1024 / 1024).toFixed(1)}MB</p>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Image {index + 1}</p>
+                      <p className="break-all text-xs text-muted">{item.file.name}</p>
+                      <p className="text-[11px] text-muted">{(item.file.size / 1024 / 1024).toFixed(1)}MB</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => suggestMetadata(item.id)}
+                      disabled={item.suggesting}
+                      className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/15 disabled:opacity-50"
+                    >
+                      {item.suggesting ? "Suggesting..." : "Suggest metadata with AI"}
+                    </button>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor={`reference-title-${item.id}`} className="mb-2 block text-sm font-medium text-foreground">
+                        Title
+                      </label>
+                      <input
+                        id={`reference-title-${item.id}`}
+                        value={item.title}
+                        onChange={(event) => updateItem(item.id, "title", event.target.value)}
+                        placeholder="Misty lake morning"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor={`reference-country-${item.id}`} className="mb-2 block text-sm font-medium text-foreground">
+                        Country
+                      </label>
+                      <select
+                        id={`reference-country-${item.id}`}
+                        value={item.country}
+                        onChange={(event) => updateItem(item.id, "country", event.target.value)}
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="">Select country</option>
+                        {countries.map((countryName) => (
+                          <option key={countryName} value={countryName}>
+                            {countryName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="mb-2 block text-sm font-medium text-foreground">
+                      Category
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+                      {categories.map((categoryName) => (
+                        <label
+                          key={categoryName}
+                          className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${
+                            item.category === categoryName
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border bg-background text-foreground hover:bg-accent"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`category-choice-${item.id}`}
+                            value={categoryName}
+                            checked={item.category === categoryName}
+                            onChange={() => updateItem(item.id, "category", categoryName)}
+                            className="sr-only"
+                          />
+                          <span className={`h-2.5 w-2.5 rounded-full ${item.category === categoryName ? "bg-primary" : "bg-border"}`} />
+                          {categoryName}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor={`reference-city-${item.id}`} className="mb-2 block text-sm font-medium text-foreground">
+                        City or place
+                      </label>
+                      <input
+                        id={`reference-city-${item.id}`}
+                        value={item.city}
+                        onChange={(event) => updateItem(item.id, "city", event.target.value)}
+                        placeholder="Kandy"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor={`reference-date-${item.id}`} className="mb-2 block text-sm font-medium text-foreground">
+                        Date taken
+                      </label>
+                      <input
+                        id={`reference-date-${item.id}`}
+                        type="date"
+                        value={item.takenAt}
+                        onChange={(event) => updateItem(item.id, "takenAt", event.target.value)}
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label htmlFor={`reference-description-${item.id}`} className="mb-2 block text-sm font-medium text-foreground">
+                      Description
+                    </label>
+                    <textarea
+                      id={`reference-description-${item.id}`}
+                      value={item.description}
+                      onChange={(event) => updateItem(item.id, "description", event.target.value)}
+                      rows={3}
+                      placeholder="Light direction, location, season, colors, or painting notes"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label htmlFor={`reference-tags-${item.id}`} className="mb-2 block text-sm font-medium text-foreground">
+                      Tags
+                    </label>
+                    <input
+                      id={`reference-tags-${item.id}`}
+                      value={item.tags}
+                      onChange={(event) => updateItem(item.id, "tags", event.target.value)}
+                      placeholder="clouds, lake, reflections"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={suggestMetadata}
-              disabled={suggesting}
-              className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/15 disabled:opacity-50"
-            >
-              {suggesting ? "Suggesting..." : "Suggest metadata with AI"}
-            </button>
-            <span className="text-xs text-muted">Uses the first selected image.</span>
-          </div>
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
-          Category
-        </label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {categories.map((item) => (
-            <label
-              key={item}
-              className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${
-                category === item
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-foreground hover:bg-accent"
-              }`}
-            >
-              <input
-                type="radio"
-                name="category-choice"
-                value={item}
-                checked={category === item}
-                onChange={() => setCategory(item)}
-                className="sr-only"
-              />
-              <span className={`h-2.5 w-2.5 rounded-full ${category === item ? "bg-primary" : "bg-border"}`} />
-              {item}
-            </label>
+            </section>
           ))}
         </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="reference-title" className="block text-sm font-medium text-foreground mb-2">
-            Title
-          </label>
-          <input
-            id="reference-title"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="Misty lake morning"
-            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-        <div>
-          <label htmlFor="reference-country" className="block text-sm font-medium text-foreground mb-2">
-            Country
-          </label>
-          <select
-            id="reference-country"
-            value={country}
-            onChange={(event) => setCountry(event.target.value)}
-            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          >
-            <option value="">Select country</option>
-            {countries.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="reference-city" className="block text-sm font-medium text-foreground mb-2">
-            City or place
-          </label>
-          <input
-            id="reference-city"
-            value={city}
-            onChange={(event) => setCity(event.target.value)}
-            placeholder="Kandy"
-            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-        <div>
-          <label htmlFor="reference-date" className="block text-sm font-medium text-foreground mb-2">
-            Date taken
-          </label>
-          <input
-            id="reference-date"
-            type="date"
-            value={takenAt}
-            onChange={(event) => setTakenAt(event.target.value)}
-            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="reference-description" className="block text-sm font-medium text-foreground mb-2">
-          Description
-        </label>
-        <textarea
-          id="reference-description"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          rows={3}
-          placeholder="Light direction, location, season, colors, or painting notes"
-          className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="reference-tags" className="block text-sm font-medium text-foreground mb-2">
-          Tags
-        </label>
-        <input
-          id="reference-tags"
-          value={tags}
-          onChange={(event) => setTags(event.target.value)}
-          placeholder="clouds, lake, reflections"
-          className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
