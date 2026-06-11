@@ -25,7 +25,13 @@ Startup DB behavior: `entrypoint.sh` runs `prisma migrate deploy` first. The liv
 production DB predates Prisma migration history, so startup temporarily falls back
 to non-destructive `prisma db push --skip-generate` if deploy fails. Do not add
 `--accept-data-loss`. Remove this fallback only after production migration history
-is repaired in a maintenance window.
+is repaired in a maintenance window. Avoid schema changes that make fallback
+`db push` require `--accept-data-loss`.
+
+Painting reference AI metadata suggestions are click-triggered only and require
+`OPENAI_API_KEY`. `OPENAI_VISION_MODEL` is optional and defaults to `gpt-5.4-mini`.
+`OPENAI_METADATA_DAILY_LIMIT` defaults to 10. The server resizes images before
+sending low-detail vision requests.
 
 ## 10 Hard Rules
 
@@ -57,4 +63,4 @@ Meilisearch reindex? · Cache clear? · Rollback steps?
 
 ---
 
-*Generated 2026-06-06 from AGENTS.md*
+*Generated 2026-06-11 from AGENTS.md*

@@ -109,6 +109,13 @@ All of these must be set in production (Portainer stack env vars) and defined in
 |----------|---------|---------|
 | `NEXT_PUBLIC_BASE_URL` | `https://wcwiki.org` | Public-facing base URL |
 
+### OpenAI
+| Variable | Example | Purpose |
+|----------|---------|---------|
+| `OPENAI_API_KEY` | (secret key) | Enables AI metadata suggestions for painting reference uploads |
+| `OPENAI_VISION_MODEL` | `gpt-5.4-mini` | Optional model override for painting reference metadata suggestions |
+| `OPENAI_METADATA_DAILY_LIMIT` | `10` | Optional per-user daily limit for painting reference AI suggestions |
+
 ### Cloudflare R2 (Image Storage)
 | Variable | Example | Purpose |
 |----------|---------|---------|
@@ -253,7 +260,7 @@ When stack, deployment, environment variables, known errors, or architecture cha
 - **VPS path**: `/opt/wcwiki`
 - **Git branch**: `master` (not `main`)
 - **Image registry**: `ghcr.io/dinu-sri/wcwiki:latest`
-- **DB migrations**: `entrypoint.sh` runs `prisma migrate deploy` on every container start. Because the live DB predates migration history, startup currently falls back to `prisma db push --skip-generate` if deploy fails. This fallback is non-destructive (no `--accept-data-loss`) and should remain documented until production migration history is repaired in a maintenance window.
+- **DB migrations**: `entrypoint.sh` runs `prisma migrate deploy` on every container start. Because the live DB predates migration history, startup currently falls back to `prisma db push --skip-generate` if deploy fails. This fallback is non-destructive (no `--accept-data-loss`) and should remain documented until production migration history is repaired in a maintenance window. Avoid schema changes that make `db push` require `--accept-data-loss`.
 - **First migration**: `prisma/migrations/20260607000000_initial_schema/` — full DDL snapshot of all 19 models
 - **Schema changes**: Run `npx prisma migrate dev --name <name>` to generate a new migration; review the generated SQL; test on staging DB (`docker compose up postgres-staging` + `npm run db:staging-migrate`); then commit and deploy
 - **Search sync**: Auto-runs on container start via `sync-meilisearch.js`
@@ -261,6 +268,7 @@ When stack, deployment, environment variables, known errors, or architecture cha
 - **Content API auth**: `Authorization: Bearer wk_<api_key>` header
 - **Content encoding**: Use HTML entities in article body, ASCII-only in excerpts (PowerShell Unicode bug)
 - **Image uploads**: Max 10MB, auto-convert to WebP, stored in Cloudflare R2
+- **Painting reference AI suggestions**: Upload form can call OpenAI vision only when the user clicks the suggestion button. Requires `OPENAI_API_KEY`; defaults to `OPENAI_VISION_MODEL=gpt-5.4-mini`; images are resized and sent with low detail; `OPENAI_METADATA_DAILY_LIMIT` defaults to 10 per user per day.
 - **Search indexes**: `artists`, `paintings`, `articles`, `suggestions`
 - **Auto-suggest**: Uses past DB queries only (not content titles), 3-char min, 2-occurrence min, 90-day window
 

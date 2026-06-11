@@ -36,6 +36,8 @@ Any change to `prisma/schema.prisma` requires:
 Because the existing production DB predates Prisma migration history, startup currently
 falls back to `prisma db push --skip-generate` if deploy fails. This fallback must
 never use `--accept-data-loss`. Always backup the database before risky schema changes.
+Until migration history is repaired, avoid Prisma schema changes that make the
+fallback require `--accept-data-loss`.
 
 ---
 

@@ -209,6 +209,13 @@ docker start wcwiki-app
 3. Commit with `ENV: NEW_VAR=<description>` in message
 4. Redeploy stack for env var to take effect
 
+### Painting Reference AI Suggestions
+- Set `OPENAI_API_KEY` in Portainer to enable the upload-form AI suggestion button.
+- `OPENAI_VISION_MODEL` is optional and defaults to `gpt-5.4-mini`.
+- `OPENAI_METADATA_DAILY_LIMIT` is optional and defaults to 10 suggestions per user per day.
+- The feature is click-triggered only; it resizes the first selected image and sends a low-detail vision request for title, description, category, country, city, and tags.
+- If the key is missing, uploads still work and the AI button returns a configuration message.
+
 ### New Dependency
 1. `npm install <package>`
 2. Commit `package.json` + `package-lock.json`

@@ -224,7 +224,7 @@ model PaintingReference {
   id          String  @id @default(cuid())
   title       String
   slug        String  @unique
-  shortCode   String? @unique
+  shortCode   String?
   description String? @db.Text
 
   categoryId String?
@@ -269,6 +269,7 @@ model PaintingReference {
   @@index([submittedById])
   @@index([createdAt])
   @@index([status, createdAt])
+  @@index([shortCode])
 }
 
 model ReferenceSave {

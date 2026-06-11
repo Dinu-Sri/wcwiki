@@ -229,4 +229,31 @@ remove the fallback from `entrypoint.sh`.
 
 ---
 
-*Last updated: 2026-06-07*
+## 12. Prisma `db push` Refuses `PaintingReference.shortCode` Unique Index
+
+**Status**: RESOLVED (2026-06-11)
+
+**Symptom**: Startup falls back from `prisma migrate deploy` to `prisma db push
+--skip-generate`, then Prisma refuses to continue with:
+
+```text
+A unique constraint covering the columns [shortCode] on the table PaintingReference will be added.
+Use the --accept-data-loss flag to ignore the data loss warnings.
+```
+
+**Root Cause**: Production is temporarily unbaselined, so startup uses `db push`.
+Prisma treats adding a unique constraint to an existing table as a potentially unsafe
+operation even when the column is new or nullable.
+
+**Fix/Workaround**: `PaintingReference.shortCode` is indexed instead of Prisma-unique.
+Application code still checks for an unused short code before insert. The first
+migration SQL file was also cleaned because stray terminal output had been appended
+after the valid SQL.
+
+**Prevention**: Until production migration history is repaired, avoid schema changes
+that require `prisma db push --accept-data-loss`. Use normal indexes plus application
+validation when a startup-safe fallback is more important than DB-level enforcement.
+
+---
+
+*Last updated: 2026-06-11*

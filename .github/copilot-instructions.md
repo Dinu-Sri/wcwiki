@@ -18,6 +18,7 @@
 - Tailwind CSS 3.4.17 + next-intl 4.8 (10 locales)
 - Cloudflare R2 for images + Cloudflare Tunnel for routing
 - Docker/Portainer deployment on VPS
+- Painting reference AI metadata suggestions use `OPENAI_API_KEY`, optional `OPENAI_VISION_MODEL`, and optional `OPENAI_METADATA_DAILY_LIMIT`
 
 ## For Every Change, State:
 - [ ] New/changed env vars needed?

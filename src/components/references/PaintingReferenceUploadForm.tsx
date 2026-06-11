@@ -9,6 +9,15 @@ interface PreviewFile {
   url: string;
 }
 
+interface MetadataSuggestion {
+  title?: string;
+  description?: string;
+  category?: string;
+  country?: string;
+  city?: string;
+  tags?: string[];
+}
+
 export function PaintingReferenceUploadForm({
   categories,
   countries,
@@ -32,6 +41,7 @@ export function PaintingReferenceUploadForm({
   const [ownershipConfirmed, setOwnershipConfirmed] = useState(false);
   const [licenseConfirmed, setLicenseConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successCount, setSuccessCount] = useState<number | null>(null);
 
@@ -54,6 +64,52 @@ export function PaintingReferenceUploadForm({
     }
     setError(null);
     setFiles(next);
+  }
+
+  async function suggestMetadata() {
+    setError(null);
+    setSuccessCount(null);
+
+    const file = files[0];
+    if (!file) {
+      setError("Select an image before asking for AI suggestions.");
+      return;
+    }
+
+    setSuggesting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/painting-references/suggest-metadata", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        setError(payload.error || "AI suggestion failed.");
+        return;
+      }
+
+      const suggestion = (payload.data || {}) as MetadataSuggestion;
+      if (suggestion.title) setTitle(suggestion.title);
+      if (suggestion.description) setDescription(suggestion.description);
+      if (suggestion.category && categories.includes(suggestion.category)) {
+        setCategory(suggestion.category);
+      }
+      if (suggestion.country && countries.includes(suggestion.country)) {
+        setCountry(suggestion.country);
+      }
+      if (suggestion.city) setCity(suggestion.city);
+      if (Array.isArray(suggestion.tags) && suggestion.tags.length > 0) {
+        setTags(suggestion.tags.join(", "));
+      }
+    } catch {
+      setError("AI suggestion failed. Please try again.");
+    } finally {
+      setSuggesting(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -153,18 +209,31 @@ export function PaintingReferenceUploadForm({
       </div>
 
       {previews.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {previews.map((file) => (
-            <div key={file.url} className="overflow-hidden rounded-xl border border-border bg-card">
-              <div className="aspect-square bg-accent">
-                <img src={file.url} alt="" className="h-full w-full object-cover" />
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {previews.map((file) => (
+              <div key={file.url} className="overflow-hidden rounded-xl border border-border bg-card">
+                <div className="aspect-square bg-accent">
+                  <img src={file.url} alt="" className="h-full w-full object-cover" />
+                </div>
+                <div className="px-2 py-2">
+                  <p className="truncate text-xs font-medium text-foreground">{file.name}</p>
+                  <p className="text-[10px] text-muted">{(file.size / 1024 / 1024).toFixed(1)}MB</p>
+                </div>
               </div>
-              <div className="px-2 py-2">
-                <p className="truncate text-xs font-medium text-foreground">{file.name}</p>
-                <p className="text-[10px] text-muted">{(file.size / 1024 / 1024).toFixed(1)}MB</p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={suggestMetadata}
+              disabled={suggesting}
+              className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/15 disabled:opacity-50"
+            >
+              {suggesting ? "Suggesting..." : "Suggest metadata with AI"}
+            </button>
+            <span className="text-xs text-muted">Uses the first selected image.</span>
+          </div>
         </div>
       )}
 

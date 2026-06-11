@@ -59,7 +59,7 @@ async function generateReferenceShortCode() {
     for (let index = 0; index < 5; index++) {
       code += chars[randomInt(chars.length)];
     }
-    const existing = await db.paintingReference.findUnique({
+    const existing = await db.paintingReference.findFirst({
       where: { shortCode: code },
       select: { id: true },
     });
