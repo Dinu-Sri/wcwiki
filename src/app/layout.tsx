@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist } from "next/font/google";
-import { getLocale } from "next-intl/server";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import {
   getSiteSettings,
@@ -58,7 +57,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = await getSiteSettings();
-  const locale = await getLocale();
 
   const orgSchema = generateOrganizationSchema(settings);
   const webSiteSchema = generateWebSiteSchema(settings);
@@ -71,7 +69,7 @@ export default async function RootLayout({
   const yandexVerification = (settings as Record<string, unknown>).yandexVerification as string | null;
 
   return (
-    <html lang={locale} className={`${geistSans.variable} h-full`}>
+    <html lang="en" className={`${geistSans.variable} h-full`}>
       <head>
         {/* Verification meta tags */}
         {gscVerification && (
