@@ -38,7 +38,7 @@ export default function Home() {
             <img src="/logo.webp" alt="wcWIKI" className="h-10 sm:h-20 md:h-24 w-auto" />
           </div>
           {/* Tagline — always visible */}
-          <p className="text-muted text-xs sm:text-base tracking-wide">
+          <p className="text-muted text-base sm:text-xl font-medium tracking-wide">
             The Watercolor Art Encyclopedia
           </p>
         </div>
@@ -96,11 +96,11 @@ export default function Home() {
       </div>
 
       {/* Vision statement + footer */}
-      <div className="text-center px-6 sm:px-8 pb-1 pt-1">
-        <p className="text-[10px] sm:text-xs font-medium tracking-widest uppercase text-muted/80 mb-0.5">
+      <div className="text-center px-6 sm:px-8 pb-3 pt-2">
+        <p className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-muted/90 mb-1">
           Artists Building for Artists
         </p>
-        <p className="text-[9px] sm:text-[10px] text-muted/50 leading-snug max-w-md mx-auto">
+        <p className="text-[11px] sm:text-xs text-muted/70 leading-relaxed max-w-xl mx-auto">
           The world&apos;s first peer-reviewed watercolor encyclopedia, created exclusively by human artists. We safeguard authentic art philosophy through a unique, human-verified knowledge base that remains accessible to all, forever.
         </p>
       </div>

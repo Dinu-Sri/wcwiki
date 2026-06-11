@@ -519,6 +519,35 @@ Track:
 - reference detail page dwell time
 - painting-reference pages indexed in Google
 
+### 3A.11 Next iteration: painted works, My Studio, and AI assist
+
+Add these after the initial painting reference library is stable:
+
+- **Painted from this reference** uploads on each reference detail page.
+  - Logged-in users upload their finished painting made from the reference.
+  - Images are auto-resized to web-friendly variants without changing aspect ratio.
+  - Submissions should enter a moderation queue before becoming public.
+  - Public paintings sort by vote count first, then newest.
+  - Each page must clearly state: uploaded painting works belong to their respective artists, and unauthorized reuse is prohibited.
+- **Voting** on uploaded painting works.
+  - One vote per logged-in user per work.
+  - Prevent self-vote if needed later.
+  - Show top works first to create a light community challenge loop.
+- **Terms and upload permissions**.
+  - Registration should require accepting the site terms for credential signup.
+  - OAuth users need an onboarding/first-action terms gate before upload or contribution.
+  - Upload flows should explicitly say users allow wcWIKI to store, resize, display, and use uploaded media for platform features while ownership remains with the uploader.
+- **My Studio media and collections**.
+  - Rename saved references behavior to "Add to My Painting Reference List."
+  - Show saved references in My Studio.
+  - Add a personal media area for the user's own uploads; admins can see all media.
+  - Keep donated reference photos, painted works, and article/media uploads distinguishable.
+- **AI metadata assist for uploads**.
+  - Add optional "Suggest title, description, and tags" after upload preview.
+  - Use a vision model only when the user clicks the suggestion button, never automatically.
+  - Add strict cost controls: low-detail image input, rate limits, per-user daily cap, admin toggle, and cached suggestions.
+  - Suggested descriptions should focus on search value: light direction, subject, season, color palette, location hints, mood, and watercolor painting notes.
+
 ---
 
 ## 4. Phase 1 — Watercolor Knowledge Taxonomy

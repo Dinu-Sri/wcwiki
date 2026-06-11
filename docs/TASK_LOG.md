@@ -18,6 +18,7 @@
 
 | Date | Task | Files Changed | Env Vars | DB Migration | Redeploy | Rollback |
 |------|------|--------------|----------|-------------|----------|----------|
+| 2026-06-11 | Improve Painting Reference attribution, short redirects, upload metadata, lightbox, dashboard saved list, and roadmap next-phase notes | prisma/schema.prisma, prisma/migrations/20260611083000_reference_metadata_shortlinks/, src/app/r/[code]/route.ts, src/app/[locale]/painting-references/*, src/app/api/painting-references/route.ts, src/components/references/*, src/app/[locale]/dashboard/page.tsx, src/app/[locale]/page.tsx, docs/WCWIKI_FUTURE_PROOF_EXPANSION_ROADMAP.md | None | New migration 20260611083000_reference_metadata_shortlinks adds shortCode/country/city/takenAt to PaintingReference | Yes | Revert this commit; if needed after backup drop the added columns and shortCode index |
 | 2026-06-10 | Clean homepage painting reference UI labels and remove category filter pills | src/app/[locale]/page.tsx, src/components/layout/Header.tsx, src/components/layout/MobileNav.tsx, src/components/layout/Footer.tsx, src/app/[locale]/admin/layout.tsx, src/app/[locale]/admin/page.tsx, src/app/[locale]/dashboard/page.tsx | None | None | Yes | Revert this UI cleanup commit |
 | 2026-06-10 | Add Painting References library MVP with submission, approval, saves, SEO, and sitemap hooks | prisma/schema.prisma, prisma/migrations/20260610090000_painting_references/, src/app/[locale]/painting-references/*, src/app/api/painting-references/*, src/app/api/admin/painting-references/*, src/components/references/*, src/app/sitemap.ts, src/app/llms.txt/route.ts, layout/dashboard/nav files | None | New migration 20260610090000_painting_references; production startup may still use documented non-destructive db push fallback until migration history is repaired | Yes | Revert this commit; if tables were created, remove PaintingReference/ReferenceCategory/ReferenceSave data after backup |
 | 2026-06-09 | Document temporary Prisma startup fallback and future migration-history repair plan | AGENTS.md, docs/DEPLOYMENT_WORKFLOW.md, docs/PRODUCTION_RULES.md, docs/KNOWN_ERRORS.md, ai/AI_CONTEXT.generated.md | None | None | No | Revert documentation commit |
@@ -42,4 +43,4 @@
 
 ---
 
-*Last updated: 2026-06-10*
+*Last updated: 2026-06-11*

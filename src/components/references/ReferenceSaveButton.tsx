@@ -44,13 +44,14 @@ export function ReferenceSaveButton({
       type="button"
       onClick={toggle}
       disabled={busy}
-      className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+      className={`w-full rounded-xl px-4 py-2 text-center text-sm font-medium leading-snug transition-colors disabled:opacity-50 ${
         saved
           ? "bg-primary text-white hover:bg-primary/90"
           : "border border-border bg-surface text-foreground hover:bg-accent"
       }`}
     >
-      {saved ? "Saved" : "Save"} {count > 0 ? `(${count})` : ""}
+      {saved ? "In My Painting Reference List" : "Add to My Painting Reference List"}
+      {count > 0 ? ` (${count})` : ""}
     </button>
   );
 }

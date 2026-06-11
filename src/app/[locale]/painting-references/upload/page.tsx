@@ -1,10 +1,10 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PaintingReferenceUploadForm } from "@/components/references/PaintingReferenceUploadForm";
+import { REFERENCE_CATEGORIES, REFERENCE_COUNTRIES } from "@/lib/reference-taxonomy";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +21,6 @@ export const metadata: Metadata = {
 
 export default async function PaintingReferenceUploadPage() {
   const session = await auth();
-  const categories = await db.referenceCategory.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true, slug: true },
-  });
 
   return (
     <>
@@ -77,7 +73,8 @@ export default async function PaintingReferenceUploadPage() {
           </div>
         ) : (
           <PaintingReferenceUploadForm
-            categories={categories}
+            categories={[...REFERENCE_CATEGORIES]}
+            countries={[...REFERENCE_COUNTRIES]}
             defaultAttributionName={session.user.name || session.user.email || ""}
           />
         )}

@@ -224,12 +224,16 @@ model PaintingReference {
   id          String  @id @default(cuid())
   title       String
   slug        String  @unique
+  shortCode   String? @unique
   description String? @db.Text
 
   categoryId String?
   category   ReferenceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  tags            String[] @default([])
+  tags            String[]  @default([])
+  country         String?
+  city            String?
+  takenAt         DateTime?
   previewUrl      String
   thumbnailUrl    String
   fullImageUrl    String?
@@ -237,7 +241,7 @@ model PaintingReference {
   height          Int?
   size            Int?
   format          String?
-  license         String   @default("CC_BY_4_0")
+  license         String    @default("CC_BY_4_0")
   attributionName String?
   attributionUrl  String?
 

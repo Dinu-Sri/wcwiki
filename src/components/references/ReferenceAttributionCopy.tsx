@@ -16,15 +16,17 @@ export function ReferenceAttributionCopy({ text }: { text: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+      <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">
         Attribution
       </p>
-      <p className="break-words text-sm text-foreground">{text}</p>
+      <p className="break-words text-base font-medium leading-relaxed text-foreground">
+        {text}
+      </p>
       <button
         type="button"
         onClick={copy}
-        className="mt-3 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+        className="mt-4 rounded-lg border border-primary/30 bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
       >
         {copied ? "Copied" : "Copy Attribution"}
       </button>

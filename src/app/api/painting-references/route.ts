@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomInt } from "crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/slug";
 import { uploadReferenceImage } from "@/lib/storage";
+import { REFERENCE_CATEGORIES, REFERENCE_COUNTRIES } from "@/lib/reference-taxonomy";
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -43,6 +45,30 @@ function normalizeUrl(value: string) {
   }
 }
 
+function parseDate(value: string) {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+async function generateReferenceShortCode() {
+  const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+  for (let attempt = 0; attempt < 12; attempt++) {
+    let code = "";
+    for (let index = 0; index < 5; index++) {
+      code += chars[randomInt(chars.length)];
+    }
+    const existing = await db.paintingReference.findUnique({
+      where: { shortCode: code },
+      select: { id: true },
+    });
+    if (!existing) return code;
+  }
+
+  throw new Error("Could not create a unique reference short code");
+}
+
 async function resolveCategory(name: string) {
   const cleaned = name.trim().slice(0, 80);
   if (!cleaned) return null;
@@ -65,9 +91,30 @@ export async function GET(req: NextRequest) {
   const session = await auth();
   const { searchParams } = req.nextUrl;
   const mine = searchParams.get("mine") === "true";
+  const saved = searchParams.get("saved") === "true";
 
-  if (mine && !session?.user?.id) {
+  if ((mine || saved) && !session?.user?.id) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  if (saved) {
+    const savedReferences = await db.referenceSave.findMany({
+      where: { userId: session!.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        reference: {
+          include: {
+            category: { select: { id: true, name: true, slug: true } },
+            submittedBy: { select: { id: true, name: true, image: true } },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      data: savedReferences.map((item) => item.reference),
+    });
   }
 
   const references = await db.paintingReference.findMany({
@@ -126,7 +173,17 @@ export async function POST(req: NextRequest) {
     const titleBase = cleanText(formData.get("title"), 100);
     const description = cleanText(formData.get("description"), 1200) || null;
     const tags = parseTags(cleanText(formData.get("tags"), 400));
-    const category = await resolveCategory(cleanText(formData.get("category"), 80));
+    const categoryName = cleanText(formData.get("category"), 80);
+    if (!REFERENCE_CATEGORIES.includes(categoryName as typeof REFERENCE_CATEGORIES[number])) {
+      return NextResponse.json({ error: "Choose a valid category." }, { status: 400 });
+    }
+    const country = cleanText(formData.get("country"), 80);
+    if (country && !REFERENCE_COUNTRIES.includes(country as typeof REFERENCE_COUNTRIES[number])) {
+      return NextResponse.json({ error: "Choose a valid country." }, { status: 400 });
+    }
+    const city = cleanText(formData.get("city"), 120) || null;
+    const takenAt = parseDate(cleanText(formData.get("takenAt"), 20));
+    const category = await resolveCategory(categoryName);
     const attributionName =
       cleanText(formData.get("attributionName"), 120) ||
       session.user.name ||
@@ -145,14 +202,19 @@ export async function POST(req: NextRequest) {
           ? titleBase || fallbackTitle
           : `${titleBase || fallbackTitle} ${index + 1}`;
       const slug = await generateSlug(title, "paintingReference");
+      const shortCode = await generateReferenceShortCode();
 
       const reference = await db.paintingReference.create({
         data: {
           title,
           slug,
+          shortCode,
           description,
           categoryId: category?.id || null,
           tags,
+          country: country || null,
+          city,
+          takenAt,
           previewUrl: uploaded.preview.url,
           thumbnailUrl: uploaded.thumbnail.url,
           width: uploaded.preview.width,

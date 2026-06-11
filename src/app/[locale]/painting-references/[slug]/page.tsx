@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ReferenceAttributionCopy } from "@/components/references/ReferenceAttributionCopy";
+import { ReferenceImageLightbox } from "@/components/references/ReferenceImageLightbox";
 import { ReferenceSaveButton } from "@/components/references/ReferenceSaveButton";
 import {
   generateBreadcrumbSchema,
@@ -100,9 +101,10 @@ export default async function PaintingReferencePage({ params }: Props) {
     take: 6,
   });
 
-  const attributionText = `Reference photo by ${
-    reference.attributionName || reference.submittedBy.name || "wcWIKI contributor"
-  } via ${baseUrl}/painting-references/${reference.slug} - CC BY 4.0`;
+  const shortCode = reference.shortCode || reference.id.slice(0, 7);
+  const shortUrl = `${baseUrl}/r/${shortCode}`;
+  const downloadUrl = reference.fullImageUrl || reference.previewUrl;
+  const attributionText = `Reference by Watercolor Wikipedia via ${shortUrl} - CC BY 4.0`;
 
   const imageLd = generatePaintingReferenceImageSchema(reference, baseUrl);
   const breadcrumbLd = generateBreadcrumbSchema(baseUrl, [
@@ -140,13 +142,7 @@ export default async function PaintingReferencePage({ params }: Props) {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div>
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
-              <img
-                src={reference.previewUrl}
-                alt={reference.title}
-                className="max-h-[76vh] w-full object-contain bg-accent"
-              />
-            </div>
+            <ReferenceImageLightbox src={reference.previewUrl} alt={reference.title} />
 
             <section className="mt-6">
               <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-3">
@@ -176,7 +172,7 @@ export default async function PaintingReferencePage({ params }: Props) {
 
           <aside className="space-y-4">
             <div className="rounded-xl border border-border bg-surface p-4">
-              <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="mb-4 flex flex-col gap-3">
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                   CC BY 4.0
                 </span>
@@ -186,6 +182,13 @@ export default async function PaintingReferencePage({ params }: Props) {
                   initialCount={reference.saveCount}
                   signedIn={Boolean(session?.user?.id)}
                 />
+                <a
+                  href={downloadUrl}
+                  download
+                  className="rounded-xl border border-border bg-card px-4 py-2 text-center text-sm font-medium text-foreground transition-colors hover:bg-accent"
+                >
+                  Download Painting Reference
+                </a>
               </div>
               <dl className="space-y-3 text-sm">
                 <div>
@@ -222,6 +225,23 @@ export default async function PaintingReferencePage({ params }: Props) {
                     </dd>
                   </div>
                 )}
+                {(reference.country || reference.city || reference.takenAt) && (
+                  <div>
+                    <dt className="text-xs uppercase tracking-wider text-muted">
+                      Location and date
+                    </dt>
+                    <dd className="mt-1 text-foreground">
+                      {[reference.city, reference.country].filter(Boolean).join(", ") || "Location not listed"}
+                      {reference.takenAt
+                        ? ` - ${reference.takenAt.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}`
+                        : ""}
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-xs uppercase tracking-wider text-muted">
                     Image
@@ -252,8 +272,13 @@ export default async function PaintingReferencePage({ params }: Props) {
 
             <ReferenceAttributionCopy text={attributionText} />
 
-            <div className="rounded-xl border border-border bg-warm-light p-4 text-sm text-muted">
-              Use this reference under CC BY 4.0. Give attribution to the contributor and link back to this wcWIKI page when you share your finished work.
+            <div className="rounded-xl border border-border bg-warm-light p-4 text-sm leading-relaxed text-muted">
+              <p>
+                Use this reference under CC BY 4.0. Give attribution and link back to wcWIKI when you share your finished work.
+              </p>
+              <p className="mt-3 font-medium text-foreground">
+                Any painting uploaded from this reference belongs to its respective artist. Unauthorized reuse of artist-uploaded work is prohibited.
+              </p>
             </div>
           </aside>
         </div>

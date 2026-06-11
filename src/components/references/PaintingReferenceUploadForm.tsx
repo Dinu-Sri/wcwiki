@@ -3,12 +3,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
-interface CategoryOption {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 interface PreviewFile {
   name: string;
   size: number;
@@ -17,9 +11,11 @@ interface PreviewFile {
 
 export function PaintingReferenceUploadForm({
   categories,
+  countries,
   defaultAttributionName,
 }: {
-  categories: CategoryOption[];
+  categories: string[];
+  countries: string[];
   defaultAttributionName: string;
 }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -27,6 +23,9 @@ export function PaintingReferenceUploadForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
+  const [takenAt, setTakenAt] = useState("");
   const [tags, setTags] = useState("");
   const [attributionName, setAttributionName] = useState(defaultAttributionName);
   const [attributionUrl, setAttributionUrl] = useState("");
@@ -66,6 +65,10 @@ export function PaintingReferenceUploadForm({
       setError("Select at least one image.");
       return;
     }
+    if (!category) {
+      setError("Choose a category for these painting references.");
+      return;
+    }
     if (!ownershipConfirmed || !licenseConfirmed) {
       setError("Please confirm ownership and CC BY 4.0 publishing permission.");
       return;
@@ -78,6 +81,9 @@ export function PaintingReferenceUploadForm({
       formData.append("title", title);
       formData.append("description", description);
       formData.append("category", category);
+      formData.append("country", country);
+      formData.append("city", city);
+      formData.append("takenAt", takenAt);
       formData.append("tags", tags);
       formData.append("attributionName", attributionName);
       formData.append("attributionUrl", attributionUrl);
@@ -99,6 +105,10 @@ export function PaintingReferenceUploadForm({
       setFiles([]);
       setTitle("");
       setDescription("");
+      setCategory("");
+      setCountry("");
+      setCity("");
+      setTakenAt("");
       setTags("");
       setOwnershipConfirmed(false);
       setLicenseConfirmed(false);
@@ -158,6 +168,35 @@ export function PaintingReferenceUploadForm({
         </div>
       )}
 
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Category
+        </label>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {categories.map((item) => (
+            <label
+              key={item}
+              className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${
+                category === item
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-foreground hover:bg-accent"
+              }`}
+            >
+              <input
+                type="radio"
+                name="category-choice"
+                value={item}
+                checked={category === item}
+                onChange={() => setCategory(item)}
+                className="sr-only"
+              />
+              <span className={`h-2.5 w-2.5 rounded-full ${category === item ? "bg-primary" : "bg-border"}`} />
+              {item}
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="reference-title" className="block text-sm font-medium text-foreground mb-2">
@@ -172,22 +211,49 @@ export function PaintingReferenceUploadForm({
           />
         </div>
         <div>
-          <label htmlFor="reference-category" className="block text-sm font-medium text-foreground mb-2">
-            Category
+          <label htmlFor="reference-country" className="block text-sm font-medium text-foreground mb-2">
+            Country
+          </label>
+          <select
+            id="reference-country"
+            value={country}
+            onChange={(event) => setCountry(event.target.value)}
+            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="">Select country</option>
+            {countries.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="reference-city" className="block text-sm font-medium text-foreground mb-2">
+            City or place
           </label>
           <input
-            id="reference-category"
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            list="reference-categories"
-            placeholder="Landscape"
+            id="reference-city"
+            value={city}
+            onChange={(event) => setCity(event.target.value)}
+            placeholder="Kandy"
             className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
-          <datalist id="reference-categories">
-            {categories.map((item) => (
-              <option key={item.id} value={item.name} />
-            ))}
-          </datalist>
+        </div>
+        <div>
+          <label htmlFor="reference-date" className="block text-sm font-medium text-foreground mb-2">
+            Date taken
+          </label>
+          <input
+            id="reference-date"
+            type="date"
+            value={takenAt}
+            onChange={(event) => setTakenAt(event.target.value)}
+            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
         </div>
       </div>
 
@@ -261,7 +327,7 @@ export function PaintingReferenceUploadForm({
             onChange={(event) => setLicenseConfirmed(event.target.checked)}
             className="mt-1"
           />
-          <span>I agree that approved images will be published under CC BY 4.0 with attribution.</span>
+          <span>I agree that approved images will be published under CC BY 4.0 with attribution, and wcWIKI may store, resize, optimize, and display them for platform features.</span>
         </label>
       </div>
 

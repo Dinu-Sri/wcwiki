@@ -61,6 +61,7 @@ export default function DashboardPage() {
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [openSuggestions, setOpenSuggestions] = useState<SuggestionItem[]>([]);
   const [references, setReferences] = useState<ReferenceItem[]>([]);
+  const [savedReferences, setSavedReferences] = useState<ReferenceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<ApplicationStatus | null>(null);
   const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
@@ -71,12 +72,13 @@ export default function DashboardPage() {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const [editsRes, appRes, profileRes, suggestRes, referencesRes] = await Promise.all([
+      const [editsRes, appRes, profileRes, suggestRes, referencesRes, savedReferencesRes] = await Promise.all([
         fetch("/api/my-edits"),
         fetch("/api/editor-application"),
         fetch("/api/profile"),
         fetch("/api/suggestions?mine=true"),
         fetch("/api/painting-references?mine=true"),
+        fetch("/api/painting-references?saved=true"),
       ]);
 
       if (editsRes.ok) {
@@ -98,6 +100,10 @@ export default function DashboardPage() {
       if (referencesRes.ok) {
         const data = await referencesRes.json();
         setReferences(data.data || []);
+      }
+      if (savedReferencesRes.ok) {
+        const data = await savedReferencesRes.json();
+        setSavedReferences(data.data || []);
       }
 
       // Fetch open suggestions for EDITOR+ users
@@ -446,12 +452,59 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* My Painting References */}
+          {/* My Studio: saved painting reference list */}
+          {savedReferences.length > 0 && (
+            <div className="mb-8">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    My Studio: Painting Reference List
+                  </h2>
+                  <p className="text-xs text-muted">
+                    Saved images you plan to paint from.
+                  </p>
+                </div>
+                <Link
+                  href="/painting-references"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Browse more
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {savedReferences.slice(0, 12).map((reference) => (
+                  <Link
+                    key={reference.id}
+                    href={`/painting-references/${reference.slug}`}
+                    className="group overflow-hidden rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-lg"
+                  >
+                    <div className="aspect-[4/3] bg-accent">
+                      <img
+                        src={reference.thumbnailUrl}
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="px-2.5 py-2">
+                      <h3 className="truncate text-xs font-medium text-foreground">
+                        {reference.title}
+                      </h3>
+                      <p className="truncate text-[11px] text-muted">
+                        {reference.category?.name || "Painting reference"}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* My donated painting references */}
           {references.length > 0 && (
             <div className="mb-8">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold text-foreground">
-                  My Painting References
+                  My Donated Painting References
                 </h2>
                 <Link
                   href="/painting-references/upload"

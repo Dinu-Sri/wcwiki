@@ -310,8 +310,10 @@ export function generateItemListSchema(
 // --- Painting Reference Schema ----------------------------------------------
 
 interface PaintingReferenceForSchema {
+  id?: string;
   title: string;
   slug: string;
+  shortCode?: string | null;
   description?: string | null;
   previewUrl: string;
   thumbnailUrl: string;
@@ -332,6 +334,10 @@ export function generatePaintingReferenceImageSchema(
   baseUrl: string
 ) {
   const pageUrl = `${baseUrl}/painting-references/${reference.slug}`;
+  const attributionUrl =
+    reference.shortCode || reference.id
+      ? `${baseUrl}/r/${reference.shortCode || reference.id?.slice(0, 7)}`
+      : pageUrl;
   const creatorName = reference.attributionName || "wcWIKI contributor";
 
   return {
@@ -343,7 +349,7 @@ export function generatePaintingReferenceImageSchema(
     thumbnailUrl: toAbsoluteUrl(reference.thumbnailUrl, baseUrl),
     license: "https://creativecommons.org/licenses/by/4.0/",
     acquireLicensePage: pageUrl,
-    creditText: `Reference photo by ${creatorName} via wcWIKI.org - CC BY 4.0`,
+    creditText: `Reference by Watercolor Wikipedia via ${attributionUrl} - CC BY 4.0`,
     creator: {
       "@type": "Person",
       name: creatorName,
