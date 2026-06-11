@@ -126,6 +126,7 @@ Each page should contain at least three retention hooks:
 |---|---:|---|---|---|---|
 | Phase 0 | Critical | Stability and Data Safety | Fix production risks before adding major features | Protect existing user/content trust | Prevent data loss and stale search |
 | Phase 1A | Very High | Painting References Library | Community-donated reference photos for watercolor artists | Repeat browsing, saves, contributor recognition | Original visual source library with attribution backlinks |
+| Phase 1B | Very High | Painted from Painting References | Let artists upload finished works made from references | Community feedback, voting, profile growth, repeat visits | Original artist outcomes tied to original visual sources |
 | Phase 1 | Critical | Watercolor Knowledge Taxonomy | Add core entity types: pigments, papers, brands, brushes, techniques | Gives users more browsing depth | Builds structured data AI cannot easily reproduce |
 | Phase 2 | Very High | Visual Evidence Lab | Standardized swatches, paper tests, brand comparisons | Visual browsing, repeated visits | Original experimental evidence |
 | Phase 3 | Very High | Review and Rating System | Reviews for papers, pigments, brands, brushes, books, courses | User-generated content loop | Human experience + social proof |
@@ -259,6 +260,30 @@ Deferred to be implemented alongside Phase 1 (new entity types need test coverag
 ---
 
 ## 3A. Phase 1A — Painting References Library
+
+### 3A.0 Current implementation status
+
+As of 2026-06-11, the first Painting References production layer is live:
+
+- Public painting reference browse/detail pages.
+- Donate flow for registered users.
+- Per-image metadata entry for multi-image uploads.
+- Controlled category and country selection.
+- AI metadata suggestions with explicit click-triggered OpenAI vision request.
+- Admin approval flow.
+- Optimized local image storage for preview/thumbnail assets.
+- Save action using the clearer "Add to My Painting Reference List" language.
+- Short attribution URL support.
+- Lightbox viewing with zoom/rotate controls.
+- Basic My Studio/dashboard saved reference visibility.
+- Sitemap/structured metadata hooks for painting reference pages.
+- App log API for AI/upload failures.
+
+Known operational note:
+
+- Production `docker-compose.prod.yml` must pass OpenAI environment variables into
+  the app container; setting variables in Portainer alone is not enough unless the
+  compose file references them under `app.environment`.
 
 ### 3A.1 Purpose
 
@@ -547,6 +572,207 @@ Add these after the initial painting reference library is stable:
   - Use a vision model only when the user clicks the suggestion button, never automatically.
   - Add strict cost controls: low-detail image input, rate limits, per-user daily cap, admin toggle, and cached suggestions.
   - Suggested descriptions should focus on search value: light direction, subject, season, color palette, location hints, mood, and watercolor painting notes.
+
+---
+
+## 3B. Phase 1B — Painted from Painting References
+
+### 3B.1 Purpose
+
+Turn Painting References from a static image library into a repeat-use artist workflow:
+
+1. Find a painting reference.
+2. Save it to My Painting Reference List.
+3. Paint from it.
+4. Upload the finished painting.
+5. Receive visibility, votes, and contribution credit.
+6. Return to manage work in My Studio.
+
+This creates a retention loop around real artist activity instead of only content browsing.
+
+### 3B.2 Core product surface
+
+Reference detail page:
+
+- Add a section titled **Painted from this painting reference**.
+- Show approved finished paintings in a visual gallery.
+- Sort by:
+  - highest votes first
+  - newest as secondary ordering
+- Add a clear CTA for logged-in users:
+  - "Upload your finished painting"
+- Add login prompt for anonymous users.
+- Show ownership notice near the gallery:
+  - "Finished paintings belong to their respective artists. Unauthorized use is prohibited."
+
+Upload flow:
+
+- Only logged-in users can upload.
+- Upload is attached to one `PaintingReference`.
+- Accept common image formats.
+- Auto-rotate and resize without changing aspect ratio.
+- Strip EXIF metadata.
+- Generate thumbnail and preview variants.
+- Optional title, medium, paper, size, notes, completion date, social/portfolio URL.
+- Required confirmation:
+  - user created the finished painting
+  - user allows wcWIKI to store, resize, display, and use it for platform features
+  - ownership remains with the artist
+  - unauthorized reuse by others is prohibited
+
+### 3B.3 Data model proposal
+
+Add a model such as `ReferenceArtwork` or `PaintedFromReference`.
+
+Recommended fields:
+
+- `id`
+- `referenceId`
+- `artistUserId`
+- `title`
+- `slug`
+- `description`
+- `imageUrl`
+- `thumbnailUrl`
+- `width`
+- `height`
+- `size`
+- `format`
+- `medium`
+- `paper`
+- `dimensions`
+- `completedAt`
+- `artistName`
+- `artistUrl`
+- `status`: `PENDING`, `APPROVED`, `REJECTED`
+- `moderationNote`
+- `voteCount`
+- `createdAt`
+- `updatedAt`
+- `approvedAt`
+- `approvedById`
+
+Add a vote model such as `ReferenceArtworkVote`:
+
+- `id`
+- `artworkId`
+- `userId`
+- `createdAt`
+- unique constraint on `artworkId + userId`
+
+Add indexes:
+
+- `referenceId + status + voteCount`
+- `artistUserId + createdAt`
+- `status + createdAt`
+- `slug`
+
+### 3B.4 Moderation and safety
+
+MVP moderation:
+
+- New uploads start as `PENDING`.
+- Admin/Approver can approve or reject.
+- Rejection reason is visible to the uploader in My Studio.
+- Admin can remove approved work if needed.
+
+Important controls:
+
+- Rate limit uploads per user per day.
+- Enforce max file size.
+- Block unsafe MIME types.
+- Strip EXIF/GPS.
+- Log upload and moderation failures through app logs.
+- Add report/takedown path later for ownership disputes.
+- Avoid public display until approved.
+- Do not allow anonymous voting.
+- Consider blocking self-votes later, but it is not required for MVP.
+
+### 3B.5 My Studio integration
+
+My Studio should show three painting-reference buckets:
+
+- **My Painting Reference List**
+  - saved references the user wants to paint from
+- **My Donated Painting References**
+  - submitted reference photos and approval status
+- **My Finished Paintings**
+  - finished works uploaded under reference pages
+  - pending/approved/rejected status
+  - vote count
+  - link back to the source painting reference
+
+Future additions:
+
+- Private notes on saved painting references.
+- Mark saved reference as:
+  - planning
+  - in progress
+  - painted
+  - archived
+- Personal collections by subject, season, palette, or learning goal.
+
+### 3B.6 SEO and structured data
+
+Public approved finished works can improve long-tail SEO and entity relationships.
+
+On reference detail pages:
+
+- Add gallery structured data where appropriate.
+- Link each finished painting back to the source painting reference.
+- Use descriptive alt text:
+  - "Watercolor painting by [artist] painted from [reference title]"
+
+If individual artwork detail pages are added later:
+
+- Use `VisualArtwork` structured data.
+- Include creator, image, dateCreated, artMedium, isBasedOn, and url.
+- Keep canonical links stable.
+
+Important SEO caution:
+
+- Do not index pending/rejected artwork.
+- Do not create thin pages for every upload until there is enough metadata.
+- Keep the main reference page as the primary SEO page for MVP.
+
+### 3B.7 Notifications and retention
+
+Useful notifications:
+
+- "Your finished painting was approved."
+- "Your painting received a new vote."
+- "Someone uploaded a painting from a reference you donated."
+- "Your donated reference has 5 painted works."
+
+Badges/contribution credit:
+
+- First finished painting uploaded.
+- 10 finished paintings uploaded.
+- Most painted reference contributor.
+- Monthly top painted work.
+- Helpful reference donor.
+
+### 3B.8 Implementation order
+
+Recommended build order:
+
+1. Add Prisma models and migration.
+2. Add upload API and storage helper for finished paintings.
+3. Add upload UI on reference detail page.
+4. Add admin approval queue for finished paintings.
+5. Add public gallery section on approved reference detail pages.
+6. Add voting API and vote button.
+7. Add My Studio sections for saved references, donated references, and finished paintings.
+8. Add notifications and contributor stats.
+9. Add structured data and sitemap/indexing refinements only for approved public content.
+
+### 3B.9 Open questions before coding
+
+- Should finished-painting uploads be visible only after admin approval from day one? Recommended: yes.
+- Should users be able to edit/delete their own pending/approved finished paintings? Recommended: allow edit/delete before approval; require moderation after approval.
+- Should votes be anonymous publicly? Recommended: show count only, not voter names.
+- Should a finished painting have its own page? Recommended: later, not MVP.
+- Should high-resolution finished painting images be downloadable? Recommended: no; display optimized preview only.
 
 ---
 
@@ -3159,6 +3385,43 @@ Show:
 - Admin system health panel
 
 **Do not start major user-generated features until backups and safe migrations are done.**
+
+### Phase 1A — Completed MVP, continue stabilization
+
+**Already built**:
+
+- Painting reference browse/detail pages
+- Donate flow
+- Admin approval queue
+- Saved painting references
+- Short attribution URLs
+- Lightbox viewing
+- AI metadata suggestions
+- App logs for AI/upload diagnostics
+
+**Stabilize**:
+
+- Verify indexing in Google Search Console.
+- Watch upload/log errors.
+- Keep production migration fallback documented until migration history is repaired.
+
+### Phase 1B — 2 to 3 development cycles
+
+**Build next**:
+
+- `ReferenceArtwork` / `PaintedFromReference` model.
+- Finished-painting upload API and storage variants.
+- Pending/approved/rejected moderation.
+- Gallery on painting reference detail pages.
+- Voting model and vote API.
+- My Studio sections for saved references, donated references, and finished paintings.
+- Ownership notices and upload permission confirmations.
+- Basic notification hooks.
+- Approved-only SEO/schema additions.
+
+**UX target**:
+
+- Artists can paint from a reference, upload the finished work, earn votes, and return through My Studio.
 
 ### Phase 1 — 2 to 4 development cycles
 
