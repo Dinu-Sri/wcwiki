@@ -21,6 +21,10 @@ services:
       - BACKUP_DIR=/opt/backups/wcwiki
       - BACKUP_RETENTION_DAYS=14
       - CRON_SECRET=${CRON_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_VISION_MODEL=${OPENAI_VISION_MODEL}
+      - OPENAI_METADATA_DAILY_LIMIT=${OPENAI_METADATA_DAILY_LIMIT}
+      - APP_LOG_DIR=${APP_LOG_DIR}
     volumes:
       - uploads:/app/uploads
       - backups:/opt/backups/wcwiki

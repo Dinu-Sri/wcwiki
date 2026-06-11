@@ -104,6 +104,27 @@ export default function AdminApiKeysPage() {
         </button>
       </div>
 
+      <div className="mb-6 bg-surface border border-border rounded-xl p-4">
+        <h2 className="text-sm font-semibold text-foreground">Application logs</h2>
+        <p className="text-sm text-muted mt-1">
+          SUPER_ADMIN users can inspect recent app errors through the internal logs API.
+        </p>
+        <div className="mt-3 space-y-2 text-xs">
+          <div>
+            <span className="font-medium text-foreground">OpenAI metadata failures: </span>
+            <code className="text-muted break-all">/api/admin/logs?source=openai.metadata&amp;limit=50</code>
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Reference upload failures: </span>
+            <code className="text-muted break-all">/api/admin/logs?source=painting-references.upload&amp;limit=50</code>
+          </div>
+          <div>
+            <span className="font-medium text-foreground">All recent errors: </span>
+            <code className="text-muted break-all">/api/admin/logs?level=error&amp;limit=100</code>
+          </div>
+        </div>
+      </div>
+
       {/* New token display */}
       {newToken && (
         <div className="mb-6 bg-green-50 border border-green-300 rounded-xl p-4">

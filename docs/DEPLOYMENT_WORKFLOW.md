@@ -213,6 +213,7 @@ docker start wcwiki-app
 - Set `OPENAI_API_KEY` in Portainer to enable the upload-form AI suggestion button.
 - `OPENAI_VISION_MODEL` is optional and defaults to `gpt-5.4-mini`.
 - `OPENAI_METADATA_DAILY_LIMIT` is optional and defaults to 10 suggestions per user per day.
+- These variables must be referenced under `app.environment` in `docker-compose.prod.yml`; Portainer stack variables are not automatically visible inside the app container unless the compose file passes them through.
 - The feature is click-triggered only; it resizes the first selected image and sends a low-detail vision request for title, description, category, country, city, and tags.
 - If the key is missing, uploads still work and the AI button returns a configuration message.
 - Provider failures are logged to the app JSONL log. SUPER_ADMIN users can inspect recent AI failures at:
